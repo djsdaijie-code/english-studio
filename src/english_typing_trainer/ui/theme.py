@@ -1,13 +1,20 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import QApplication, QWidget
 
 
+def resource_root() -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / "resources"
+    return Path(__file__).resolve().parents[3] / "resources"
+
+
 def style_root() -> Path:
-    return Path(__file__).resolve().parents[3] / "resources" / "styles"
+    return resource_root() / "styles"
 
 
 def resolve_theme(theme_name: str) -> str:

@@ -45,3 +45,9 @@ Desktop.ini
 # Database fixtures under tests/ remain trackable if added later.
 /typing_trainer.db
 /typing_trainer.db-*
+
+# Generated release artifacts
+release/*.zip
+release/SHA256SUMS.txt
+dist-debug/
+build-debug/
