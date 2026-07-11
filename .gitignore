@@ -1,0 +1,47 @@
+# Python environments and caches
+.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Build outputs (keep future PyInstaller .spec files tracked)
+build/
+dist/
+*.egg-info/
+
+# Runtime and acceptance data
+runtime_data*/
+workspace_data/
+phase*_runtime/
+phase*_screenshots/
+tmp_*/
+artifacts/
+*.db-wal
+*.db-shm
+tmp_stdout.log
+tmp_stderr.log
+logs/
+*.log
+
+# Recovered Git metadata backup
+.git.corrupt-*/
+
+# Local IDE and OS files
+.idea/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
+~$*
+*.tmp
+*.temp
+
+# Local SQLite databases are ignored only at project root or runtime folders.
+# Database fixtures under tests/ remain trackable if added later.
+/typing_trainer.db
+/typing_trainer.db-*

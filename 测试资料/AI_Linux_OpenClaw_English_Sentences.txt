@@ -1,0 +1,132 @@
+Which model should I use?
+This API key is not working.
+The request failed.
+What is the token cost?
+Please generate a better prompt.
+Create a new task.
+Copy and paste this command.
+Upload the file.
+Download the latest version.
+Export the result.
+This agent can run automation tasks.
+The task failed.
+Please execute this workflow.
+The tool needs permission.
+Set a daily schedule.
+OpenClaw is not configured.
+Approve the pairing request.
+Check the OpenClaw status.
+Show me the logs.
+Restart the gateway service.
+Open the terminal.
+Run this command.
+Go to this directory.
+Check the file path.
+This file is in the home directory.
+Start the service.
+Stop the service.
+Restart the service.
+Check the service status.
+The service failed to start.
+Command not found.
+Permission denied.
+The file is missing.
+Invalid API key.
+The connection timed out.
+There may be a proxy issue.
+The server is unreachable.
+Connection refused.
+Check the proxy settings.
+The port is not open.
+Install the required dependencies.
+Update the package list.
+Install the latest version.
+Uninstall the old version.
+There is a version conflict.
+Check the config file.
+Save the settings.
+Reload the configuration.
+Set the environment variable.
+Use the default settings.
+Read the documentation.
+Download the latest release.
+Check the requirements.
+Open an issue on GitHub.
+Follow the installation guide.
+Show the latest logs.
+Check the error message.
+The app crashed.
+Enable debug mode.
+What is the reason for this error?
+Help me fix this error.
+Explain this error in simple Chinese.
+Give me the exact commands to run.
+Do not explain too much. Just give me the steps.
+Check if this command is safe before I run it.
+Access is not configured.
+Which provider should I use?
+Set the endpoint URL.
+Change the temperature setting.
+The model has high latency.
+The context is too long.
+Check the status code.
+The request body is invalid.
+Authentication failed.
+You have reached the rate limit.
+Check your API credentials.
+The model is unavailable.
+The server is overloaded.
+This feature is deprecated.
+The API key has expired.
+The request is malformed.
+Use a clear output format.
+Make the answer concise.
+Give me a detailed explanation.
+Follow these requirements.
+Explain it step by step.
+Execute this task now.
+Set a recurring schedule.
+Monitor this service.
+Notify me if it fails.
+Check the task result.
+List all files in this directory.
+Create a new folder.
+Remove this file.
+Copy this file to the home directory.
+Search for the config file.
+Check the file permissions.
+You need sudo permission.
+The user does not have access.
+Make this file executable.
+Change the file owner.
+Check if the service is running.
+The process is still running.
+The service crashed.
+Reload the systemd service.
+Check the memory usage.
+Check your proxy settings.
+The DNS lookup failed.
+The port is already in use.
+The connection was refused.
+Install the missing dependency.
+This version is not compatible.
+Reinstall the package.
+Update the package manager.
+The build failed.
+Load the config file.
+Apply the new settings.
+The default value was overridden.
+The gateway is not running.
+Check the allowlist settings.
+The webhook is not responding.
+Restart the OpenClaw gateway.
+Help me troubleshoot this issue.
+What is the root cause?
+Give me a safe fix.
+Can you reproduce the issue?
+Verify the result after fixing it.
+Here is the error message.
+Here is the command output.
+It may be a configuration error.
+Tell me the next step.
+Give me the exact command to run.
