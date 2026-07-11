@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from html import escape
-
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
-from PySide6.QtGui import QKeyEvent
+from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QPlainTextEdit,
     QPushButton,
+    QSizePolicy,
+    QSplitter,
     QTextBrowser,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -27,6 +29,40 @@ class FocusTextBrowser(QTextBrowser):
         self.clicked.emit()
 
 
+class PracticeInputEdit(QPlainTextEdit):
+    key_received = Signal(object)
+    clicked = Signal()
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setObjectName("PracticeInput")
+        self.setReadOnly(True)
+        self.setAcceptDrops(False)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setPlaceholderText("在这里开始输入……")
+        self.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+        self.document().defaultTextOption().setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # type: ignore[override]
+        if event.matches(QKeySequence.StandardKey.Paste):
+            event.accept()
+            return
+        self.key_received.emit(event)
+        event.accept()
+
+    def mousePressEvent(self, event) -> None:  # type: ignore[override]
+        super().mousePressEvent(event)
+        self.clicked.emit()
+
+    def insertFromMimeData(self, source) -> None:  # type: ignore[override]
+        return
+
+    def dropEvent(self, event) -> None:  # type: ignore[override]
+        event.ignore()
+
+
 class PracticeView(QWidget):
     session_completed = Signal(object)
     back_requested = Signal()
@@ -35,8 +71,8 @@ class PracticeView(QWidget):
         super().__init__(parent)
         self.material: PracticeMaterial | None = None
         self.session: TypingSession | None = None
-        self._error_flash_remaining = 0
-        self._current_font_size = 26
+        self._settings_font_size = 18
+        self._current_font_size = 22
 
         self._timer = QTimer(self)
         self._timer.setInterval(250)
@@ -86,27 +122,81 @@ class PracticeView(QWidget):
         stats_row.addStretch(1)
         layout.addWidget(self.stats_frame)
 
-        self.hint_label = QLabel("直接输入即可。按 Esc 可暂停或继续，点击正文会自动恢复输入焦点。")
+        self.hint_label = QLabel("请在“我的输入”中打字。错误字符会标红并继续前进，Backspace 可回退一格，Esc 暂停或继续。")
         self.hint_label.setProperty("role", "subtitle")
         layout.addWidget(self.hint_label)
 
-        text_shell = QHBoxLayout()
-        text_shell.addStretch(1)
-        text_card = QFrame()
-        text_card.setObjectName("PanelCard")
-        text_card.setMaximumWidth(940)
-        text_layout = QVBoxLayout(text_card)
-        text_layout.setContentsMargins(28, 24, 28, 24)
+        content_shell = QHBoxLayout()
+        content_shell.setContentsMargins(0, 0, 0, 0)
+        content_shell.addStretch(1)
+        self.content_host = QWidget()
+        self.content_host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        host_layout = QVBoxLayout(self.content_host)
+        host_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.practice_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.practice_splitter.setChildrenCollapsible(False)
+        self.practice_splitter.setHandleWidth(8)
+        self.practice_splitter.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        source_card = QFrame()
+        source_card.setObjectName("PracticeSourceCard")
+        source_card.setMinimumHeight(200)
+        source_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        source_layout = QVBoxLayout(source_card)
+        source_layout.setContentsMargins(20, 16, 20, 18)
+        source_layout.setSpacing(10)
+        source_heading = QHBoxLayout()
+        source_title = QLabel("原文")
+        source_title.setProperty("role", "section-title")
+        self.target_hint = QLabel("高亮位置是当前输入目标")
+        self.target_hint.setProperty("role", "muted")
+        source_heading.addWidget(source_title)
+        source_heading.addStretch(1)
+        source_heading.addWidget(self.target_hint)
+        source_layout.addLayout(source_heading)
         self.text_browser = FocusTextBrowser()
+        self.text_browser.setObjectName("PracticeSource")
         self.text_browser.setReadOnly(True)
         self.text_browser.setOpenLinks(False)
-        self.text_browser.setMinimumHeight(420)
+        self.text_browser.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
+        self.text_browser.document().defaultTextOption().setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
+        self.text_browser.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.text_browser.viewport().installEventFilter(self)
-        self.text_browser.clicked.connect(self._restore_focus)
-        text_layout.addWidget(self.text_browser)
-        text_shell.addWidget(text_card, stretch=1)
-        text_shell.addStretch(1)
-        layout.addLayout(text_shell, stretch=1)
+        self.text_browser.clicked.connect(lambda: QTimer.singleShot(0, self._restore_focus))
+        source_layout.addWidget(self.text_browser, stretch=1)
+
+        input_card = QFrame()
+        input_card.setObjectName("PracticeInputCard")
+        input_card.setMinimumHeight(150)
+        input_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        input_layout = QVBoxLayout(input_card)
+        input_layout.setContentsMargins(20, 16, 20, 18)
+        input_layout.setSpacing(10)
+        input_heading = QHBoxLayout()
+        input_title = QLabel("我的输入")
+        input_title.setProperty("role", "section-title")
+        self.input_feedback_label = QLabel("等待输入")
+        self.input_feedback_label.setProperty("role", "muted")
+        input_heading.addWidget(input_title)
+        input_heading.addStretch(1)
+        input_heading.addWidget(self.input_feedback_label)
+        input_layout.addLayout(input_heading)
+        self.input_edit = PracticeInputEdit()
+        self.input_edit.key_received.connect(self._handle_input_event)
+        self.input_edit.clicked.connect(lambda: QTimer.singleShot(0, self._restore_focus))
+        input_layout.addWidget(self.input_edit, stretch=1)
+
+        self.practice_splitter.addWidget(source_card)
+        self.practice_splitter.addWidget(input_card)
+        self.practice_splitter.setStretchFactor(0, 3)
+        self.practice_splitter.setStretchFactor(1, 2)
+        self.practice_splitter.setSizes([560, 360])
+        host_layout.addWidget(self.practice_splitter)
+        content_shell.addWidget(self.content_host, stretch=18)
+        content_shell.addStretch(1)
+        layout.addLayout(content_shell, stretch=1)
+        self._update_responsive_geometry()
 
     def _build_stat_label(self, title: str, parent_layout: QHBoxLayout) -> QLabel:
         box = QVBoxLayout()
@@ -122,9 +212,11 @@ class PracticeView(QWidget):
         return value_label
 
     def apply_settings(self, settings: AppSettings) -> None:
-        self._current_font_size = min(28, max(24, settings.font_size + 8))
+        self._settings_font_size = settings.font_size
         self.stats_frame.setVisible(settings.show_live_stats)
+        self._update_responsive_geometry()
         self._render_text()
+        self._render_input()
 
     def start_practice(self, material: PracticeMaterial, settings: AppSettings) -> None:
         self.material = material
@@ -137,26 +229,47 @@ class PracticeView(QWidget):
         self.title_label.setText(practice_name)
         self.section_label.setText(f"第 {material.section_index + 1} / {material.section_count} 段")
         self.pause_button.setText("暂停")
-        self._error_flash_remaining = 0
+        self.input_feedback_label.setText("等待输入")
+        self._settings_font_size = settings.font_size
         self._refresh_ui()
+        self._update_responsive_geometry()
         self._render_text()
+        self._render_input()
         self._timer.start()
-        self._restore_focus()
+        QTimer.singleShot(0, self._restore_focus)
+
+    def resizeEvent(self, event) -> None:  # type: ignore[override]
+        super().resizeEvent(event)
+        self._update_responsive_geometry()
 
     def eventFilter(self, watched, event) -> bool:  # type: ignore[override]
         if watched is self.text_browser.viewport() and event.type() == QEvent.Type.MouseButtonPress:
-            self._restore_focus()
+            QTimer.singleShot(0, self._restore_focus)
         return super().eventFilter(watched, event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        self._handle_input_event(event)
+
+    def _handle_input_event(self, event: QKeyEvent) -> None:
         if self.session is None:
-            super().keyPressEvent(event)
+            event.ignore()
             return
         if event.key() == Qt.Key.Key_Escape:
             self._toggle_pause()
             event.accept()
             return
-        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+        if event.matches(QKeySequence.StandardKey.Paste):
+            event.accept()
+            return
+        if event.key() == Qt.Key.Key_Backspace:
+            if not self.session.is_paused and self.session.handle_backspace():
+                self.input_feedback_label.setText("已回退一格，可重新输入")
+                self._refresh_ui()
+                self._render_text()
+                self._render_input()
+            event.accept()
+            return
+        if event.modifiers() & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.MetaModifier):
             event.accept()
             return
         if event.key() in {Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Meta}:
@@ -167,19 +280,33 @@ class PracticeView(QWidget):
         if not text:
             event.ignore()
             return
+        if self.session.is_paused:
+            self.input_feedback_label.setText("练习已暂停，按 Esc 继续")
+            event.accept()
+            return
 
-        if not self.session.handle_character(text):
-            self._error_flash_remaining = 3
+        is_correct = self.session.handle_character(text)
+        if not self.session.typed_characters:
+            event.accept()
+            return
+        typed = self.session.typed_characters[-1]
+        if is_correct:
+            self.input_feedback_label.setText("输入正确")
+        else:
+            self.input_feedback_label.setText(f"输入错误：输入了 {self._describe_character(typed.actual_char)}，原文是 {self._describe_character(typed.target_char)}")
+
         self._refresh_ui()
         self._render_text()
+        self._render_input()
 
         if self.session.is_complete:
             self._timer.stop()
+            self.input_feedback_label.setText("本段练习已完成")
             self.session_completed.emit(self.session.snapshot())
         event.accept()
 
     def focusOutEvent(self, event) -> None:  # type: ignore[override]
-        if self.session and not self.session.is_complete:
+        if self.session and not self.session.is_complete and not self.isActiveWindow():
             self.session.pause()
             self.pause_button.setText("继续")
         super().focusOutEvent(event)
@@ -187,12 +314,12 @@ class PracticeView(QWidget):
     def _map_input_text(self, event: QKeyEvent) -> str:
         if self.session is None or self.session.is_complete:
             return ""
-        expected_char = self.session.content[self.session.position]
-        if event.key() in {Qt.Key.Key_Return, Qt.Key.Key_Enter} and expected_char == "\n":
+        if event.key() in {Qt.Key.Key_Return, Qt.Key.Key_Enter}:
             return "\n"
-        if event.key() == Qt.Key.Key_Tab and expected_char == "\t":
+        if event.key() == Qt.Key.Key_Tab:
             return "\t"
-        return event.text()
+        text = event.text()
+        return text if len(text) == 1 and text.isprintable() else ""
 
     def _toggle_pause(self) -> None:
         if self.session is None or self.session.is_complete:
@@ -202,10 +329,12 @@ class PracticeView(QWidget):
         if self.session.is_paused:
             self.session.resume()
             self.pause_button.setText("暂停")
+            self.input_feedback_label.setText("练习已继续")
             self._restore_focus()
         else:
             self.session.pause()
             self.pause_button.setText("继续")
+            self.input_feedback_label.setText("练习已暂停，按 Esc 继续")
         self._refresh_ui()
 
     def _refresh_ui(self) -> None:
@@ -217,40 +346,136 @@ class PracticeView(QWidget):
         self.accuracy_value.setText(f"{snapshot.accuracy:.1f}%")
         self.errors_value.setText(str(snapshot.error_keystrokes))
         self.elapsed_value.setText(f"{snapshot.elapsed_active_seconds:.1f} 秒")
-        if self._error_flash_remaining > 0:
-            self._error_flash_remaining -= 1
 
     def _render_text(self) -> None:
         if self.session is None:
             self.text_browser.clear()
             return
-
-        foreground = self.palette().text().color().name()
-        muted = "#8b9bb0" if self.palette().window().color().lightness() < 128 else "#94a3b8"
-        current_line = "#8aa4c5" if self.palette().window().color().lightness() < 128 else "#7c8da3"
-        error_color = "#fecaca" if self.palette().window().color().lightness() < 128 else "#fee4e2"
-        error_text = "#fee2e2" if self.palette().window().color().lightness() < 128 else "#b42318"
         content = self.session.content
-        position = self.session.position
-        current_char = content[position] if position < len(content) else ""
-        typed_part = escape(content[:position]).replace("\n", "<br>")
-        remaining_part = escape(content[position + 1 :]).replace("\n", "<br>")
-        current_part = escape(current_char).replace("\n", "<br>")
+        if self.text_browser.toPlainText() != content:
+            self.text_browser.setPlainText(content)
+        dark = self.palette().window().color().lightness() < 128
+        muted = QColor("#8291a5" if dark else "#94a3b8")
+        error_text = QColor("#fecaca" if dark else "#b42318")
+        error_bg = QColor("#4a2528" if dark else "#fee4e2")
+        current_text = self.palette().text().color()
+        current_bg = QColor("#263b53" if dark else "#e8f0fa")
+        selections: list[QTextEdit.ExtraSelection] = []
 
-        typed_html = f"<span style='color:{muted};'>{typed_part}</span>"
-        current_style = f"color:{foreground};border-bottom:2px solid {current_line};padding:0 1px;"
-        if self._error_flash_remaining > 0 and self.session.last_error is not None:
-            current_style = f"color:{error_text};background:{error_color};border-bottom:2px solid #ef4444;padding:0 1px;"
-        current_html = f"<a name='current-position'></a><span style='{current_style}'>{current_part}</span>" if current_part else ""
-        remaining_html = f"<span style='color:{foreground};'>{remaining_part}</span>"
+        if self.session.position > 0:
+            selections.append(self._selection(0, self.session.position, foreground=muted))
+        for typed in self.session.typed_characters:
+            if not typed.is_correct:
+                selections.append(
+                    self._selection(
+                        typed.position,
+                        typed.position + 1,
+                        foreground=error_text,
+                        background=error_bg,
+                        underline=True,
+                    )
+                )
+        if not self.session.is_complete:
+            selections.append(
+                self._selection(
+                    self.session.position,
+                    self.session.position + 1,
+                    foreground=current_text,
+                    background=current_bg,
+                    underline=True,
+                )
+            )
+        self.text_browser.setExtraSelections(selections)
+        cursor = self.text_browser.textCursor()
+        cursor.setPosition(min(self.session.position, len(content)))
+        self.text_browser.setTextCursor(cursor)
+        self.text_browser.ensureCursorVisible()
 
-        html = (
-            f"<div style='font-size:{self._current_font_size}px; line-height:1.9; "
-            "max-width:900px; margin:0 auto; font-family:\"Microsoft YaHei UI\", \"Microsoft YaHei\", serif;'>"
-            f"{typed_html}{current_html}{remaining_html}</div>"
-        )
-        self.text_browser.setHtml(html)
-        self.text_browser.scrollToAnchor("current-position")
+    def _render_input(self) -> None:
+        if self.session is None:
+            self.input_edit.clear()
+            return
+        dark = self.palette().window().color().lightness() < 128
+        normal = QColor("#d9f3e4" if dark else "#18392a")
+        resumed = QColor("#8291a5" if dark else "#64748b")
+        error_text = QColor("#fecaca" if dark else "#b42318")
+        error_bg = QColor("#4a2528" if dark else "#fee4e2")
+        document = self.input_edit.document()
+        document.clear()
+        cursor = QTextCursor(document)
+
+        if self.session.start_position:
+            prefix_format = QTextCharFormat()
+            prefix_format.setForeground(resumed)
+            cursor.insertText(self.session.content[: self.session.start_position], prefix_format)
+        for typed in self.session.typed_characters:
+            char_format = QTextCharFormat()
+            if typed.is_correct:
+                char_format.setForeground(normal)
+            else:
+                char_format.setForeground(error_text)
+                char_format.setBackground(error_bg)
+                char_format.setFontUnderline(True)
+            cursor.insertText(typed.actual_char, char_format)
+
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.input_edit.setTextCursor(cursor)
+        self.input_edit.ensureCursorVisible()
+
+    def _selection(
+        self,
+        start: int,
+        end: int,
+        *,
+        foreground: QColor,
+        background: QColor | None = None,
+        underline: bool = False,
+    ) -> QTextEdit.ExtraSelection:
+        selection = QTextEdit.ExtraSelection()
+        cursor = QTextCursor(self.text_browser.document())
+        cursor.setPosition(start)
+        cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+        selection.cursor = cursor
+        char_format = QTextCharFormat()
+        char_format.setForeground(foreground)
+        if background is not None:
+            char_format.setBackground(background)
+        char_format.setFontUnderline(underline)
+        selection.format = char_format
+        return selection
+
+    def _update_responsive_geometry(self) -> None:
+        if not hasattr(self, "content_host"):
+            return
+        viewport_width = max(self.width(), 1)
+        self.content_host.setMaximumWidth(min(1400, max(640, int(viewport_width * 0.90))))
+        if viewport_width < 1400:
+            responsive_size = 20
+        elif viewport_width < 1800:
+            responsive_size = 22
+        else:
+            responsive_size = 24
+        self._current_font_size = min(26, max(18, responsive_size + self._settings_font_size - 18))
+        for editor in (self.text_browser, self.input_edit):
+            font = editor.font()
+            font.setPixelSize(self._current_font_size)
+            editor.setFont(font)
+            editor.document().setDefaultFont(font)
+
+    @staticmethod
+    def _describe_character(character: str) -> str:
+        if character == "\n":
+            return "换行"
+        if character == "\t":
+            return "Tab"
+        if character == " ":
+            return "空格"
+        return f"“{character}”"
 
     def _restore_focus(self) -> None:
-        self.setFocus(Qt.FocusReason.OtherFocusReason)
+        if not self.input_edit.hasFocus():
+            self.input_edit.setFocus(Qt.FocusReason.OtherFocusReason)
+        cursor = self.input_edit.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.input_edit.setTextCursor(cursor)
+        self.input_edit.ensureCursorVisible()

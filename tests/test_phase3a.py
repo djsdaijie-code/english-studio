@@ -110,14 +110,13 @@ def test_target_word_extraction_variants() -> None:
     assert extract_target_word("line one\nline two", 4) == ""
 
 
-def test_same_position_multiple_errors_are_all_recorded() -> None:
+def test_consecutive_position_errors_are_all_recorded() -> None:
     session = TypingSession("ab")
     assert session.handle_character("x") is False
     assert session.handle_character("y") is False
-    assert session.handle_character("a") is True
+    assert session.is_complete
     assert len(session.errors) == 2
-    assert all(error.position == 0 for error in session.errors)
-
+    assert [error.position for error in session.errors] == [0, 1]
 
 def test_session_and_errors_saved_together_and_not_duplicated(tmp_path: Path) -> None:
     context = build_app_context(data_dir=tmp_path / "data")
@@ -128,7 +127,6 @@ def test_session_and_errors_saved_together_and_not_duplicated(tmp_path: Path) ->
         material = context.practice_service.load_practice_material(imported.article.id)
         session = TypingSession(material.section_text)
         session.handle_character("a")
-        session.handle_character("A")
         session.handle_character("b")
 
         context.practice_service.save_completed_session(material, session, session.snapshot())

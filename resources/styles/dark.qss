@@ -107,7 +107,7 @@ QPushButton[nav="true"][active="true"] {
     font-weight: 600;
 }
 
-QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QTextEdit, QTextBrowser, QDateEdit, QListWidget, QTableWidget {
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QTextEdit, QPlainTextEdit, QTextBrowser, QDateEdit, QListWidget, QTableWidget {
     background: #111b28;
     border: 1px solid #26384f;
     border-radius: 10px;
@@ -120,7 +120,7 @@ QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit {
     padding: 0 10px;
 }
 
-QTextEdit, QTextBrowser {
+QTextEdit, QPlainTextEdit, QTextBrowser {
     padding: 10px;
 }
 
@@ -152,4 +152,40 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: transparent;
     border: none;
+}
+
+QFrame#PracticeSourceCard, QFrame#PracticeInputCard {
+    background: #152232;
+    border: 1px solid #2d4058;
+    border-radius: 12px;
+}
+
+QTextBrowser#PracticeSource {
+    border: none;
+    background: #111b28;
+}
+
+QPlainTextEdit#PracticeInput {
+    background: #101a27;
+    border: 2px solid #405874;
+    border-radius: 10px;
+    padding: 16px;
+    color: #f1f5f9;
+    line-height: 1.6;
+}
+
+QPlainTextEdit#PracticeInput:focus {
+    border: 2px solid #7797bb;
+    background: #132131;
+}
+
+QLabel[role="section-title"] {
+    color: #f8fbff;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+QSplitter::handle:vertical {
+    background: transparent;
+    height: 8px;
 }

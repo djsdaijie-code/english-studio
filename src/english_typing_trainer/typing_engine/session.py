@@ -23,6 +23,14 @@ class TypingErrorRecord:
 
 
 @dataclass(slots=True)
+class TypedCharacterRecord:
+    target_char: str
+    actual_char: str
+    position: int
+    is_correct: bool
+
+
+@dataclass(slots=True)
 class SessionSnapshot:
     position: int
     total_keystrokes: int
@@ -63,6 +71,7 @@ class TypingSession:
         self._persisted = False
         self._persisted_session_id: int | None = None
         self.errors: list[TypingErrorRecord] = []
+        self.typed_characters: list[TypedCharacterRecord] = []
         self.last_error: TypingErrorRecord | None = None
 
     @property
@@ -119,7 +128,7 @@ class TypingSession:
         self._is_paused = False
 
     def handle_character(self, actual_char: str) -> bool:
-        if self.is_complete or self._is_paused or not actual_char:
+        if self.is_complete or self._is_paused or len(actual_char) != 1:
             return False
 
         if self.started_at is None:
@@ -129,33 +138,55 @@ class TypingSession:
             self._started_monotonic = current_tick
             self._last_resumed_monotonic = current_tick
 
-        expected_char = self.content[self.position]
+        character_position = self.position
+        expected_char = self.content[character_position]
+        is_correct = self._matches(actual_char, expected_char)
         self.total_keystrokes += 1
 
-        if self._matches(actual_char, expected_char):
+        if is_correct:
             self.correct_keystrokes += 1
             self.correct_characters += 1
-            self.position += 1
             self.current_streak += 1
             self.best_streak = max(self.best_streak, self.current_streak)
             self.last_error = None
-            if self.is_complete:
-                self._finish()
-            return True
+        else:
+            self.error_keystrokes += 1
+            self.current_streak = 0
+            error_record = TypingErrorRecord(
+                target_char=expected_char,
+                actual_char=actual_char,
+                position=character_position,
+                word=extract_target_word(self.content, character_position),
+                error_type=classify_error(expected_char, actual_char),
+                timestamp=datetime.now(),
+            )
+            self.errors.append(error_record)
+            self.last_error = error_record
 
-        self.error_keystrokes += 1
-        self.current_streak = 0
-        error_record = TypingErrorRecord(
-            target_char=expected_char,
-            actual_char=actual_char,
-            position=self.position,
-            word=extract_target_word(self.content, self.position),
-            error_type=classify_error(expected_char, actual_char),
-            timestamp=datetime.now(),
+        self.typed_characters.append(
+            TypedCharacterRecord(
+                target_char=expected_char,
+                actual_char=actual_char,
+                position=character_position,
+                is_correct=is_correct,
+            )
         )
-        self.errors.append(error_record)
-        self.last_error = error_record
-        return False
+        self.position += 1
+        if self.is_complete:
+            self._finish()
+        return is_correct
+
+    def handle_backspace(self) -> bool:
+        if self._is_paused or self.completed_at is not None or not self.typed_characters:
+            return False
+        last_typed = self.typed_characters[-1]
+        if last_typed.position < self.start_position or self.position <= self.start_position:
+            return False
+        self.typed_characters.pop()
+        self.position -= 1
+        self.current_streak = 0
+        # Historical key and error counters intentionally remain unchanged.
+        return True
 
     def mark_persisted(self, session_id: int) -> None:
         self._persisted = True
