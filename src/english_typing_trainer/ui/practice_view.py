@@ -201,13 +201,6 @@ class PracticeView(QWidget):
         self.input_edit.clicked.connect(lambda: QTimer.singleShot(0, self._restore_focus))
         input_layout.addWidget(self.input_edit, stretch=1)
 
-        self.practice_splitter.addWidget(source_card)
-        self.practice_splitter.addWidget(input_card)
-        self.practice_splitter.setStretchFactor(0, 3)
-        self.practice_splitter.setStretchFactor(1, 2)
-        self.practice_splitter.setSizes([560, 360])
-        host_layout.addWidget(self.practice_splitter)
-
         self.translation_card = QFrame()
         self.translation_card.setObjectName("ContinuousTranslationCard")
         self.translation_card.setMinimumWidth(280)
@@ -236,13 +229,21 @@ class PracticeView(QWidget):
         self.continuous_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.continuous_splitter.setChildrenCollapsible(False)
         self.continuous_splitter.setHandleWidth(10)
-        self.continuous_splitter.addWidget(self.content_host)
+        self.continuous_splitter.addWidget(source_card)
         self.continuous_splitter.addWidget(self.translation_card)
         self.continuous_splitter.setStretchFactor(0, 2)
         self.continuous_splitter.setStretchFactor(1, 1)
-        self.continuous_splitter.setSizes([920, 440])
+        self.continuous_splitter.setSizes([900, 400])
+
+        self.practice_splitter.addWidget(self.continuous_splitter)
+        self.practice_splitter.addWidget(input_card)
+        self.practice_splitter.setStretchFactor(0, 3)
+        self.practice_splitter.setStretchFactor(1, 2)
+        self.practice_splitter.setSizes([560, 360])
+        host_layout.addWidget(self.practice_splitter)
+
         content_shell.addStretch(1)
-        content_shell.addWidget(self.continuous_splitter, stretch=18)
+        content_shell.addWidget(self.content_host, stretch=18)
         content_shell.addStretch(1)
         layout.addLayout(content_shell, stretch=1)
         self._update_responsive_geometry()
@@ -450,7 +451,7 @@ class PracticeView(QWidget):
         cursor.setPosition(min(self.session.position, len(content)))
         self.text_browser.setTextCursor(cursor)
         self.text_browser.ensureCursorVisible()
-        self._apply_line_spacing(self.text_browser, 160)
+        self._apply_line_spacing(self.text_browser, 148)
 
     def _render_input(self) -> None:
         if self.session is None:
@@ -482,7 +483,7 @@ class PracticeView(QWidget):
         cursor.movePosition(QTextCursor.MoveOperation.End)
         self.input_edit.setTextCursor(cursor)
         self.input_edit.ensureCursorVisible()
-        self._apply_line_spacing(self.input_edit, 160)
+        self._apply_line_spacing(self.input_edit, 148)
 
     def _selection(
         self,
@@ -510,14 +511,13 @@ class PracticeView(QWidget):
         if not hasattr(self, "content_host"):
             return
         viewport_width = max(self.width(), 1)
-        self.continuous_splitter.setMaximumWidth(min(1400, max(640, int(viewport_width * 0.90))))
         panel_enabled = not self.translation_card.isHidden()
-        self.content_host.setMaximumWidth(16777215 if panel_enabled else min(1400, max(640, int(viewport_width * 0.90))))
+        self.content_host.setMaximumWidth(min(1400, max(640, int(viewport_width * 0.90))))
         if panel_enabled:
             self.continuous_splitter.setOrientation(
                 Qt.Orientation.Vertical if viewport_width < 1100 else Qt.Orientation.Horizontal
             )
-            self.continuous_splitter.setSizes([720, 280] if viewport_width < 1100 else [920, 440])
+            self.continuous_splitter.setSizes([420, 180] if viewport_width < 1100 else [900, 400])
         if viewport_width < 1400:
             responsive_size = 20
         elif viewport_width < 1800:

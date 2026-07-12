@@ -125,7 +125,7 @@ def test_continuous_line_spacing_and_responsive_themes(tmp_path: Path) -> None:
         view._handle_input_event(_key("F"))
         for editor in (view.text_browser, view.input_edit):
             block_format = editor.document().firstBlock().blockFormat()
-            assert block_format.lineHeight() == 160.0
+            assert block_format.lineHeight() == 148.0
             assert block_format.lineHeightType() == QTextBlockFormat.LineHeightTypes.ProportionalHeight.value
 
         for theme in ("light", "dark"):
@@ -134,6 +134,12 @@ def test_continuous_line_spacing_and_responsive_themes(tmp_path: Path) -> None:
             app.processEvents()
             assert view.continuous_splitter.orientation() == Qt.Orientation.Horizontal
             assert view.translation_text.text() == "第 1 句中文。"
+            source_card = view.findChild(type(view.translation_card), "PracticeSourceCard")
+            input_card = view.findChild(type(view.translation_card), "PracticeInputCard")
+            assert source_card.geometry().top() == view.translation_card.geometry().top()
+            assert abs(source_card.height() - view.translation_card.height()) <= 2
+            assert view.translation_card.geometry().bottom() < input_card.geometry().top()
+            assert input_card.height() >= 150
         window.resize(1920, 1080)
         app.processEvents()
         assert view.continuous_splitter.orientation() == Qt.Orientation.Horizontal
