@@ -10,6 +10,9 @@
 - 首次输入计时、无输入自动暂停、句后学习暂停和 Enter 下一句状态机。
 - DeepSeek provider、异步翻译、全局缓存、重点表达、人工编辑和整篇翻译。
 - Windows Credential Manager API Key 存储与中文连接错误分类。
+- schema 5 语音缓存索引、MiniMax 同步 T2A provider 和独立 Windows 凭据。
+- 逐句与连续练习当前句朗读、0.8×/1.0×/1.2× 生成语速及 QtMultimedia 播放。
+- `audio_cache/` 本地缓存、损坏重建、统计清理、并发去重和可取消退避重试。
 
 ### 优化
 

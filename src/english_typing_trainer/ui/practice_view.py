@@ -79,6 +79,8 @@ class PracticeInputEdit(QPlainTextEdit):
 class PracticeView(QWidget):
     session_completed = Signal(object)
     back_requested = Signal()
+    speech_requested = Signal(str, float, object)
+    speech_sentence_changed = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -88,6 +90,8 @@ class PracticeView(QWidget):
         self._current_font_size = 22
         self._translation_hints: list[tuple[int, int, str]] = []
         self._translation_visible = True
+        self._speech_segments: list[tuple[int, int, str]] = []
+        self._current_speech_text = ""
 
         self._timer = QTimer(self)
         self._timer.setInterval(250)
@@ -168,6 +172,10 @@ class PracticeView(QWidget):
         source_heading.addWidget(source_title)
         source_heading.addStretch(1)
         source_heading.addWidget(self.target_hint)
+        from english_typing_trainer.ui.speech_controls import SpeechControls
+        self.speech_controls = SpeechControls()
+        self.speech_controls.play_requested.connect(self._request_speech)
+        source_heading.addWidget(self.speech_controls)
         source_layout.addLayout(source_heading)
         self.text_browser = FocusTextBrowser()
         self.text_browser.setObjectName("PracticeSource")
@@ -296,6 +304,11 @@ class PracticeView(QWidget):
         self.translation_card.setVisible(visible)
         self._refresh_translation()
 
+    def set_speech_segments(self, segments: list[tuple[int, int, str]], *, visible: bool, speed: float) -> None:
+        self._speech_segments = segments; self._current_speech_text = ""
+        self.speech_controls.setVisible(visible); self.speech_controls.set_speed(speed)
+        self._refresh_speech_sentence()
+
     def resizeEvent(self, event) -> None:  # type: ignore[override]
         super().resizeEvent(event)
         self._update_responsive_geometry()
@@ -407,6 +420,7 @@ class PracticeView(QWidget):
         self.errors_value.setText(str(snapshot.error_keystrokes))
         self.elapsed_value.setText(f"{snapshot.elapsed_active_seconds:.1f} 秒")
         self._refresh_translation()
+        self._refresh_speech_sentence()
 
     def _render_text(self) -> None:
         if self.session is None:
@@ -560,6 +574,21 @@ class PracticeView(QWidget):
         self._translation_visible = not self._translation_visible
         self._update_translation_visibility()
         QTimer.singleShot(0, self._restore_focus)
+
+    def _request_speech(self, speed: float) -> None:
+        self._refresh_speech_sentence()
+        if self._current_speech_text:
+            self.speech_requested.emit(self._current_speech_text, speed, self.speech_controls)
+        QTimer.singleShot(0, self._restore_focus)
+
+    def _refresh_speech_sentence(self) -> None:
+        position = self.session.position if self.session else 0
+        text = next((text for start, end, text in self._speech_segments if start <= position < end), "")
+        if not text and self._speech_segments and self.session and self.session.is_complete:
+            text = self._speech_segments[-1][2]
+        if text != self._current_speech_text:
+            self._current_speech_text = text
+            self.speech_sentence_changed.emit(text)
 
     def _update_translation_visibility(self) -> None:
         icon_name = "eye.svg" if self._translation_visible else "eye-off.svg"

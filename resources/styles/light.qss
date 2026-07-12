@@ -219,6 +219,9 @@ QToolButton#TranslationVisibilityButton:hover {
     background: #f1f5f9;
 }
 
+QToolButton#SpeechButton { background: transparent; border: none; border-radius: 8px; padding: 6px; }
+QToolButton#SpeechButton:hover { background: #f1f5f9; }
+
 QLabel#ContinuousTranslationText {
     color: #334155;
     font-size: 17px;

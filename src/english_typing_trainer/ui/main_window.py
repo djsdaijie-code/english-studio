@@ -39,9 +39,12 @@ from english_typing_trainer.models.article import Article
 from english_typing_trainer.models.practice import PracticeMaterial
 from english_typing_trainer.models.settings import AppSettings
 from english_typing_trainer.models.sentence import ArticleSentence
-from english_typing_trainer.services.credential_store import mask_api_key
+from english_typing_trainer.services.credential_store import mask_api_key, mask_secret
 from english_typing_trainer.database.sentence_repositories import SentenceAttemptRepository
 from english_typing_trainer.services.translation_provider import DeepSeekTranslationProvider, TranslationProviderError
+from english_typing_trainer.models.tts import TTSRequest
+from english_typing_trainer.services.audio_playback import AudioPlaybackService
+from english_typing_trainer.services.tts_provider import MiniMaxTTSProvider, TTSProviderError
 from english_typing_trainer.ui.history_page import HistoryPage
 from english_typing_trainer.ui.practice_view import PracticeView
 from english_typing_trainer.ui.result_dialog import ResultDialog
@@ -49,6 +52,7 @@ from english_typing_trainer.ui.segmented_control import SegmentedControl
 from english_typing_trainer.ui.session_detail_dialog import SessionDetailDialog
 from english_typing_trainer.ui.sentence_practice_view import SentencePracticeView
 from english_typing_trainer.ui.translation_tasks import TranslationWorker
+from english_typing_trainer.ui.tts_tasks import TTSWorker
 from english_typing_trainer.ui.settings_page import SettingsPage as SettingsScreen
 from english_typing_trainer.ui.special_practice_page import SpecialPracticePage
 from english_typing_trainer.ui.statistics_page import StatisticsPage
@@ -231,6 +235,8 @@ class MainWindow(QMainWindow):
         self.practice_view = PracticeView()
         self.practice_view.session_completed.connect(self._handle_session_completed)
         self.practice_view.back_requested.connect(self._leave_practice_view)
+        self.practice_view.speech_requested.connect(self._request_speech)
+        self.practice_view.speech_sentence_changed.connect(self._speech_sentence_changed)
         self.sentence_practice_view = SentencePracticeView()
         self.sentence_practice_view.session_completed.connect(self._handle_session_completed)
         self.sentence_practice_view.back_requested.connect(self._leave_practice_view)
@@ -238,11 +244,19 @@ class MainWindow(QMainWindow):
         self.sentence_practice_view.translation_requested.connect(self._request_sentence_translation)
         self.sentence_practice_view.edit_translation_requested.connect(self._edit_sentence_translation)
         self.sentence_practice_view.translate_article_requested.connect(self._translate_current_article)
+        self.sentence_practice_view.speech_requested.connect(self._request_speech)
+        self.sentence_practice_view.speech_sentence_changed.connect(self._speech_sentence_changed)
         self._sentence_attempts = SentenceAttemptRepository(self.context.database.connect)
         self._sentence_attempt_ids: list[int] = []
         self._thread_pool = QThreadPool(self)
         self._thread_pool.setMaxThreadCount(3)
         self._translation_workers: set[TranslationWorker] = set()
+        self._tts_workers: set[TTSWorker] = set()
+        self._active_speech_control = None
+        self._active_speech_text = ""
+        self.audio_playback = AudioPlaybackService(self)
+        self.audio_playback.state_changed.connect(self._speech_playback_state_changed)
+        self.audio_playback.playback_failed.connect(self._speech_playback_failed)
 
         self.settings_page = SettingsScreen(str(self.context.paths.data_dir.resolve()))
         self.settings_page.save_button.clicked.connect(self._save_settings)
@@ -250,6 +264,10 @@ class MainWindow(QMainWindow):
         self.settings_page.save_api_key_button.clicked.connect(self._save_api_key)
         self.settings_page.delete_api_key_button.clicked.connect(self._delete_api_key)
         self.settings_page.test_api_button.clicked.connect(self._test_api_connection)
+        self.settings_page.save_tts_key_button.clicked.connect(self._save_tts_key)
+        self.settings_page.delete_tts_key_button.clicked.connect(self._delete_tts_key)
+        self.settings_page.test_tts_button.clicked.connect(self._test_tts_connection)
+        self.settings_page.clear_tts_cache_button.clicked.connect(self._clear_tts_cache)
         self.history_page = HistoryPage()
         self.history_page.view_detail_requested.connect(self._show_session_detail)
         self.history_page.delete_session_requested.connect(self._delete_session)
@@ -525,6 +543,11 @@ class MainWindow(QMainWindow):
             self.settings_page.set_api_key_status(mask_api_key(self.context.credential_store.get()))
         except Exception:
             self.settings_page.set_api_key_status("读取失败")
+        try:
+            self.settings_page.set_tts_api_key_status(mask_secret(self.context.tts_credential_store.get()))
+        except Exception:
+            self.settings_page.set_tts_api_key_status("读取失败")
+        stats=self.context.tts_service.stats(); self.settings_page.set_tts_cache_stats(stats.file_count,stats.total_size_bytes)
         self._switch_page(5)
 
     def _reload_articles(self) -> None:
@@ -691,6 +714,7 @@ class MainWindow(QMainWindow):
             self.stack.setCurrentWidget(self.sentence_practice_view)
         else:
             hints: list[tuple[int, int, str]] = []
+            speech_segments: list[tuple[int, int, str]] = []
             show_translation_panel = material.practice_type in {"article", "article_section"} and material.section_id is not None
             if show_translation_panel:
                 sentences = self.context.sentence_service.ensure_for_section(material.section_id)
@@ -699,7 +723,9 @@ class MainWindow(QMainWindow):
                     cached = self.context.translation_service.get(sentence.sentence_hash)
                     translation = cached.chinese_translation if cached and cached.status == "completed" else ""
                     hints.append((sentence.start_offset - section_start, sentence.end_offset - section_start, translation))
+                    speech_segments.append((sentence.start_offset - section_start, sentence.end_offset - section_start, sentence.normalized_text))
             self.practice_view.set_translation_hints(hints, visible=show_translation_panel)
+            self.practice_view.set_speech_segments(speech_segments, visible=show_translation_panel, speed=self.settings.tts_speed)
             self.practice_view.start_practice(material, self.settings)
             self.stack.setCurrentWidget(self.practice_view)
         self.sidebar.hide()
@@ -710,6 +736,60 @@ class MainWindow(QMainWindow):
 
     def _active_practice_view(self):
         return self.sentence_practice_view if self.stack.currentWidget() is self.sentence_practice_view else self.practice_view
+
+    def _request_speech(self, text: str, speed: float, controls) -> None:
+        request = TTSRequest(
+            text=text, content_type="sentence", model=self.settings.tts_model,
+            voice_id=self.settings.tts_voice_id, speed=speed,
+        )
+        self._active_speech_control = controls
+        self._active_speech_text = text
+        cached = self.context.tts_service.get_cached(request)
+        if cached:
+            self.context.tts_service.mark_played(cached.cache_key)
+            self.audio_playback.toggle(cached.file_path)
+            return
+        try:
+            key = self.context.tts_credential_store.get()
+            provider = MiniMaxTTSProvider(key or "", timeout=15.0)
+        except Exception as exc:
+            controls.set_state("error", str(exc))
+            return
+        controls.set_state("loading", "生成中")
+        worker = TTSWorker(self.context.tts_service, provider, request)
+        self._tts_workers.add(worker)
+        worker.signals.completed.connect(lambda item, audio, w=worker: self._speech_generated(item, audio, w))
+        worker.signals.failed.connect(lambda item, error, w=worker: self._speech_generation_failed(item, error, w))
+        self._thread_pool.start(worker)
+
+    def _speech_generated(self, request, audio, worker) -> None:
+        self._tts_workers.discard(worker)
+        if request.text != self._active_speech_text:
+            return
+        self.context.tts_service.mark_played(audio.cache_key)
+        self.audio_playback.toggle(audio.file_path)
+        if self.audio_playback.is_playing() and self._active_speech_control:
+            self._active_speech_control.set_state("playing")
+
+    def _speech_generation_failed(self, request, error, worker) -> None:
+        self._tts_workers.discard(worker)
+        if request.text == self._active_speech_text and self._active_speech_control:
+            self._active_speech_control.set_state("error", str(error))
+
+    def _speech_sentence_changed(self, text: str) -> None:
+        if text != self._active_speech_text:
+            self.audio_playback.stop()
+            if self._active_speech_control:
+                self._active_speech_control.set_state("ready")
+            self._active_speech_text = text
+
+    def _speech_playback_state_changed(self, state: str) -> None:
+        if self._active_speech_control:
+            self._active_speech_control.set_state(state)
+
+    def _speech_playback_failed(self, message: str) -> None:
+        if self._active_speech_control:
+            self._active_speech_control.set_state("error", message or "音频播放失败。")
 
     def _active_snapshot(self):
         view = self._active_practice_view()
@@ -844,6 +924,40 @@ class MainWindow(QMainWindow):
             self.settings_page.set_api_key_status("未保存")
         except Exception as exc:
             QMessageBox.critical(self, "删除失败", f"无法删除 API Key：{exc}")
+
+    def _save_tts_key(self) -> None:
+        key=self.settings_page.tts_api_key_input.text().strip()
+        if not key: QMessageBox.information(self,"未输入 Key","请输入 MiniMax API Key。"); return
+        try:
+            self.context.tts_credential_store.set(key); self.settings_page.tts_api_key_input.clear(); self.settings_page.set_tts_api_key_status(mask_secret(key))
+            QMessageBox.information(self,"保存成功","MiniMax API Key 已保存到 Windows 凭据管理器。")
+        except Exception as exc: QMessageBox.critical(self,"保存失败",f"无法保存 MiniMax API Key：{exc}")
+
+    def _delete_tts_key(self) -> None:
+        try:
+            self.context.tts_credential_store.delete(); self.settings_page.tts_api_key_input.clear(); self.settings_page.set_tts_api_key_status("未保存")
+        except Exception as exc: QMessageBox.critical(self,"删除失败",f"无法删除 MiniMax API Key：{exc}")
+
+    def _test_tts_connection(self) -> None:
+        try:
+            provider=MiniMaxTTSProvider(self.context.tts_credential_store.get() or "", timeout=10.0)
+        except Exception as exc: QMessageBox.warning(self,"连接失败",str(exc)); return
+        request=TTSRequest(text="Hello.",model=str(self.settings_page.tts_model_combo.currentData()),voice_id=str(self.settings_page.tts_voice_combo.currentData()),speed=float(self.settings_page.tts_speed_combo.currentData()))
+        worker=TTSWorker(self.context.tts_service,provider,request); self._tts_workers.add(worker)
+        worker.signals.completed.connect(lambda _request,_audio,w=worker:self._tts_test_finished(True,"",w)); worker.signals.failed.connect(lambda _request,error,w=worker:self._tts_test_finished(False,str(error),w)); self._thread_pool.start(worker)
+
+    def _tts_test_finished(self, success: bool, message: str, worker) -> None:
+        self._tts_workers.discard(worker)
+        if success: QMessageBox.information(self,"测试连接","MiniMax 语音连接成功。")
+        else: QMessageBox.warning(self,"测试连接",message)
+        stats=self.context.tts_service.stats(); self.settings_page.set_tts_cache_stats(stats.file_count,stats.total_size_bytes)
+
+    def _clear_tts_cache(self) -> None:
+        if self._tts_workers:
+            QMessageBox.information(self, "语音生成中", "请等待当前语音生成完成后再清理缓存。")
+            return
+        if QMessageBox.question(self,"清理语音缓存","确定删除全部本地语音缓存吗？文章、翻译和练习记录不会受影响。") != QMessageBox.StandardButton.Yes: return
+        self.audio_playback.stop(); self.context.tts_service.clear_cache(); self.settings_page.set_tts_cache_stats(0,0)
 
     def _test_api_connection(self) -> None:
         try:
@@ -987,6 +1101,7 @@ class MainWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.context.paths.data_dir)))
 
     def _leave_practice_view(self) -> None:
+        self.audio_playback.stop()
         if not self._confirm_leave_practice():
             return
         if self.current_material and self.current_material.practice_type not in {"article", "article_section"}:
@@ -1240,6 +1355,9 @@ class MainWindow(QMainWindow):
         if not self._confirm_leave_practice():
             event.ignore()
             return
+        self.audio_playback.stop()
+        for worker in self._tts_workers:
+            worker.cancel()
         self._thread_pool.clear()
         self._thread_pool.waitForDone(10000)
         super().closeEvent(event)

@@ -17,6 +17,7 @@ from english_typing_trainer.services.settings_service import SettingsService
 from english_typing_trainer.services.special_practice import SpecialPracticeService
 from english_typing_trainer.services.statistics_service import StatisticsService
 from english_typing_trainer.services.translation_service import TranslationService
+from english_typing_trainer.services.tts_service import PronunciationService, TTSService
 from english_typing_trainer.services.word_normalization import WordNormalizationService
 
 
@@ -36,9 +37,12 @@ class AppContext:
     special_practice_service: SpecialPracticeService
     translation_service: TranslationService
     credential_store: CredentialStore
+    tts_service: TTSService
+    pronunciation_service: PronunciationService
+    tts_credential_store: CredentialStore
 
 
-def build_app_context(data_dir: Path | None = None, credential_store: CredentialStore | None = None) -> AppContext:
+def build_app_context(data_dir: Path | None = None, credential_store: CredentialStore | None = None, tts_credential_store: CredentialStore | None = None) -> AppContext:
     path_service = AppPathService(base_dir=data_dir)
     paths = path_service.ensure_directories()
     database = DatabaseManager(paths.database_path)
@@ -53,8 +57,14 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
     history_service = HistoryService(database)
     statistics_service = StatisticsService(database)
     translation_service = TranslationService(database)
+    tts_service = TTSService(database, paths.audio_cache_dir)
+    pronunciation_service = PronunciationService(tts_service)
     if credential_store is None:
         credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else WindowsCredentialStore()
+    if tts_credential_store is None:
+        tts_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else WindowsCredentialStore(
+            "English Studio/MiniMax TTS", "MiniMax TTS"
+        )
     special_practice_service = SpecialPracticeService(
         database,
         normalization=normalization_service,
@@ -75,4 +85,7 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
         special_practice_service=special_practice_service,
         translation_service=translation_service,
         credential_store=credential_store,
+        tts_service=tts_service,
+        pronunciation_service=pronunciation_service,
+        tts_credential_store=tts_credential_store,
     )

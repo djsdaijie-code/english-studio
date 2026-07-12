@@ -25,6 +25,8 @@ class SentencePracticeView(QWidget):
     translation_requested = Signal(object, bool)
     edit_translation_requested = Signal(object)
     translate_article_requested = Signal()
+    speech_requested = Signal(str, float, object)
+    speech_sentence_changed = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -78,7 +80,10 @@ class SentencePracticeView(QWidget):
         layout = QVBoxLayout(panel); layout.setContentsMargins(0, 0, 0, 0); layout.setSpacing(12)
         source = QFrame(); source.setObjectName("PracticeSourceCard"); source.setMinimumHeight(180)
         source_layout = QVBoxLayout(source); source_layout.setContentsMargins(20, 16, 20, 18)
-        source_title = QLabel("当前句原文"); source_title.setProperty("role", "section-title"); source_layout.addWidget(source_title)
+        source_heading = QHBoxLayout(); source_title = QLabel("当前句原文"); source_title.setProperty("role", "section-title")
+        from english_typing_trainer.ui.speech_controls import SpeechControls
+        self.speech_controls = SpeechControls(); self.speech_controls.play_requested.connect(self._request_speech)
+        source_heading.addWidget(source_title); source_heading.addStretch(1); source_heading.addWidget(self.speech_controls); source_layout.addLayout(source_heading)
         self.text_browser = FocusTextBrowser(); self.text_browser.setObjectName("PracticeSource"); self.text_browser.setReadOnly(True)
         self.text_browser.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth); self.text_browser.document().defaultTextOption().setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         self.text_browser.clicked.connect(lambda: QTimer.singleShot(0, self._restore_focus)); source_layout.addWidget(self.text_browser, stretch=1)
@@ -131,6 +136,7 @@ class SentencePracticeView(QWidget):
         self.title_label.setText(material.article_title); self.pause_button.setText("暂停")
         self._show_translation = settings.show_translation_after_sentence
         self._auto_translate = settings.translation_auto_on_demand
+        self.speech_controls.set_speed(settings.tts_speed)
         self._font_size = max(18, min(26, settings.font_size + 4)); self._apply_font(); self._show_sentence(); self._timer.start(); QTimer.singleShot(0, self._restore_focus)
 
     def _handle_key(self, event: QKeyEvent) -> None:
@@ -193,6 +199,7 @@ class SentencePracticeView(QWidget):
         self.sentence_label.setText(f"第 {self.learning.current_index + 1} / {len(self.sentences)} 句")
         self.translation_source.setText(sentence.normalized_text); self.translation_status.setText("完成当前句后显示翻译")
         self.translation_text.setText("翻译尚未显示"); self.expressions_label.setText("暂无"); self._set_translation_actions(False); self._refresh()
+        self.speech_sentence_changed.emit(sentence.normalized_text)
 
     def _request_translation(self, retry: bool) -> None:
         if self.current_sentence:
@@ -218,6 +225,11 @@ class SentencePracticeView(QWidget):
 
     def _copy_translation(self) -> None:
         QApplication.clipboard().setText(self.translation_text.text())
+
+    def _request_speech(self, speed: float) -> None:
+        if self.current_sentence:
+            self.speech_requested.emit(self.current_sentence.normalized_text, speed, self.speech_controls)
+        QTimer.singleShot(0, self._restore_focus)
 
     def _emit_new_attempts(self) -> None:
         if not self.learning: return

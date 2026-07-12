@@ -16,9 +16,10 @@ dist/
 # Runtime and acceptance data
 runtime_data*/
 workspace_data/
-phase*_runtime/
-phase*_screenshots/
+phase*_runtime*/
+phase*_screenshots*/
 tmp_*/
+.tmp_*/
 artifacts/
 *.db-wal
 *.db-shm

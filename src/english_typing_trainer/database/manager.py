@@ -50,6 +50,28 @@ class DatabaseManager:
             connection.rollback()
             raise
 
+    @contextmanager
+    def independent_connection(self) -> Iterator[sqlite3.Connection]:
+        connection = sqlite3.connect(self.db_path)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
+        connection.execute("PRAGMA busy_timeout = 5000")
+        try:
+            yield connection
+        finally:
+            connection.close()
+
+    @contextmanager
+    def independent_transaction(self) -> Iterator[sqlite3.Connection]:
+        with self.independent_connection() as connection:
+            try:
+                connection.execute("BEGIN")
+                yield connection
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+
     def get_schema_version(self) -> int:
         return self._current_version(self.connect())
 

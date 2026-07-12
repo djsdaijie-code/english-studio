@@ -11,6 +11,7 @@ debug_console = os.environ.get("ETT_DEBUG_CONSOLE", "0") == "1"
 
 hidden_imports = collect_submodules("PySide6.QtCharts")
 hidden_imports += collect_submodules("PySide6.QtSvg")
+hidden_imports += collect_submodules("PySide6.QtMultimedia")
 
 a = Analysis(
     [str(project_root / "main.py")],

@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-v0.2.0-dev：逐句学习与 DeepSeek 翻译开发分支 `feature/v0.2-sentence-learning`。现有 v0.1.0 发布产物保持冻结，本阶段不制作新安装包。
+v0.2.0-dev 阶段 A：MiniMax TTS 与可复用音频基础设施。开发分支 `feature/v0.2-sentence-learning`，本阶段不开发完整单词系统或新安装包。
 
 ## 架构与目录
 
@@ -15,7 +15,7 @@ v0.2.0-dev：逐句学习与 DeepSeek 翻译开发分支 `feature/v0.2-sentence-
 
 ## 数据库
 
-当前 schema version 为 4。新增 `article_sentences`、`sentence_translations`、`sentence_attempts`；`practice_sessions` 新增 `total_elapsed_seconds`、`learning_seconds`、`idle_seconds`、`manual_paused_seconds`。v3 升级前自动备份，迁移失败回滚，旧文章采用按段落懒拆句。
+当前 schema version 为 5。v5 新增 `tts_audio_cache`，索引本地音频文件、模型、音色、速度、大小和播放时间；v4 升级前自动备份，迁移失败回滚。文章、练习、翻译和生词结构不变。
 
 ## 已完成
 
@@ -23,6 +23,7 @@ v0.2.0-dev：逐句学习与 DeepSeek 翻译开发分支 `feature/v0.2-sentence-
 - 普通文章可默认进入逐句学习；老数据库升级默认保留连续模式，新安装默认启用逐句模式。
 - 首次有效输入开始计时；默认 3 秒无输入自动暂停；句子完成后进入学习计时；Enter 进入下一句但不提前启动有效计时。
 - DeepSeek provider、Windows Credential Manager、异步请求、全局缓存、人工编辑、显式重新生成和整篇翻译已接入。
+- MiniMax 同步 T2A provider、独立凭据、异步生成、参数化缓存、并发去重、退避重试和 QtMultimedia 播放已接入逐句与连续练习。
 - 已完成句子保存 `sentence_attempts`；中途未完成句子按 session 级进度恢复。
 
 ## 数据目录与隐私
@@ -34,11 +35,11 @@ v0.2.0-dev：逐句学习与 DeepSeek 翻译开发分支 `feature/v0.2-sentence-
 
 ## 测试状态
 
-2026-07-12，Python 3.14.6：连续练习中文辅助优化后全量 pytest `106 passed`。测试覆盖 v1/v2/v3 到 v4 迁移、备份与回滚、拆句 offset、计时状态、翻译缓存/provider、文章详情练习模式、真实输入光标、连续模式缓存中文同步和深浅主题 UI 烟测。
+2026-07-12，Python 3.14.6：TTS 阶段 A 后全量 pytest `121 passed`。新增覆盖 MiniMax 请求/错误、缓存差异与损坏、并发去重、v4→v5 迁移回滚、播放器和两种练习页语音入口。
 
 ## 尚未完成
 
-- 少量真实 DeepSeek API 联调由用户提供 Key 后人工执行。
+- 真实 DeepSeek 与 MiniMax API 联调由用户提供 Key 后人工执行；自动验收只使用 mock provider。
 - v0.2 新安装包、无 Python 环境验证和发布签名。
 - 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
 - 全局单词体系、ABCD 测试、段位和字符速度分析留待后续版本。

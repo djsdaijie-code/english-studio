@@ -19,3 +19,8 @@ class AppSettings:
     translation_provider: str = "deepseek"
     translation_model: str = "deepseek-v4-flash"
     translation_prompt_version: str = "sentence-v1"
+    tts_provider: str = "minimax"
+    tts_model: str = "speech-2.8-hd"
+    tts_voice_id: str = "English_expressive_narrator"
+    tts_speed: float = 1.0
+    tts_auto_play: bool = False

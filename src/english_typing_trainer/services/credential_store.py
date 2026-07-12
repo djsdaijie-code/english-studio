@@ -40,10 +40,11 @@ class WindowsCredentialStore:
             ("TargetAlias", wintypes.LPWSTR), ("UserName", wintypes.LPWSTR),
         ]
 
-    def __init__(self, target_name: str = "EnglishTypingTrainer/DeepSeekAPI") -> None:
+    def __init__(self, target_name: str = "EnglishTypingTrainer/DeepSeekAPI", user_name: str = "DeepSeek API") -> None:
         if os.name != "nt":
             raise OSError("Windows Credential Manager 仅支持 Windows。")
         self.target_name = target_name
+        self.user_name = user_name
         self._advapi = ctypes.WinDLL("Advapi32.dll", use_last_error=True)
         pointer_type = ctypes.POINTER(self.CREDENTIALW)
         self._advapi.CredReadW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, ctypes.POINTER(pointer_type)]
@@ -76,7 +77,7 @@ class WindowsCredentialStore:
         credential.CredentialBlobSize = len(encoded)
         credential.CredentialBlob = ctypes.cast(blob, ctypes.POINTER(ctypes.c_ubyte))
         credential.Persist = self.CRED_PERSIST_LOCAL_MACHINE
-        credential.UserName = "DeepSeek API"
+        credential.UserName = self.user_name
         if not self._advapi.CredWriteW(ctypes.byref(credential), 0):
             raise ctypes.WinError(ctypes.get_last_error())
 
@@ -91,3 +92,10 @@ def mask_api_key(api_key: str | None) -> str:
         return "未保存"
     suffix = api_key[-4:] if len(api_key) >= 4 else api_key
     return f"sk-****{suffix}"
+
+
+def mask_secret(secret: str | None) -> str:
+    if not secret:
+        return "未保存"
+    suffix = secret[-4:] if len(secret) >= 4 else secret
+    return f"••••••••{suffix}"

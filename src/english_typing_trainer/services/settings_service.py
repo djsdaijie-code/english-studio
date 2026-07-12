@@ -29,6 +29,11 @@ class SettingsService:
             translation_provider=raw_values.get("translation_provider", "deepseek"),
             translation_model=raw_values.get("translation_model", "deepseek-v4-flash"),
             translation_prompt_version=raw_values.get("translation_prompt_version", "sentence-v1"),
+            tts_provider=raw_values.get("tts_provider", "minimax"),
+            tts_model=raw_values.get("tts_model", "speech-2.8-hd"),
+            tts_voice_id=raw_values.get("tts_voice_id", "English_expressive_narrator"),
+            tts_speed=float(raw_values.get("tts_speed", 1.0)),
+            tts_auto_play=self._to_bool(raw_values.get("tts_auto_play"), False),
         )
 
     def save_settings(self, settings: AppSettings) -> AppSettings:
@@ -47,6 +52,11 @@ class SettingsService:
             "translation_provider": settings.translation_provider,
             "translation_model": settings.translation_model,
             "translation_prompt_version": settings.translation_prompt_version,
+            "tts_provider": settings.tts_provider,
+            "tts_model": settings.tts_model,
+            "tts_voice_id": settings.tts_voice_id,
+            "tts_speed": str(settings.tts_speed),
+            "tts_auto_play": "1" if settings.tts_auto_play else "0",
         }
         with self._database.transaction() as connection:
             self._repository.set_many(connection, values)

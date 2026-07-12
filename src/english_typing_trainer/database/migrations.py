@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 4
+LATEST_SCHEMA_VERSION = 5
 
 
 class MigrationRunner:
@@ -31,6 +31,9 @@ class MigrationRunner:
                 current_version = 3
             if current_version < 4:
                 self._apply_version_4(connection)
+                current_version = 4
+            if current_version < 5:
+                self._apply_version_5(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -357,6 +360,48 @@ class MigrationRunner:
         )
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (?)", (4,))
+
+    def _apply_version_5(self, connection: sqlite3.Connection) -> None:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS tts_audio_cache (
+                cache_key TEXT PRIMARY KEY,
+                provider TEXT NOT NULL,
+                model TEXT NOT NULL,
+                voice_id TEXT NOT NULL,
+                speed REAL NOT NULL,
+                volume REAL NOT NULL,
+                pitch INTEGER NOT NULL,
+                text_hash TEXT NOT NULL,
+                text_preview TEXT NOT NULL DEFAULT '',
+                file_path TEXT NOT NULL,
+                audio_format TEXT NOT NULL,
+                duration_ms INTEGER,
+                size_bytes INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                last_played_at TEXT,
+                status TEXT NOT NULL CHECK(status IN ('completed', 'failed')),
+                error_message TEXT NOT NULL DEFAULT ''
+            )
+            """
+        )
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_tts_cache_last_played ON tts_audio_cache(last_played_at, created_at)"
+        )
+        now = connection.execute("SELECT datetime('now')").fetchone()[0]
+        defaults = {
+            "tts_provider": "minimax",
+            "tts_model": "speech-2.8-hd",
+            "tts_voice_id": "English_expressive_narrator",
+            "tts_speed": "1.0",
+            "tts_auto_play": "0",
+        }
+        connection.executemany(
+            "INSERT OR IGNORE INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
+            [(key, value, now) for key, value in defaults.items()],
+        )
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (5)")
     def _ensure_column(
         self,
         connection: sqlite3.Connection,

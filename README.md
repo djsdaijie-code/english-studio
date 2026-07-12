@@ -6,7 +6,7 @@
 
 - Python `>=3.14,<3.15`，当前验证环境 Python 3.14.6
 - PySide6 6.11.1
-- SQLite（标准库 `sqlite3`），schema version 4
+- SQLite（标准库 `sqlite3`），schema version 5
 - pytest 9.1.1；PyInstaller 6.21.0
 - 当前开发版本 `0.2.0-dev`；现有 v0.1.0 可移植包保持不变
 
@@ -16,6 +16,7 @@
 - 练习：普通连续模式、逐句学习模式、可见错误输入、Backspace、暂停、进度恢复和实时指标；连续模式可按当前句显示已有中文翻译缓存，并可临时隐藏。
 - 逐句学习：可靠拆句、首个有效输入开始计时、无输入自动暂停、句后学习暂停、Enter 下一句和每句成绩保存。
 - 翻译：DeepSeek 异步按需翻译、前后句上下文、全局句子缓存、重点表达、人工编辑、重试及整篇后台翻译。
+- 语音：MiniMax `speech-2.8-hd`/`speech-2.8-turbo` 句子朗读、三档语速、英语系统音色、本地音频缓存和 QtMultimedia 播放。单词界面将在后续阶段复用此基础设施。
 - 学习管理：历史记录、单次详情、学习统计、错误分析、错词/错误字符/原句专项练习、生词本和间隔复习。
 - 产品界面：简体中文、浅色/深色主题和专注练习布局。
 
@@ -33,6 +34,10 @@ py -3.14 -m venv .venv
 ## 数据与隐私
 
 正式数据目录为 `%LOCALAPPDATA%\EnglishTypingTrainer\`，包含数据库、日志和迁移备份。翻译缓存保存在 `typing_trainer.db` 的 `sentence_translations` 表；DeepSeek API Key 使用 Windows Credential Manager 保存，不进入数据库、配置文件或日志。
+
+MiniMax API Key 在设置页“语音服务”中配置，独立保存到 Windows Credential Manager 的 `English Studio/MiniMax TTS` 凭据。音频文件保存在 `%LOCALAPPDATA%\EnglishTypingTrainer\audio_cache\`，索引位于 `tts_audio_cache`。相同文本、模型、音色和生成参数会直接复用缓存，不会再次请求或收费；设置页可查看数量/大小并清空缓存。
+
+MiniMax 语音生成可能按字符产生费用，具体以 [MiniMax 官方语音价格页面](https://platform.minimax.io/docs/guides/pricing-speech) 为准，程序不写死价格。当前仅提供句子朗读，未接入词典真人音频或完整单词功能。
 
 按句翻译仅发送当前句及可选前后句，不发送整篇文章。使用在线翻译即表示相关文本会发送给所选服务商；离线时仍可读取已有缓存。
 
@@ -53,7 +58,7 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishTypingTrainer-v02"
 
 ## 数据库迁移
 
-迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1、v2、v3 数据库可顺序升级到 v4。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。旧文章的句子在首次进入对应段落时懒生成，避免升级时全量重算。
+迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v4 数据库可顺序升级到 v5。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。旧文章的句子在首次进入对应段落时懒生成，避免升级时全量重算。
 
 ## 已知限制
 
