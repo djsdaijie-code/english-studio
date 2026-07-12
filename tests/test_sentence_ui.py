@@ -119,7 +119,8 @@ def test_settings_page_exposes_sentence_and_masked_deepseek_controls(tmp_path: P
     context = build_app_context(data_dir=tmp_path / "data", credential_store=store)
     try:
         window = MainWindow(context); window.show(); window._show_settings(); app.processEvents()
-        assert window.settings_page.sentence_learning_checkbox.isChecked()
+        assert not hasattr(window.settings_page, "sentence_learning_checkbox")
+        assert window.practice_mode_control.value() == "sentence"
         assert window.settings_page.idle_pause_combo.currentData() == 3
         assert window.settings_page.translation_model_combo.currentData() == "deepseek-v4-flash"
         assert "abcd" in window.settings_page.api_key_status.text()

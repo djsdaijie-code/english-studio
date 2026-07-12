@@ -78,11 +78,11 @@ class SettingsPage(QWidget):
         self.target_accuracy_spin.valueChanged.connect(self._mark_dirty)
         self.theme_combo.currentIndexChanged.connect(self._mark_dirty)
         self.font_size_spin.valueChanged.connect(self._mark_dirty)
-        self.sentence_learning_checkbox.toggled.connect(self._mark_dirty)
         self.show_translation_checkbox.toggled.connect(self._mark_dirty)
         self.idle_pause_combo.currentIndexChanged.connect(self._mark_dirty)
         self.translation_auto_checkbox.toggled.connect(self._mark_dirty)
         self.translation_model_combo.currentIndexChanged.connect(self._mark_dirty)
+        self._sentence_learning_enabled = True
 
     def _build_practice_card(self) -> QFrame:
         card = QFrame()
@@ -111,12 +111,10 @@ class SettingsPage(QWidget):
         form.addRow("实时统计", self.live_stats_checkbox)
         form.addRow("目标 WPM", self.target_wpm_spin)
         form.addRow("目标正确率", self.target_accuracy_spin)
-        self.sentence_learning_checkbox = QCheckBox("启用逐句学习模式")
         self.show_translation_checkbox = QCheckBox("完成句子后显示翻译")
         self.idle_pause_combo = QComboBox()
         for label, value in (("关闭", 0), ("2 秒", 2), ("3 秒", 3), ("5 秒", 5), ("10 秒", 10)):
             self.idle_pause_combo.addItem(label, value)
-        form.addRow("逐句学习", self.sentence_learning_checkbox)
         form.addRow("句后翻译", self.show_translation_checkbox)
         form.addRow("无输入自动暂停", self.idle_pause_combo)
         layout.addLayout(form)
@@ -214,7 +212,7 @@ class SettingsPage(QWidget):
         self.font_size_spin.setValue(settings.font_size)
         theme_index = self.theme_combo.findData(settings.theme)
         self.theme_combo.setCurrentIndex(theme_index if theme_index >= 0 else 0)
-        self.sentence_learning_checkbox.setChecked(settings.sentence_learning_enabled)
+        self._sentence_learning_enabled = settings.sentence_learning_enabled
         self.show_translation_checkbox.setChecked(settings.show_translation_after_sentence)
         idle_index = self.idle_pause_combo.findData(settings.idle_pause_seconds)
         self.idle_pause_combo.setCurrentIndex(idle_index if idle_index >= 0 else 2)
@@ -232,7 +230,7 @@ class SettingsPage(QWidget):
             target_accuracy=self.target_accuracy_spin.value(),
             theme=str(self.theme_combo.currentData()),
             font_size=self.font_size_spin.value(),
-            sentence_learning_enabled=self.sentence_learning_checkbox.isChecked(),
+            sentence_learning_enabled=self._sentence_learning_enabled,
             show_translation_after_sentence=self.show_translation_checkbox.isChecked(),
             idle_pause_seconds=int(self.idle_pause_combo.currentData()),
             translation_auto_on_demand=self.translation_auto_checkbox.isChecked(),

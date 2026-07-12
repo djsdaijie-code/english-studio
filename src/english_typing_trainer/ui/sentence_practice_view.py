@@ -24,6 +24,7 @@ class SentencePracticeView(QWidget):
     attempt_completed = Signal(object)
     translation_requested = Signal(object, bool)
     edit_translation_requested = Signal(object)
+    translate_article_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -94,6 +95,10 @@ class SentencePracticeView(QWidget):
         panel = QFrame(); panel.setObjectName("TranslationCard"); panel.setMinimumWidth(300); panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         layout = QVBoxLayout(panel); layout.setContentsMargins(20, 20, 20, 20); layout.setSpacing(12)
         title = QLabel("中文翻译与重点表达"); title.setProperty("role", "section-title"); layout.addWidget(title)
+        self.translate_article_button = QPushButton("翻译整篇文章")
+        self.translate_article_button.setProperty("variant", "ghost")
+        self.translate_article_button.clicked.connect(self.translate_article_requested.emit)
+        layout.addWidget(self.translate_article_button, alignment=Qt.AlignmentFlag.AlignLeft)
         self.translation_status = QLabel("完成当前句后显示翻译"); self.translation_status.setProperty("role", "muted"); layout.addWidget(self.translation_status)
         self.translation_source = QLabel(""); self.translation_source.setWordWrap(True); self.translation_source.setProperty("role", "subtitle"); layout.addWidget(self.translation_source)
         self.translation_text = QLabel("翻译尚未显示"); self.translation_text.setWordWrap(True); self.translation_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse); layout.addWidget(self.translation_text)
@@ -132,6 +137,7 @@ class SentencePracticeView(QWidget):
         if not self.learning or not self.session: return
         if event.key() == Qt.Key.Key_Escape: self._toggle_pause(); return
         if self.learning.state == SentenceLearningState.LEARNING_PAUSED:
+            self._set_input_active(False)
             if event.key() in {Qt.Key.Key_Return, Qt.Key.Key_Enter} and not event.isAutoRepeat(): self._next_sentence()
             return
         if event.matches(QKeySequence.StandardKey.Paste): return
@@ -147,6 +153,7 @@ class SentencePracticeView(QWidget):
         self.input_feedback.setText("输入正确" if result else "输入错误，已继续前进")
         self._emit_new_attempts(); self._refresh()
         if self.learning.state == SentenceLearningState.LEARNING_PAUSED:
+            self._set_input_active(False)
             self.state_label.setText("有效计时已暂停，请阅读翻译；按 Enter 进入下一句")
             if self._show_translation and self._auto_translate:
                 self._request_translation(False)
@@ -170,12 +177,13 @@ class SentencePracticeView(QWidget):
         paused = self.learning.state == SentenceLearningState.MANUAL_PAUSED
         self.pause_button.setText("继续" if paused else "暂停")
         self.state_label.setText("练习已手动暂停" if paused else "练习已继续")
+        self._set_input_active(not paused)
         if not paused: self._restore_focus()
 
     def _next_sentence(self) -> None:
         if not self.learning or self.learning.state != SentenceLearningState.LEARNING_PAUSED: return
         if self.learning.next_sentence():
-            self._show_sentence(); self.state_label.setText("输入第一个字符后开始计时"); self._restore_focus()
+            self._show_sentence(); self.state_label.setText("输入第一个字符后开始计时"); self._set_input_active(True); self._restore_focus()
         else:
             self._timer.stop(); self._prepare_aggregate_snapshot(); self.session_completed.emit(self._aggregate_snapshot())
 
@@ -228,7 +236,7 @@ class SentencePracticeView(QWidget):
         if current.position: selections.append(self._selection(0,current.position,QColor("#8291a5" if dark else "#94a3b8")))
         for typed in current.typed_characters:
             if not typed.is_correct: selections.append(self._selection(typed.position,typed.position+1,QColor("#fecaca" if dark else "#b42318"),QColor("#4a2528" if dark else "#fee4e2"),True))
-        if not current.is_complete: selections.append(self._selection(current.position,current.position+1,self.palette().text().color(),QColor("#263b53" if dark else "#e8f0fa"),True))
+        if not current.is_complete: selections.append(self._selection(current.position,current.position+1,self.palette().text().color(),QColor("#263b53" if dark else "#e8f0fa"),False))
         self.text_browser.setExtraSelections(selections); cursor=self.text_browser.textCursor(); cursor.setPosition(min(current.position,len(current.content))); self.text_browser.setTextCursor(cursor); self.text_browser.ensureCursorVisible()
 
     def _render_input(self, current: TypingSession) -> None:
@@ -275,4 +283,9 @@ class SentencePracticeView(QWidget):
         super().focusOutEvent(event)
 
     def _restore_focus(self) -> None:
-        self.input_edit.setFocus(Qt.FocusReason.OtherFocusReason); cursor=self.input_edit.textCursor(); cursor.movePosition(QTextCursor.MoveOperation.End); self.input_edit.setTextCursor(cursor)
+        if not self.learning or self.learning.state in {SentenceLearningState.LEARNING_PAUSED, SentenceLearningState.MANUAL_PAUSED, SentenceLearningState.COMPLETED}:
+            self._set_input_active(False); return
+        self._set_input_active(True); self.input_edit.setFocus(Qt.FocusReason.OtherFocusReason); cursor=self.input_edit.textCursor(); cursor.movePosition(QTextCursor.MoveOperation.End); self.input_edit.setTextCursor(cursor); self.input_edit.ensureCursorVisible()
+
+    def _set_input_active(self, active: bool) -> None:
+        self.input_edit.setCursorWidth(2 if active else 0)

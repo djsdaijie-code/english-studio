@@ -36,7 +36,11 @@ class PracticeInputEdit(QPlainTextEdit):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("PracticeInput")
-        self.setReadOnly(True)
+        # Keep the editor visually editable so Qt paints its native caret;
+        # all document changes still flow through the controlled key handler.
+        self.setReadOnly(False)
+        self.setUndoRedoEnabled(False)
+        self.setCursorWidth(2)
         self.setAcceptDrops(False)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -55,6 +59,13 @@ class PracticeInputEdit(QPlainTextEdit):
     def mousePressEvent(self, event) -> None:  # type: ignore[override]
         super().mousePressEvent(event)
         self.clicked.emit()
+
+    def mouseDoubleClickEvent(self, event) -> None:  # type: ignore[override]
+        super().mouseDoubleClickEvent(event)
+        self.clicked.emit()
+
+    def inputMethodEvent(self, event) -> None:  # type: ignore[override]
+        event.ignore()
 
     def insertFromMimeData(self, source) -> None:  # type: ignore[override]
         return
@@ -236,6 +247,7 @@ class PracticeView(QWidget):
         self._render_text()
         self._render_input()
         self._timer.start()
+        self._set_input_active(True)
         QTimer.singleShot(0, self._restore_focus)
 
     def resizeEvent(self, event) -> None:  # type: ignore[override]
@@ -301,6 +313,7 @@ class PracticeView(QWidget):
 
         if self.session.is_complete:
             self._timer.stop()
+            self._set_input_active(False)
             self.input_feedback_label.setText("本段练习已完成")
             self.session_completed.emit(self.session.snapshot())
         event.accept()
@@ -335,6 +348,7 @@ class PracticeView(QWidget):
             self.session.pause()
             self.pause_button.setText("继续")
             self.input_feedback_label.setText("练习已暂停，按 Esc 继续")
+            self._set_input_active(False)
         self._refresh_ui()
 
     def _refresh_ui(self) -> None:
@@ -382,7 +396,7 @@ class PracticeView(QWidget):
                     self.session.position + 1,
                     foreground=current_text,
                     background=current_bg,
-                    underline=True,
+                    underline=False,
                 )
             )
         self.text_browser.setExtraSelections(selections)
@@ -473,9 +487,16 @@ class PracticeView(QWidget):
         return f"“{character}”"
 
     def _restore_focus(self) -> None:
+        if self.session is None or self.session.is_paused or self.session.is_complete:
+            self._set_input_active(False)
+            return
+        self._set_input_active(True)
         if not self.input_edit.hasFocus():
             self.input_edit.setFocus(Qt.FocusReason.OtherFocusReason)
         cursor = self.input_edit.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
         self.input_edit.setTextCursor(cursor)
         self.input_edit.ensureCursorVisible()
+
+    def _set_input_active(self, active: bool) -> None:
+        self.input_edit.setCursorWidth(2 if active else 0)

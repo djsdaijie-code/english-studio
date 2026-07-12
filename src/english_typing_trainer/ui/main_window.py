@@ -45,6 +45,7 @@ from english_typing_trainer.services.translation_provider import DeepSeekTransla
 from english_typing_trainer.ui.history_page import HistoryPage
 from english_typing_trainer.ui.practice_view import PracticeView
 from english_typing_trainer.ui.result_dialog import ResultDialog
+from english_typing_trainer.ui.segmented_control import SegmentedControl
 from english_typing_trainer.ui.session_detail_dialog import SessionDetailDialog
 from english_typing_trainer.ui.sentence_practice_view import SentencePracticeView
 from english_typing_trainer.ui.translation_tasks import TranslationWorker
@@ -236,6 +237,7 @@ class MainWindow(QMainWindow):
         self.sentence_practice_view.attempt_completed.connect(self._save_sentence_attempt)
         self.sentence_practice_view.translation_requested.connect(self._request_sentence_translation)
         self.sentence_practice_view.edit_translation_requested.connect(self._edit_sentence_translation)
+        self.sentence_practice_view.translate_article_requested.connect(self._translate_current_article)
         self._sentence_attempts = SentenceAttemptRepository(self.context.database.connect)
         self._sentence_attempt_ids: list[int] = []
         self._thread_pool = QThreadPool(self)
@@ -450,11 +452,21 @@ class MainWindow(QMainWindow):
         action_row.addWidget(self.continue_button)
         action_row.addWidget(self.restart_button)
         action_row.addWidget(self.more_button)
-        self.translate_article_button = QPushButton("翻译整篇文章")
-        self.translate_article_button.clicked.connect(self._translate_selected_article)
-        action_row.addWidget(self.translate_article_button)
         action_row.addStretch(1)
         detail_layout.addLayout(action_row)
+
+        mode_row = QHBoxLayout()
+        mode_row.setSpacing(12)
+        mode_label = QLabel("练习模式")
+        mode_label.setProperty("role", "subtitle")
+        self.practice_mode_control = SegmentedControl(
+            [("逐句学习", "sentence"), ("连续练习", "continuous")]
+        )
+        self.practice_mode_control.value_changed.connect(self._set_practice_mode)
+        mode_row.addWidget(mode_label)
+        mode_row.addWidget(self.practice_mode_control)
+        mode_row.addStretch(1)
+        detail_layout.addLayout(mode_row)
 
         self.preview_content = QTextEdit()
         self.preview_content.setReadOnly(True)
@@ -476,6 +488,16 @@ class MainWindow(QMainWindow):
         self.practice_view.apply_settings(self.settings)
         self.settings_page.load_settings(self.settings)
         self.preview_content.setStyleSheet(f"font-size: {max(14, self.settings.font_size - 1)}px;")
+        self.practice_mode_control.set_value("sentence" if self.settings.sentence_learning_enabled else "continuous")
+
+    def _set_practice_mode(self, mode: str) -> None:
+        enabled = mode == "sentence"
+        if enabled == self.settings.sentence_learning_enabled:
+            return
+        self.settings = self.context.settings_service.save_settings(
+            replace(self.settings, sentence_learning_enabled=enabled)
+        )
+        self.settings_page.load_settings(self.settings)
 
     def _show_library(self) -> None:
         self._switch_page(0)
@@ -837,6 +859,14 @@ class MainWindow(QMainWindow):
         article_id = self._selected_article_id()
         if article_id is None:
             return
+        self._translate_article(article_id)
+
+    def _translate_current_article(self) -> None:
+        if self.current_material is None or self.current_material.article_id is None:
+            return
+        self._translate_article(self.current_material.article_id)
+
+    def _translate_article(self, article_id: int) -> None:
         try:
             api_key = self.context.credential_store.get()
             if not api_key:

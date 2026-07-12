@@ -201,3 +201,25 @@ QFrame#TranslationCard {
     border: 1px solid #dbe1ea;
     border-radius: 12px;
 }
+
+QFrame#SegmentedControl {
+    background: #eef2f7;
+    border: 1px solid #dbe1ea;
+    border-radius: 11px;
+}
+
+QPushButton[segment="true"] {
+    min-height: 34px;
+    padding: 0 16px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: #64748b;
+}
+
+QPushButton[segment="true"]:checked {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #172033;
+    font-weight: 600;
+}
