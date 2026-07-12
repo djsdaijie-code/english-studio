@@ -136,6 +136,7 @@ class PracticeService:
             correct_characters=snapshot.correct_characters,
             active_seconds=snapshot.elapsed_active_seconds,
         )
+        timing = getattr(session, "timing_breakdown", {})
         return PracticeSessionRecord(
             article_id=material.article_id,
             section_id=material.section_id,
@@ -157,6 +158,10 @@ class PracticeService:
             average_wpm=snapshot.wpm if effective_result else None,
             app_version=self._resolved_app_version(),
             practice_set_id=material.practice_set_id,
+            total_elapsed_seconds=float(timing.get("total_elapsed_seconds", snapshot.elapsed_active_seconds + snapshot.paused_seconds)),
+            learning_seconds=float(timing.get("learning_seconds", 0.0)),
+            idle_seconds=float(timing.get("idle_seconds", 0.0)),
+            manual_paused_seconds=float(timing.get("manual_paused_seconds", snapshot.paused_seconds)),
         )
 
     def _resolved_app_version(self) -> str:

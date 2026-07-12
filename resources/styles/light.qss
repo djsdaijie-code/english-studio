@@ -195,3 +195,9 @@ QSplitter::handle:vertical {
     background: transparent;
     height: 8px;
 }
+
+QFrame#TranslationCard {
+    background: #ffffff;
+    border: 1px solid #dbe1ea;
+    border-radius: 12px;
+}

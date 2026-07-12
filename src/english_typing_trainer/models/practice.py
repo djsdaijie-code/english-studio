@@ -29,6 +29,10 @@ class PracticeMaterial:
     completed_section_count: int = 0
     practice_type: str = "article"
     practice_set_id: int | None = None
+    total_elapsed_seconds: float = 0.0
+    learning_seconds: float = 0.0
+    idle_seconds: float = 0.0
+    manual_paused_seconds: float = 0.0
     source_items: list[str] | None = None
 
 
@@ -52,5 +56,9 @@ class PracticeSessionRecord:
     practice_type: str = "article_section"
     longest_correct_streak: int = 0
     average_wpm: float | None = None
-    app_version: str = "0.1.0"
+    app_version: str = "0.2.0-dev"
     practice_set_id: int | None = None
+    total_elapsed_seconds: float = 0.0
+    learning_seconds: float = 0.0
+    idle_seconds: float = 0.0
+    manual_paused_seconds: float = 0.0

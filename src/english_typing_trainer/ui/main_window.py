@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import replace
 
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import Qt, QTimer, QUrl, QThreadPool
 from PySide6.QtGui import QAction, QCloseEvent, QDesktopServices
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QProgressDialog,
     QMenu,
     QMessageBox,
     QPushButton,
@@ -37,10 +38,16 @@ from english_typing_trainer.application.context import AppContext
 from english_typing_trainer.models.article import Article
 from english_typing_trainer.models.practice import PracticeMaterial
 from english_typing_trainer.models.settings import AppSettings
+from english_typing_trainer.models.sentence import ArticleSentence
+from english_typing_trainer.services.credential_store import mask_api_key
+from english_typing_trainer.database.sentence_repositories import SentenceAttemptRepository
+from english_typing_trainer.services.translation_provider import DeepSeekTranslationProvider, TranslationProviderError
 from english_typing_trainer.ui.history_page import HistoryPage
 from english_typing_trainer.ui.practice_view import PracticeView
 from english_typing_trainer.ui.result_dialog import ResultDialog
 from english_typing_trainer.ui.session_detail_dialog import SessionDetailDialog
+from english_typing_trainer.ui.sentence_practice_view import SentencePracticeView
+from english_typing_trainer.ui.translation_tasks import TranslationWorker
 from english_typing_trainer.ui.settings_page import SettingsPage as SettingsScreen
 from english_typing_trainer.ui.special_practice_page import SpecialPracticePage
 from english_typing_trainer.ui.statistics_page import StatisticsPage
@@ -223,10 +230,24 @@ class MainWindow(QMainWindow):
         self.practice_view = PracticeView()
         self.practice_view.session_completed.connect(self._handle_session_completed)
         self.practice_view.back_requested.connect(self._leave_practice_view)
+        self.sentence_practice_view = SentencePracticeView()
+        self.sentence_practice_view.session_completed.connect(self._handle_session_completed)
+        self.sentence_practice_view.back_requested.connect(self._leave_practice_view)
+        self.sentence_practice_view.attempt_completed.connect(self._save_sentence_attempt)
+        self.sentence_practice_view.translation_requested.connect(self._request_sentence_translation)
+        self.sentence_practice_view.edit_translation_requested.connect(self._edit_sentence_translation)
+        self._sentence_attempts = SentenceAttemptRepository(self.context.database.connect)
+        self._sentence_attempt_ids: list[int] = []
+        self._thread_pool = QThreadPool(self)
+        self._thread_pool.setMaxThreadCount(3)
+        self._translation_workers: set[TranslationWorker] = set()
 
         self.settings_page = SettingsScreen(str(self.context.paths.data_dir.resolve()))
         self.settings_page.save_button.clicked.connect(self._save_settings)
         self.settings_page.open_data_dir_button.clicked.connect(self._open_data_dir)
+        self.settings_page.save_api_key_button.clicked.connect(self._save_api_key)
+        self.settings_page.delete_api_key_button.clicked.connect(self._delete_api_key)
+        self.settings_page.test_api_button.clicked.connect(self._test_api_connection)
         self.history_page = HistoryPage()
         self.history_page.view_detail_requested.connect(self._show_session_detail)
         self.history_page.delete_session_requested.connect(self._delete_session)
@@ -284,6 +305,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.statistics_page)
         self.stack.addWidget(self.settings_page)
         self.stack.addWidget(self.practice_view)
+        self.stack.addWidget(self.sentence_practice_view)
 
         self.nav_buttons: dict[int, QPushButton] = {}
         nav_specs = [
@@ -303,7 +325,7 @@ class MainWindow(QMainWindow):
             self.nav_buttons[index] = button
         sidebar_layout.addStretch(1)
 
-        version_label = QLabel("版本 0.1.0")
+        version_label = QLabel("版本 0.2.0-dev")
         version_label.setProperty("role", "subtitle")
         sidebar_layout.addWidget(version_label)
 
@@ -428,6 +450,9 @@ class MainWindow(QMainWindow):
         action_row.addWidget(self.continue_button)
         action_row.addWidget(self.restart_button)
         action_row.addWidget(self.more_button)
+        self.translate_article_button = QPushButton("翻译整篇文章")
+        self.translate_article_button.clicked.connect(self._translate_selected_article)
+        action_row.addWidget(self.translate_article_button)
         action_row.addStretch(1)
         detail_layout.addLayout(action_row)
 
@@ -440,7 +465,7 @@ class MainWindow(QMainWindow):
 
     def _switch_page(self, index: int) -> None:
         self.stack.setCurrentIndex(index)
-        self.sidebar.setVisible(index != 6)
+        self.sidebar.setVisible(index not in {6, 7})
         for button_index, button in self.nav_buttons.items():
             button.setProperty("active", "true" if button_index == index else "false")
             button.style().unpolish(button)
@@ -474,6 +499,10 @@ class MainWindow(QMainWindow):
 
     def _show_settings(self) -> None:
         self.settings_page.load_settings(self.settings)
+        try:
+            self.settings_page.set_api_key_status(mask_api_key(self.context.credential_store.get()))
+        except Exception:
+            self.settings_page.set_api_key_status("读取失败")
         self._switch_page(5)
 
     def _reload_articles(self) -> None:
@@ -628,14 +657,102 @@ class MainWindow(QMainWindow):
     def _begin_practice(self, material: PracticeMaterial) -> None:
         self.current_material = material
         self.current_practice_saved = False
-        self.practice_view.start_practice(material, self.settings)
-        self.stack.setCurrentWidget(self.practice_view)
+        self._sentence_attempt_ids = []
+        use_sentence_mode = (
+            self.settings.sentence_learning_enabled
+            and material.practice_type in {"article", "article_section"}
+            and material.section_id is not None
+        )
+        if use_sentence_mode:
+            sentences = self.context.sentence_service.ensure_for_section(material.section_id)
+            self.sentence_practice_view.start_practice(material, sentences, self.settings)
+            self.stack.setCurrentWidget(self.sentence_practice_view)
+        else:
+            self.practice_view.start_practice(material, self.settings)
+            self.stack.setCurrentWidget(self.practice_view)
         self.sidebar.hide()
         for button in self.nav_buttons.values():
             button.setProperty("active", "false")
             button.style().unpolish(button)
             button.style().polish(button)
 
+    def _active_practice_view(self):
+        return self.sentence_practice_view if self.stack.currentWidget() is self.sentence_practice_view else self.practice_view
+
+    def _active_snapshot(self):
+        view = self._active_practice_view()
+        return view.current_snapshot() if view is self.sentence_practice_view else view.session.snapshot()
+
+    def _save_sentence_attempt(self, attempt) -> None:
+        with self.context.database.transaction() as connection:
+            attempt_id = self._sentence_attempts.insert(connection, attempt)
+        self._sentence_attempt_ids.append(attempt_id)
+
+    def _attach_sentence_attempts(self) -> None:
+        session = self._active_practice_view().session
+        if not self._sentence_attempt_ids or session is None or session.persisted_session_id is None:
+            return
+        with self.context.database.transaction() as connection:
+            self._sentence_attempts.attach_to_session(connection, self._sentence_attempt_ids, session.persisted_session_id)
+
+    def _request_sentence_translation(self, sentence, retry: bool = False) -> None:
+        decision = self.context.translation_service.prepare(
+            sentence,
+            provider="deepseek",
+            model=self.settings.translation_model,
+            prompt_version=self.settings.translation_prompt_version,
+            retry=retry,
+        )
+        if decision.cached and decision.cached.status == "completed":
+            self.sentence_practice_view.show_translation(decision.cached, cached=True)
+            return
+        if not decision.should_request:
+            if decision.cached and decision.cached.status == "failed":
+                self.sentence_practice_view.show_translation_failed(decision.cached.error_message or "翻译失败")
+            return
+        try:
+            api_key = self.context.credential_store.get()
+            provider = DeepSeekTranslationProvider(api_key or "", model=self.settings.translation_model, timeout=10.0)
+        except Exception as exc:
+            error = exc if isinstance(exc, TranslationProviderError) else TranslationProviderError("credential", "无法读取 API Key。")
+            self.context.translation_service.fail(sentence.sentence_hash, error)
+            self.sentence_practice_view.show_translation_failed(str(error))
+            return
+        index = self.sentence_practice_view.sentences.index(sentence)
+        previous = self.sentence_practice_view.sentences[index - 1].normalized_text if index > 0 else ""
+        following = self.sentence_practice_view.sentences[index + 1].normalized_text if index + 1 < len(self.sentence_practice_view.sentences) else ""
+        worker = TranslationWorker(self.context.translation_service, provider, sentence, previous=previous, following=following)
+        self._translation_workers.add(worker)
+        worker.signals.completed.connect(lambda item, result, p=provider, w=worker: self._translation_completed(item, result, p, w))
+        worker.signals.failed.connect(lambda item, error, w=worker: self._translation_failed(item, error, w))
+        self._thread_pool.start(worker)
+
+    def _translation_completed(self, sentence, result, provider, worker) -> None:
+        self._translation_workers.discard(worker)
+        cached = self.context.translation_service.complete(
+            sentence.sentence_hash, result, provider=provider.name, model=provider.model,
+            prompt_version=self.settings.translation_prompt_version,
+        )
+        current = self.sentence_practice_view.current_sentence
+        if cached and current and current.sentence_hash == sentence.sentence_hash:
+            self.sentence_practice_view.show_translation(cached)
+
+    def _translation_failed(self, sentence, error, worker) -> None:
+        self._translation_workers.discard(worker)
+        provider_error = error if isinstance(error, TranslationProviderError) else TranslationProviderError("unknown", "翻译请求失败。")
+        self.context.translation_service.fail(sentence.sentence_hash, provider_error)
+        current = self.sentence_practice_view.current_sentence
+        if current and current.sentence_hash == sentence.sentence_hash:
+            self.sentence_practice_view.show_translation_failed(str(provider_error))
+
+    def _edit_sentence_translation(self, sentence) -> None:
+        cached = self.context.translation_service.get(sentence.sentence_hash)
+        current = cached.chinese_translation if cached else ""
+        text, accepted = QInputDialog.getMultiLineText(self, "编辑翻译", "中文翻译：", current)
+        if accepted and text.strip():
+            updated = self.context.translation_service.edit(sentence.sentence_hash, text.strip(), cached.key_expressions if cached else [])
+            if updated:
+                self.sentence_practice_view.show_translation(updated)
     def _rename_selected_article(self) -> None:
         article_id = self._selected_article_id()
         if article_id is None:
@@ -675,6 +792,157 @@ class MainWindow(QMainWindow):
         self._refresh_statistics()
         self._refresh_overview()
 
+    def _save_api_key(self) -> None:
+        api_key = self.settings_page.api_key_input.text().strip()
+        if not api_key:
+            QMessageBox.information(self, "未输入 Key", "请输入 DeepSeek API Key。")
+            return
+        try:
+            self.context.credential_store.set(api_key)
+            self.settings_page.api_key_input.clear()
+            self.settings_page.set_api_key_status(mask_api_key(api_key))
+            QMessageBox.information(self, "保存成功", "API Key 已保存到 Windows 凭据管理器。")
+        except Exception as exc:
+            QMessageBox.critical(self, "保存失败", f"无法保存 API Key：{exc}")
+
+    def _delete_api_key(self) -> None:
+        try:
+            self.context.credential_store.delete()
+            self.settings_page.api_key_input.clear()
+            self.settings_page.set_api_key_status("未保存")
+        except Exception as exc:
+            QMessageBox.critical(self, "删除失败", f"无法删除 API Key：{exc}")
+
+    def _test_api_connection(self) -> None:
+        try:
+            provider = DeepSeekTranslationProvider(self.context.credential_store.get() or "", model=self.settings_page.translation_model_combo.currentData(), timeout=10.0)
+        except TranslationProviderError as exc:
+            QMessageBox.warning(self, "连接失败", str(exc))
+            return
+        sentence = ArticleSentence(None, 0, 0, 0, "Hello.", "Hello.", "connection-test", 0, 6)
+        worker = TranslationWorker(self.context.translation_service, provider, sentence)
+        self._translation_workers.add(worker)
+        worker.signals.completed.connect(lambda _sentence, _result, w=worker: self._api_test_finished(True, "连接成功", w))
+        worker.signals.failed.connect(lambda _sentence, error, w=worker: self._api_test_finished(False, str(error), w))
+        self._thread_pool.start(worker)
+
+    def _api_test_finished(self, success: bool, message: str, worker) -> None:
+        self._translation_workers.discard(worker)
+        if success:
+            QMessageBox.information(self, "测试连接", "DeepSeek 连接成功。")
+        else:
+            QMessageBox.warning(self, "测试连接", message)
+
+    def _translate_selected_article(self) -> None:
+        article_id = self._selected_article_id()
+        if article_id is None:
+            return
+        try:
+            api_key = self.context.credential_store.get()
+            if not api_key:
+                raise TranslationProviderError("missing_key", "请先在设置中保存 DeepSeek API Key。")
+            self._bulk_provider = DeepSeekTranslationProvider(api_key, model=self.settings.translation_model, timeout=10.0)
+        except Exception as exc:
+            QMessageBox.warning(self, "无法开始翻译", str(exc))
+            return
+        sentences = []
+        for section in self.context.article_library.get_sections(article_id):
+            sentences.extend(self.context.sentence_service.ensure_for_section(section.id))
+        cached_count = sum(1 for item in sentences if (cached := self.context.translation_service.get(item.sentence_hash)) and cached.status == "completed")
+        request_count = len(sentences) - cached_count
+        estimated = sum(len(item.normalized_text) for item in sentences if not self.context.translation_service.get(item.sentence_hash))
+        answer = QMessageBox.question(
+            self,
+            "翻译整篇文章",
+            f"本文共 {len(sentences)} 句\n已有翻译 {cached_count} 句\n本次需要翻译 {request_count} 句\n预计发送约 {estimated} 个英文字符（仅供参考）。\n\n是否继续？",
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        self._bulk_queue = list(sentences)
+        self._bulk_total = len(sentences)
+        self._bulk_done = 0
+        self._bulk_success = 0
+        self._bulk_failed = 0
+        self._bulk_retry_counts = {}
+        self._bulk_cancelled = False
+        self._bulk_progress = QProgressDialog("正在翻译文章……", "取消", 0, self._bulk_total, self)
+        self._bulk_progress.setWindowTitle("翻译整篇文章")
+        self._bulk_progress.setAutoClose(False)
+        self._bulk_progress.canceled.connect(self._cancel_bulk_translation)
+        self._bulk_progress.show()
+        self._start_next_bulk_translation()
+
+    def _start_next_bulk_translation(self) -> None:
+        if not getattr(self, "_bulk_queue", None):
+            if hasattr(self, "_bulk_progress"):
+                self._bulk_progress.setValue(self._bulk_total)
+                self._bulk_progress.setLabelText(f"完成：成功 {self._bulk_success}，失败 {self._bulk_failed}")
+            return
+        sentence = self._bulk_queue.pop(0)
+        decision = self.context.translation_service.prepare(sentence, provider="deepseek", model=self.settings.translation_model, prompt_version=self.settings.translation_prompt_version)
+        if not decision.should_request:
+            self._bulk_done += 1
+            self._bulk_success += int(bool(decision.cached and decision.cached.status == "completed"))
+            self._bulk_progress.setValue(self._bulk_done)
+            QTimer.singleShot(0, self._start_next_bulk_translation)
+            return
+        worker = TranslationWorker(self.context.translation_service, self._bulk_provider, sentence)
+        self._translation_workers.add(worker)
+        worker.signals.completed.connect(lambda item, result, w=worker: self._bulk_translation_completed(item, result, w))
+        worker.signals.failed.connect(lambda item, error, w=worker: self._bulk_translation_failed(item, error, w))
+        self._thread_pool.start(worker)
+
+    def _bulk_translation_completed(self, sentence, result, worker) -> None:
+        self._translation_workers.discard(worker)
+        self.context.translation_service.complete(sentence.sentence_hash, result, provider=self._bulk_provider.name, model=self._bulk_provider.model, prompt_version=self.settings.translation_prompt_version)
+        self._bulk_done += 1; self._bulk_success += 1
+        self._bulk_progress.setValue(self._bulk_done)
+        self._bulk_progress.setLabelText(f"{self._bulk_done} / {self._bulk_total} · 成功 {self._bulk_success} · 失败 {self._bulk_failed}")
+        self._start_next_bulk_translation()
+
+    def _bulk_translation_failed(self, sentence, error, worker) -> None:
+        self._translation_workers.discard(worker)
+        provider_error = error if isinstance(error, TranslationProviderError) else TranslationProviderError("unknown", "翻译失败")
+        self.context.translation_service.fail(sentence.sentence_hash, provider_error)
+        retryable = provider_error.category in {"rate_limit", "server", "timeout", "network"}
+        retry_count = self._bulk_retry_counts.get(sentence.sentence_hash, 0)
+        if retryable and retry_count < 2 and not self._bulk_cancelled:
+            self._bulk_retry_counts[sentence.sentence_hash] = retry_count + 1
+            delay_ms = 1000 * (2 ** retry_count)
+            self._bulk_progress.setLabelText(f"请求暂时失败，{delay_ms // 1000} 秒后重试……")
+            QTimer.singleShot(delay_ms, lambda item=sentence: self._retry_bulk_sentence(item))
+            return
+        self._bulk_done += 1; self._bulk_failed += 1
+        self._bulk_progress.setValue(self._bulk_done)
+        self._bulk_progress.setLabelText(f"{self._bulk_done} / {self._bulk_total} · 成功 {self._bulk_success} · 失败 {self._bulk_failed}")
+        self._start_next_bulk_translation()
+
+    def _retry_bulk_sentence(self, sentence) -> None:
+        if self._bulk_cancelled:
+            return
+        decision = self.context.translation_service.prepare(
+            sentence,
+            provider="deepseek",
+            model=self.settings.translation_model,
+            prompt_version=self.settings.translation_prompt_version,
+            retry=True,
+        )
+        if not decision.should_request:
+            self._bulk_done += 1
+            self._bulk_failed += 1
+            self._start_next_bulk_translation()
+            return
+        worker = TranslationWorker(self.context.translation_service, self._bulk_provider, sentence)
+        self._translation_workers.add(worker)
+        worker.signals.completed.connect(lambda item, result, w=worker: self._bulk_translation_completed(item, result, w))
+        worker.signals.failed.connect(lambda item, error, w=worker: self._bulk_translation_failed(item, error, w))
+        self._thread_pool.start(worker)
+
+    def _cancel_bulk_translation(self) -> None:
+        self._bulk_cancelled = True
+        self._bulk_queue = []
+        if hasattr(self, "_bulk_progress"):
+            self._bulk_progress.setLabelText("已取消，已完成的翻译仍保存在缓存中。")
     def _open_data_dir(self) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.context.paths.data_dir)))
 
@@ -689,25 +957,26 @@ class MainWindow(QMainWindow):
     def _persist_current_practice(self) -> None:
         if self.current_practice_saved:
             return
-        if self.current_material is None or self.practice_view.session is None:
+        if self.current_material is None or self._active_practice_view().session is None:
             self.current_practice_saved = True
             return
-        snapshot = self.practice_view.session.snapshot()
+        snapshot = self._active_snapshot()
         self.context.practice_service.save_interrupted_session(
             self.current_material,
-            self.practice_view.session,
+            self._active_practice_view().session,
             snapshot,
         )
         self.current_practice_saved = True
+        self._attach_sentence_attempts()
         self._refresh_history()
         self._refresh_statistics()
         self._refresh_special_practice_page()
 
     def _confirm_leave_practice(self) -> bool:
-        if self.current_practice_saved or self.current_material is None or self.practice_view.session is None:
+        if self.current_practice_saved or self.current_material is None or self._active_practice_view().session is None:
             self._persist_current_practice()
             return True
-        snapshot = self.practice_view.session.snapshot()
+        snapshot = self._active_snapshot()
         if snapshot.total_keystrokes == 0 and snapshot.position == self.current_material.resume_character_index:
             self.current_practice_saved = True
             return True
@@ -729,21 +998,22 @@ class MainWindow(QMainWindow):
         return True
 
     def _handle_session_completed(self, snapshot) -> None:
-        if self.current_material is None or self.practice_view.session is None:
+        if self.current_material is None or self._active_practice_view().session is None:
             return
         next_material = self.context.practice_service.save_completed_session(
             self.current_material,
-            self.practice_view.session,
+            self._active_practice_view().session,
             snapshot,
         )
         self.current_practice_saved = True
+        self._attach_sentence_attempts()
         if self.current_material.practice_set_id is not None:
             self.context.special_practice_service.note_set_practiced(self.current_material.practice_set_id)
         review_changes = []
         if self.current_material.practice_type == "vocabulary_review" and self.current_material.practice_set_id is not None:
             mistaken = {
                 self.context.normalization_service.normalize(error.word)
-                for error in self.practice_view.session.errors
+                for error in self._active_practice_view().session.errors
                 if self.context.normalization_service.normalize(error.word)
             }
             review_changes = self.context.special_practice_service.apply_review_results(
@@ -757,13 +1027,21 @@ class MainWindow(QMainWindow):
         self._refresh_vocabulary_page()
 
         extra_lines = []
+        if self.stack.currentWidget() is self.sentence_practice_view:
+            timing = self.sentence_practice_view.learning.timing_snapshot()
+            extra_lines.extend([
+                f"总学习时间：{timing.total_elapsed_seconds:.1f} 秒",
+                f"翻译阅读时间：{timing.learning_seconds:.1f} 秒",
+                f"自动暂停时间：{timing.idle_seconds:.1f} 秒",
+                f"手动暂停时间：{timing.manual_paused_seconds:.1f} 秒",
+            ])
         if review_changes:
             extra_lines.extend(
                 f"{change['word']}：熟练度 {change['mastery_level']}，下次复习 {change['next_review_at']}"
                 for change in review_changes[:6]
             )
         dialog = ResultDialog(
-            self.practice_view.session,
+            self._active_practice_view().session,
             snapshot,
             has_next_section=next_material is not None,
             title="练习完成" if self.current_material.practice_type in {"article", "article_section"} else "专项练习完成",
@@ -788,11 +1066,11 @@ class MainWindow(QMainWindow):
         self._leave_practice_view()
 
     def _build_retry_errors_material(self) -> PracticeMaterial | None:
-        if self.practice_view.session is None or self.current_material is None:
+        if self._active_practice_view().session is None or self.current_material is None:
             return None
         wrong_words = [
             self.context.normalization_service.normalize(error.word)
-            for error in self.practice_view.session.errors
+            for error in self._active_practice_view().session.errors
             if self.context.normalization_service.normalize(error.word)
         ]
         if not wrong_words:
@@ -922,4 +1200,6 @@ class MainWindow(QMainWindow):
         if not self._confirm_leave_practice():
             event.ignore()
             return
+        self._thread_pool.clear()
+        self._thread_pool.waitForDone(10000)
         super().closeEvent(event)

@@ -2,45 +2,43 @@
 
 ## 当前阶段
 
-第四阶段 C：项目恢复、目录治理与发布基线建立。本阶段不新增产品功能、不修改数据库结构，也不进行正式打包。
+v0.2.0-dev：逐句学习与 DeepSeek 翻译开发分支 `feature/v0.2-sentence-learning`。现有 v0.1.0 发布产物保持冻结，本阶段不制作新安装包。
 
-## 技术架构
+## 架构与目录
 
-- Python 3.14 系列与 PySide6 桌面界面。
-- `typing_engine` 负责输入判定与单调计时。
-- `services` 负责文章、练习、历史、统计、专项练习和间隔复习业务。
-- `database` 使用标准库 `sqlite3`，集中管理连接、事务、迁移和 repository。
-- `ui` 通过应用上下文与 service/repository 接口访问业务数据。
-- SQLite schema version 为 3，保留 v1 到 v3 的迁移入口。
+- `typing_engine`：逐字符输入判定与基础指标。
+- `services/sentence_*`：拆句、懒生成和集中式计时状态机。
+- `services/translation_*`：provider 抽象、DeepSeek 请求、缓存去重和重试。
+- `database`：标准库 SQLite、事务、v1-v4 迁移和 repository。
+- `ui`：连续练习、逐句学习、翻译面板及设置页面。
+- `tests`：临时数据库、fake clock、mock provider 和 UI 烟测。
 
-## 目录职责
+## 数据库
 
-- `src/english_typing_trainer/`：正式应用源码。
-- `tests/`：使用临时目录且互相独立的自动化测试。
-- `resources/`：示例 TXT 和浅色/深色 QSS。
-- `scripts/`：开发启动、异常记录清理及未来打包入口。
-- `phase*_screenshots/`：历史验收截图，仅为本地运行产物。
-- `runtime_data*`、`workspace_data/`、`phase*_runtime/`、`tmp_*/`：开发或验收数据，不进入 Git。
+当前 schema version 为 4。新增 `article_sentences`、`sentence_translations`、`sentence_attempts`；`practice_sessions` 新增 `total_elapsed_seconds`、`learning_seconds`、`idle_seconds`、`manual_paused_seconds`。v3 升级前自动备份，迁移失败回滚，旧文章采用按段落懒拆句。
 
-## 已完成功能
+## 已完成
 
-文章库、TXT 导入与自动分段、普通练习、进度恢复、历史记录、单次详情、学习统计、错误事件持久化与分析、错词/错误字符/原句专项练习、生词本、间隔复习、简体中文界面、深浅主题及无效速度过滤均已实现。
+- 原有文章库、连续练习、历史统计、错误分析、专项练习、生词本和间隔复习保持兼容。
+- 普通文章可默认进入逐句学习；老数据库升级默认保留连续模式，新安装默认启用逐句模式。
+- 首次有效输入开始计时；默认 3 秒无输入自动暂停；句子完成后进入学习计时；Enter 进入下一句但不提前启动有效计时。
+- DeepSeek provider、Windows Credential Manager、异步请求、全局缓存、人工编辑、显式重新生成和整篇翻译已接入。
+- 已完成句子保存 `sentence_attempts`；中途未完成句子按 session 级进度恢复。
 
-## 数据目录规则
+## 数据目录与隐私
 
 - 正式目录：`%LOCALAPPDATA%\EnglishTypingTrainer\`。
-- 开发和人工验收：通过 `ENGLISH_TYPING_TRAINER_DATA_DIR` 指向专用目录。
-- 自动化测试：使用 pytest 临时目录，不允许写入正式用户数据库。
-- 数据库、日志、截图和验收目录属于运行产物，不纳入版本控制。
+- 开发/验收：`ENGLISH_TYPING_TRAINER_DATA_DIR` 指向独立目录。
+- API Key：Windows Credential Manager；测试使用内存凭据存储。
+- 翻译缓存：用户本地 SQLite；日志不记录 Key 或大段正文。
 
-## 当前测试状态
+## 测试状态
 
-2026-07-11 使用 Python 3.14.6 和当前 `.venv` 完成全量验证：pytest 收集 52 项，`52 passed`；应用在隔离数据目录稳定启动，六个中文导航页可进入，浅色/深色主题可加载，Qt 正常退出且无异常堆栈。测试数量仍以每次 pytest 实际收集结果为准。
+2026-07-12，Python 3.14.6：全量 pytest `95 passed`。测试覆盖 v1/v2/v3 到 v4 迁移、备份与回滚、拆句 offset、计时状态、翻译缓存/provider、显式 AI 重新生成和三尺寸 UI 烟测。
 
-## 尚未完成的交付事项
+## 尚未完成
 
-- 真人连续输入至少 60 秒并记录真实成绩。
-- 正式 PyInstaller 打包与无 Python 环境启动验证。
-- v1/v2 用户数据库升级到 v3 的发布级备份与回滚演练。
-- 安装、升级、卸载及用户数据保留策略。
-- 发布签名、安装器和最终发行说明。
+- 少量真实 DeepSeek API 联调由用户提供 Key 后人工执行。
+- v0.2 新安装包、无 Python 环境验证和发布签名。
+- 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
+- 全局单词体系、ABCD 测试、段位和字符速度分析留待后续版本。

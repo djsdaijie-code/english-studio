@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSpinBox,
+    QLineEdit,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -42,9 +44,11 @@ class SettingsPage(QWidget):
 
         practice_card = self._build_practice_card()
         appearance_card = self._build_appearance_card()
+        translation_card = self._build_translation_card()
         data_card = self._build_data_card(data_dir)
         content_layout.addWidget(practice_card)
         content_layout.addWidget(appearance_card)
+        content_layout.addWidget(translation_card)
         content_layout.addWidget(data_card)
 
         footer = QHBoxLayout()
@@ -59,7 +63,13 @@ class SettingsPage(QWidget):
 
         content_row.addWidget(content, stretch=1)
         content_row.addStretch(1)
-        layout.addLayout(content_row)
+        scroll_host = QWidget()
+        scroll_host.setLayout(content_row)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(scroll_host)
+        layout.addWidget(scroll, stretch=1)
 
         self.section_target_combo.currentIndexChanged.connect(self._mark_dirty)
         self.case_sensitive_checkbox.toggled.connect(self._mark_dirty)
@@ -68,6 +78,11 @@ class SettingsPage(QWidget):
         self.target_accuracy_spin.valueChanged.connect(self._mark_dirty)
         self.theme_combo.currentIndexChanged.connect(self._mark_dirty)
         self.font_size_spin.valueChanged.connect(self._mark_dirty)
+        self.sentence_learning_checkbox.toggled.connect(self._mark_dirty)
+        self.show_translation_checkbox.toggled.connect(self._mark_dirty)
+        self.idle_pause_combo.currentIndexChanged.connect(self._mark_dirty)
+        self.translation_auto_checkbox.toggled.connect(self._mark_dirty)
+        self.translation_model_combo.currentIndexChanged.connect(self._mark_dirty)
 
     def _build_practice_card(self) -> QFrame:
         card = QFrame()
@@ -96,6 +111,14 @@ class SettingsPage(QWidget):
         form.addRow("实时统计", self.live_stats_checkbox)
         form.addRow("目标 WPM", self.target_wpm_spin)
         form.addRow("目标正确率", self.target_accuracy_spin)
+        self.sentence_learning_checkbox = QCheckBox("启用逐句学习模式")
+        self.show_translation_checkbox = QCheckBox("完成句子后显示翻译")
+        self.idle_pause_combo = QComboBox()
+        for label, value in (("关闭", 0), ("2 秒", 2), ("3 秒", 3), ("5 秒", 5), ("10 秒", 10)):
+            self.idle_pause_combo.addItem(label, value)
+        form.addRow("逐句学习", self.sentence_learning_checkbox)
+        form.addRow("句后翻译", self.show_translation_checkbox)
+        form.addRow("无输入自动暂停", self.idle_pause_combo)
         layout.addLayout(form)
         return card
 
@@ -121,6 +144,45 @@ class SettingsPage(QWidget):
         layout.addLayout(form)
         return card
 
+    def _build_translation_card(self) -> QFrame:
+        card = QFrame()
+        card.setObjectName("Card")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(20, 20, 20, 20)
+        title = QLabel("翻译服务")
+        title.setProperty("role", "page-title")
+        title.setStyleSheet("font-size: 18px;")
+        layout.addWidget(title)
+        form = QFormLayout()
+        provider = QLabel("DeepSeek")
+        self.translation_model_combo = QComboBox()
+        self.translation_model_combo.addItem("DeepSeek V4 Flash", "deepseek-v4-flash")
+        self.translation_model_combo.addItem("DeepSeek V4 Pro", "deepseek-v4-pro")
+        self.translation_auto_checkbox = QCheckBox("按需自动翻译当前句")
+        self.api_key_input = QLineEdit()
+        self.api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self.api_key_input.setPlaceholderText("输入 API Key（不会保存到数据库）")
+        self.api_key_status = QLabel("凭据状态：尚未读取")
+        self.api_key_status.setProperty("role", "muted")
+        form.addRow("服务商", provider)
+        form.addRow("模型", self.translation_model_combo)
+        form.addRow("自动翻译", self.translation_auto_checkbox)
+        form.addRow("API Key", self.api_key_input)
+        layout.addLayout(form)
+        layout.addWidget(self.api_key_status)
+        actions = QHBoxLayout()
+        self.save_api_key_button = QPushButton("保存 Key")
+        self.delete_api_key_button = QPushButton("删除 Key")
+        self.test_api_button = QPushButton("测试连接")
+        actions.addWidget(self.save_api_key_button)
+        actions.addWidget(self.delete_api_key_button)
+        actions.addWidget(self.test_api_button)
+        actions.addStretch(1)
+        layout.addLayout(actions)
+        return card
+
+    def set_api_key_status(self, masked_value: str) -> None:
+        self.api_key_status.setText(f"凭据状态：{masked_value}")
     def _build_data_card(self, data_dir: str) -> QFrame:
         card = QFrame()
         card.setObjectName("Card")
@@ -152,6 +214,13 @@ class SettingsPage(QWidget):
         self.font_size_spin.setValue(settings.font_size)
         theme_index = self.theme_combo.findData(settings.theme)
         self.theme_combo.setCurrentIndex(theme_index if theme_index >= 0 else 0)
+        self.sentence_learning_checkbox.setChecked(settings.sentence_learning_enabled)
+        self.show_translation_checkbox.setChecked(settings.show_translation_after_sentence)
+        idle_index = self.idle_pause_combo.findData(settings.idle_pause_seconds)
+        self.idle_pause_combo.setCurrentIndex(idle_index if idle_index >= 0 else 2)
+        self.translation_auto_checkbox.setChecked(settings.translation_auto_on_demand)
+        model_index = self.translation_model_combo.findData(settings.translation_model)
+        self.translation_model_combo.setCurrentIndex(model_index if model_index >= 0 else 0)
         self.status_label.setText("所有设置均已保存。")
 
     def build_settings(self) -> AppSettings:
@@ -163,6 +232,13 @@ class SettingsPage(QWidget):
             target_accuracy=self.target_accuracy_spin.value(),
             theme=str(self.theme_combo.currentData()),
             font_size=self.font_size_spin.value(),
+            sentence_learning_enabled=self.sentence_learning_checkbox.isChecked(),
+            show_translation_after_sentence=self.show_translation_checkbox.isChecked(),
+            idle_pause_seconds=int(self.idle_pause_combo.currentData()),
+            translation_auto_on_demand=self.translation_auto_checkbox.isChecked(),
+            translation_provider="deepseek",
+            translation_model=str(self.translation_model_combo.currentData()),
+            translation_prompt_version="sentence-v1",
         )
 
     def _mark_dirty(self, *_args) -> None:

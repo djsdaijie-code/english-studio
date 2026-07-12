@@ -22,6 +22,13 @@ class SettingsService:
             target_accuracy=float(raw_values.get("target_accuracy", 98.0)),
             theme=raw_values.get("theme", "light"),
             font_size=int(raw_values.get("font_size", 18)),
+            sentence_learning_enabled=self._to_bool(raw_values.get("sentence_learning_enabled"), True),
+            show_translation_after_sentence=self._to_bool(raw_values.get("show_translation_after_sentence"), True),
+            idle_pause_seconds=int(raw_values.get("idle_pause_seconds", 3)),
+            translation_auto_on_demand=self._to_bool(raw_values.get("translation_auto_on_demand"), True),
+            translation_provider=raw_values.get("translation_provider", "deepseek"),
+            translation_model=raw_values.get("translation_model", "deepseek-v4-flash"),
+            translation_prompt_version=raw_values.get("translation_prompt_version", "sentence-v1"),
         )
 
     def save_settings(self, settings: AppSettings) -> AppSettings:
@@ -33,6 +40,13 @@ class SettingsService:
             "target_accuracy": str(settings.target_accuracy),
             "theme": settings.theme,
             "font_size": str(settings.font_size),
+            "sentence_learning_enabled": "1" if settings.sentence_learning_enabled else "0",
+            "show_translation_after_sentence": "1" if settings.show_translation_after_sentence else "0",
+            "idle_pause_seconds": str(settings.idle_pause_seconds),
+            "translation_auto_on_demand": "1" if settings.translation_auto_on_demand else "0",
+            "translation_provider": settings.translation_provider,
+            "translation_model": settings.translation_model,
+            "translation_prompt_version": settings.translation_prompt_version,
         }
         with self._database.transaction() as connection:
             self._repository.set_many(connection, values)

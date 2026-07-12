@@ -179,7 +179,8 @@ def test_practice_focus_mode_hides_sidebar(tmp_path: Path) -> None:
         app.processEvents()
 
         assert not window.sidebar.isVisible()
-        assert window.practice_view.title_label.text() == imported.article.title
+        assert window.stack.currentWidget() is window.sentence_practice_view
+        assert window.sentence_practice_view.title_label.text() == imported.article.title
     finally:
         context.database.close()
 
@@ -199,5 +200,26 @@ def test_statistics_cards_fit_small_window(tmp_path: Path) -> None:
             widget = metrics_layout.itemAt(index).widget()
             assert widget is not None
             assert widget.geometry().right() <= window.statistics_page.width()
+    finally:
+        context.database.close()
+
+
+def test_continuous_practice_mode_remains_available_when_sentence_mode_disabled(tmp_path: Path) -> None:
+    app = _app()
+    context = build_app_context(data_dir=tmp_path / "data")
+    try:
+        settings = context.settings_service.get_settings()
+        settings.sentence_learning_enabled = False
+        context.settings_service.save_settings(settings)
+        file_path = tmp_path / "lesson.txt"
+        file_path.write_text("A" * 180, encoding="utf-8")
+        imported = context.article_library.import_txt_file(file_path, 300)
+        window = MainWindow(context)
+        window.show()
+        material = context.practice_service.load_practice_material(imported.article.id)
+        window._begin_practice(material)
+        app.processEvents()
+        assert window.stack.currentWidget() is window.practice_view
+        assert window.practice_view.title_label.text() == imported.article.title
     finally:
         context.database.close()

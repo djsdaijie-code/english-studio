@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 3
+LATEST_SCHEMA_VERSION = 4
 
 
 class MigrationRunner:
@@ -28,6 +28,9 @@ class MigrationRunner:
                 current_version = 2
             if current_version < 3:
                 self._apply_version_3(connection)
+                current_version = 3
+            if current_version < 4:
+                self._apply_version_4(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -254,6 +257,106 @@ class MigrationRunner:
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (?)", (3,))
 
+    def _apply_version_4(self, connection: sqlite3.Connection) -> None:
+        for column_name, definition in (
+            ("total_elapsed_seconds", "REAL NOT NULL DEFAULT 0"),
+            ("learning_seconds", "REAL NOT NULL DEFAULT 0"),
+            ("idle_seconds", "REAL NOT NULL DEFAULT 0"),
+            ("manual_paused_seconds", "REAL NOT NULL DEFAULT 0"),
+        ):
+            self._ensure_column(
+                connection,
+                table_name="practice_sessions",
+                column_name=column_name,
+                definition=definition,
+            )
+
+        statements = [
+            """
+            CREATE TABLE IF NOT EXISTS article_sentences (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                article_id INTEGER NOT NULL,
+                section_id INTEGER NOT NULL,
+                sentence_index INTEGER NOT NULL,
+                text TEXT NOT NULL,
+                normalized_text TEXT NOT NULL,
+                sentence_hash TEXT NOT NULL,
+                start_offset INTEGER NOT NULL,
+                end_offset INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+                FOREIGN KEY (section_id) REFERENCES article_sections(id) ON DELETE CASCADE,
+                UNIQUE(section_id, sentence_index)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS sentence_translations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sentence_hash TEXT NOT NULL UNIQUE,
+                source_text TEXT NOT NULL,
+                chinese_translation TEXT NOT NULL DEFAULT '',
+                key_expressions_json TEXT NOT NULL DEFAULT '[]',
+                provider TEXT NOT NULL,
+                model TEXT NOT NULL,
+                prompt_version TEXT NOT NULL,
+                status TEXT NOT NULL CHECK(status IN ('pending', 'completed', 'failed')),
+                error_message TEXT NOT NULL DEFAULT '',
+                is_user_edited INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS sentence_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER,
+                article_sentence_id INTEGER,
+                sentence_hash TEXT NOT NULL,
+                practice_type TEXT NOT NULL DEFAULT 'article_sentence',
+                started_at TEXT,
+                completed_at TEXT,
+                active_seconds REAL NOT NULL DEFAULT 0,
+                total_elapsed_seconds REAL NOT NULL DEFAULT 0,
+                correct_characters INTEGER NOT NULL DEFAULT 0,
+                total_characters INTEGER NOT NULL DEFAULT 0,
+                error_count INTEGER NOT NULL DEFAULT 0,
+                cpm REAL NOT NULL DEFAULT 0,
+                wpm REAL NOT NULL DEFAULT 0,
+                accuracy REAL NOT NULL DEFAULT 100,
+                completed INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (session_id) REFERENCES practice_sessions(id) ON DELETE SET NULL,
+                FOREIGN KEY (article_sentence_id) REFERENCES article_sentences(id) ON DELETE SET NULL
+            )
+            """,
+            "CREATE INDEX IF NOT EXISTS idx_article_sentences_article ON article_sentences(article_id, section_id, sentence_index)",
+            "CREATE INDEX IF NOT EXISTS idx_article_sentences_hash ON article_sentences(sentence_hash)",
+            "CREATE INDEX IF NOT EXISTS idx_sentence_translations_status ON sentence_translations(status, updated_at)",
+            "CREATE INDEX IF NOT EXISTS idx_sentence_attempts_sentence ON sentence_attempts(sentence_hash, created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_sentence_attempts_session ON sentence_attempts(session_id)",
+        ]
+        for statement in statements:
+            connection.execute(statement)
+
+        existing_data = connection.execute(
+            "SELECT EXISTS(SELECT 1 FROM articles LIMIT 1) OR EXISTS(SELECT 1 FROM practice_sessions LIMIT 1)"
+        ).fetchone()[0]
+        now = connection.execute("SELECT datetime('now')").fetchone()[0]
+        defaults = {
+            "sentence_learning_enabled": "0" if existing_data else "1",
+            "show_translation_after_sentence": "1",
+            "idle_pause_seconds": "3",
+            "translation_auto_on_demand": "1",
+            "translation_provider": "deepseek",
+            "translation_model": "deepseek-v4-flash",
+            "translation_prompt_version": "sentence-v1",
+        }
+        connection.executemany(
+            "INSERT OR IGNORE INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
+            [(key, value, now) for key, value in defaults.items()],
+        )
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (?)", (4,))
     def _ensure_column(
         self,
         connection: sqlite3.Connection,
