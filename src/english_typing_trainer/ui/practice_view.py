@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QTextCharFormat, QTextCursor, QTextOption
+from PySide6.QtGui import QColor, QIcon, QKeyEvent, QKeySequence, QTextBlockFormat, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QSplitter,
     QTextBrowser,
     QTextEdit,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
 from english_typing_trainer.models.practice import PracticeMaterial
 from english_typing_trainer.models.settings import AppSettings
 from english_typing_trainer.typing_engine.session import TypingSession
+from english_typing_trainer.ui.theme import resource_root
 
 
 class FocusTextBrowser(QTextBrowser):
@@ -84,6 +86,8 @@ class PracticeView(QWidget):
         self.session: TypingSession | None = None
         self._settings_font_size = 18
         self._current_font_size = 22
+        self._translation_hints: list[tuple[int, int, str]] = []
+        self._translation_visible = True
 
         self._timer = QTimer(self)
         self._timer.setInterval(250)
@@ -139,7 +143,6 @@ class PracticeView(QWidget):
 
         content_shell = QHBoxLayout()
         content_shell.setContentsMargins(0, 0, 0, 0)
-        content_shell.addStretch(1)
         self.content_host = QWidget()
         self.content_host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         host_layout = QVBoxLayout(self.content_host)
@@ -204,7 +207,42 @@ class PracticeView(QWidget):
         self.practice_splitter.setStretchFactor(1, 2)
         self.practice_splitter.setSizes([560, 360])
         host_layout.addWidget(self.practice_splitter)
-        content_shell.addWidget(self.content_host, stretch=18)
+
+        self.translation_card = QFrame()
+        self.translation_card.setObjectName("ContinuousTranslationCard")
+        self.translation_card.setMinimumWidth(280)
+        self.translation_card.hide()
+        translation_layout = QVBoxLayout(self.translation_card)
+        translation_layout.setContentsMargins(20, 18, 20, 20)
+        translation_layout.setSpacing(14)
+        translation_header = QHBoxLayout()
+        translation_title = QLabel("中文意思")
+        translation_title.setProperty("role", "section-title")
+        self.translation_toggle = QToolButton()
+        self.translation_toggle.setObjectName("TranslationVisibilityButton")
+        self.translation_toggle.setIcon(QIcon(str(resource_root() / "icons" / "eye.svg")))
+        self.translation_toggle.setToolTip("隐藏中文意思")
+        self.translation_toggle.clicked.connect(self._toggle_translation_visibility)
+        translation_header.addWidget(translation_title)
+        translation_header.addStretch(1)
+        translation_header.addWidget(self.translation_toggle)
+        translation_layout.addLayout(translation_header)
+        self.translation_text = QLabel("暂无翻译")
+        self.translation_text.setObjectName("ContinuousTranslationText")
+        self.translation_text.setWordWrap(True)
+        self.translation_text.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        translation_layout.addWidget(self.translation_text, stretch=1)
+
+        self.continuous_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.continuous_splitter.setChildrenCollapsible(False)
+        self.continuous_splitter.setHandleWidth(10)
+        self.continuous_splitter.addWidget(self.content_host)
+        self.continuous_splitter.addWidget(self.translation_card)
+        self.continuous_splitter.setStretchFactor(0, 2)
+        self.continuous_splitter.setStretchFactor(1, 1)
+        self.continuous_splitter.setSizes([920, 440])
+        content_shell.addStretch(1)
+        content_shell.addWidget(self.continuous_splitter, stretch=18)
         content_shell.addStretch(1)
         layout.addLayout(content_shell, stretch=1)
         self._update_responsive_geometry()
@@ -241,6 +279,8 @@ class PracticeView(QWidget):
         self.section_label.setText(f"第 {material.section_index + 1} / {material.section_count} 段")
         self.pause_button.setText("暂停")
         self.input_feedback_label.setText("等待输入")
+        self._translation_visible = True
+        self._update_translation_visibility()
         self._settings_font_size = settings.font_size
         self._refresh_ui()
         self._update_responsive_geometry()
@@ -249,6 +289,11 @@ class PracticeView(QWidget):
         self._timer.start()
         self._set_input_active(True)
         QTimer.singleShot(0, self._restore_focus)
+
+    def set_translation_hints(self, hints: list[tuple[int, int, str]], *, visible: bool) -> None:
+        self._translation_hints = hints
+        self.translation_card.setVisible(visible)
+        self._refresh_translation()
 
     def resizeEvent(self, event) -> None:  # type: ignore[override]
         super().resizeEvent(event)
@@ -360,6 +405,7 @@ class PracticeView(QWidget):
         self.accuracy_value.setText(f"{snapshot.accuracy:.1f}%")
         self.errors_value.setText(str(snapshot.error_keystrokes))
         self.elapsed_value.setText(f"{snapshot.elapsed_active_seconds:.1f} 秒")
+        self._refresh_translation()
 
     def _render_text(self) -> None:
         if self.session is None:
@@ -404,6 +450,7 @@ class PracticeView(QWidget):
         cursor.setPosition(min(self.session.position, len(content)))
         self.text_browser.setTextCursor(cursor)
         self.text_browser.ensureCursorVisible()
+        self._apply_line_spacing(self.text_browser, 160)
 
     def _render_input(self) -> None:
         if self.session is None:
@@ -435,6 +482,7 @@ class PracticeView(QWidget):
         cursor.movePosition(QTextCursor.MoveOperation.End)
         self.input_edit.setTextCursor(cursor)
         self.input_edit.ensureCursorVisible()
+        self._apply_line_spacing(self.input_edit, 160)
 
     def _selection(
         self,
@@ -462,7 +510,14 @@ class PracticeView(QWidget):
         if not hasattr(self, "content_host"):
             return
         viewport_width = max(self.width(), 1)
-        self.content_host.setMaximumWidth(min(1400, max(640, int(viewport_width * 0.90))))
+        self.continuous_splitter.setMaximumWidth(min(1400, max(640, int(viewport_width * 0.90))))
+        panel_enabled = not self.translation_card.isHidden()
+        self.content_host.setMaximumWidth(16777215 if panel_enabled else min(1400, max(640, int(viewport_width * 0.90))))
+        if panel_enabled:
+            self.continuous_splitter.setOrientation(
+                Qt.Orientation.Vertical if viewport_width < 1100 else Qt.Orientation.Horizontal
+            )
+            self.continuous_splitter.setSizes([720, 280] if viewport_width < 1100 else [920, 440])
         if viewport_width < 1400:
             responsive_size = 20
         elif viewport_width < 1800:
@@ -500,3 +555,41 @@ class PracticeView(QWidget):
 
     def _set_input_active(self, active: bool) -> None:
         self.input_edit.setCursorWidth(2 if active else 0)
+
+    def _toggle_translation_visibility(self) -> None:
+        self._translation_visible = not self._translation_visible
+        self._update_translation_visibility()
+        QTimer.singleShot(0, self._restore_focus)
+
+    def _update_translation_visibility(self) -> None:
+        icon_name = "eye.svg" if self._translation_visible else "eye-off.svg"
+        self.translation_toggle.setIcon(QIcon(str(resource_root() / "icons" / icon_name)))
+        self.translation_toggle.setToolTip("隐藏中文意思" if self._translation_visible else "显示中文意思")
+        self._refresh_translation()
+
+    def _refresh_translation(self) -> None:
+        if not hasattr(self, "translation_text"):
+            return
+        if not self._translation_visible:
+            self.translation_text.setText("中文意思已隐藏")
+            self.translation_text.setProperty("hidden", "true")
+        else:
+            position = self.session.position if self.session else 0
+            translation = next(
+                (text for start, end, text in self._translation_hints if start <= position < end),
+                self._translation_hints[-1][2] if self._translation_hints and self.session and self.session.is_complete else "",
+            )
+            self.translation_text.setText(translation or "暂无翻译")
+            self.translation_text.setProperty("hidden", "false")
+        self.translation_text.style().unpolish(self.translation_text)
+        self.translation_text.style().polish(self.translation_text)
+
+    @staticmethod
+    def _apply_line_spacing(editor: QPlainTextEdit | QTextBrowser, percent: int) -> None:
+        cursor = QTextCursor(editor.document())
+        cursor.select(QTextCursor.SelectionType.Document)
+        block_format = QTextBlockFormat()
+        block_format.setLineHeight(
+            float(percent), QTextBlockFormat.LineHeightTypes.ProportionalHeight.value
+        )
+        cursor.mergeBlockFormat(block_format)

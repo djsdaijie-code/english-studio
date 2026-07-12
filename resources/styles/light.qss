@@ -202,6 +202,32 @@ QFrame#TranslationCard {
     border-radius: 12px;
 }
 
+QFrame#ContinuousTranslationCard {
+    background: #ffffff;
+    border: 1px solid #dbe1ea;
+    border-radius: 12px;
+}
+
+QToolButton#TranslationVisibilityButton {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+QToolButton#TranslationVisibilityButton:hover {
+    background: #f1f5f9;
+}
+
+QLabel#ContinuousTranslationText {
+    color: #334155;
+    font-size: 17px;
+}
+
+QLabel#ContinuousTranslationText[hidden="true"] {
+    color: #94a3b8;
+}
+
 QFrame#SegmentedControl {
     background: #eef2f7;
     border: 1px solid #dbe1ea;

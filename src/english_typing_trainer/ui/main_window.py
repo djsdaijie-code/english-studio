@@ -690,6 +690,16 @@ class MainWindow(QMainWindow):
             self.sentence_practice_view.start_practice(material, sentences, self.settings)
             self.stack.setCurrentWidget(self.sentence_practice_view)
         else:
+            hints: list[tuple[int, int, str]] = []
+            show_translation_panel = material.practice_type in {"article", "article_section"} and material.section_id is not None
+            if show_translation_panel:
+                sentences = self.context.sentence_service.ensure_for_section(material.section_id)
+                section_start = min((sentence.start_offset for sentence in sentences), default=0)
+                for sentence in sentences:
+                    cached = self.context.translation_service.get(sentence.sentence_hash)
+                    translation = cached.chinese_translation if cached and cached.status == "completed" else ""
+                    hints.append((sentence.start_offset - section_start, sentence.end_offset - section_start, translation))
+            self.practice_view.set_translation_hints(hints, visible=show_translation_panel)
             self.practice_view.start_practice(material, self.settings)
             self.stack.setCurrentWidget(self.practice_view)
         self.sidebar.hide()

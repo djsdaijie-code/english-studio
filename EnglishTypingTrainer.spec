@@ -18,6 +18,7 @@ a = Analysis(
     binaries=[],
     datas=[
         (str(project_root / "resources" / "styles"), "resources/styles"),
+        (str(project_root / "resources" / "icons"), "resources/icons"),
     ],
     hiddenimports=hidden_imports,
     hookspath=[],
