@@ -91,18 +91,19 @@ if (-not $DebugBuild -and -not $SkipZip) {
 
 if (-not $DebugBuild -and -not $SkipInstaller) {
     $Iscc = Get-Command iscc -ErrorAction SilentlyContinue
+    $IsccPath = if ($Iscc) { $Iscc.Source } else { $null }
     if (-not $Iscc) {
         $Candidates = @(@(
             (Join-Path ${env:LOCALAPPDATA} "Programs\Inno Setup 6\ISCC.exe"),
             (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"),
             (Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe")
         ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) })
-        if ($Candidates.Count -gt 0) { $Iscc = Get-Item -LiteralPath $Candidates[0] }
+        if ($Candidates.Count -gt 0) { $IsccPath = $Candidates[0] }
     }
-    if (-not $Iscc) { throw "未找到 Inno Setup 编译器 iscc。请安装 Inno Setup 6 后重试。" }
+    if (-not $IsccPath) { throw "未找到 Inno Setup 编译器 iscc。请安装 Inno Setup 6 后重试。" }
     $env:ENGLISH_STUDIO_RELEASE_VERSION = $Version
     $env:ENGLISH_STUDIO_APP_SOURCE = $AppDir
-    & $Iscc.Source $InstallerScript
+    & $IsccPath $InstallerScript
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $SetupPath)) { throw "Inno Setup 安装程序构建失败。" }
     $SetupHash = (Get-FileHash -LiteralPath $SetupPath -Algorithm SHA256).Hash.ToLowerInvariant()
     Add-Content -LiteralPath (Join-Path $ReleaseDir "SHA256SUMS.txt") -Value "$SetupHash  EnglishStudio-$Version-Setup.exe" -Encoding utf8
