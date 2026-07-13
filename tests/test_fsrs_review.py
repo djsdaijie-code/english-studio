@@ -11,6 +11,7 @@ from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.database.migrations import MigrationRunner
 from english_typing_trainer.services.fsrs_review import FsrsReviewService
 from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
+from english_typing_trainer.ui.main_window import MainWindow
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QApplication
@@ -189,5 +190,20 @@ def test_review_page_strict_spelling_and_rating_ui(tmp_path: Path) -> None:
         page._rate("again")
         application.processEvents()
         assert ratings == [(item.card.id, "again")]
+    finally:
+        context.database.close()
+
+
+def test_special_practice_today_review_routes_to_fsrs_queue(tmp_path: Path) -> None:
+    application = QApplication.instance() or QApplication([])
+    context = build_app_context(data_dir=tmp_path / "data")
+    try:
+        context.vocabulary_learning_service.collect("English", sentence="English helps people communicate.")
+        window = MainWindow(context)
+        window.special_practice_page.start_today_review_requested.emit()
+        application.processEvents()
+        assert window.stack.currentWidget() is window.fsrs_review_page
+        assert window.fsrs_review_page.current is not None
+        window.close()
     finally:
         context.database.close()

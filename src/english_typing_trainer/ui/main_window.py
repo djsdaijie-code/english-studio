@@ -290,7 +290,7 @@ class MainWindow(QMainWindow):
         self.special_practice_page.start_preview_requested.connect(self._start_preview_special_practice)
         self.special_practice_page.start_saved_requested.connect(self._start_saved_special_practice)
         self.special_practice_page.refresh_requested.connect(self._refresh_special_practice_page)
-        self.special_practice_page.start_today_review_requested.connect(self._start_today_review)
+        self.special_practice_page.start_today_review_requested.connect(self._start_fsrs_review)
         self.vocabulary_page = VocabularyPage()
         self.vocabulary_page.refresh_requested.connect(self._refresh_vocabulary_page)
         self.vocabulary_page.add_requested.connect(self._add_vocabulary_word)
@@ -1464,13 +1464,7 @@ class MainWindow(QMainWindow):
         self._begin_practice(material)
 
     def _start_today_review(self) -> None:
-        generated = self.context.special_practice_service.generate_vocabulary_review_set(due_only=True, limit=20)
-        if generated is None:
-            QMessageBox.information(self, "今日复习", "今天没有待复习单词")
-            return
-        self.preview_special_material = generated.material
-        self.special_practice_page.set_preview(generated.preview_text, generated.message)
-        self._begin_practice(generated.material)
+        self._start_fsrs_review()
 
     def _add_vocabulary_word(self, word: str) -> None:
         try:
