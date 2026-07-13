@@ -101,6 +101,11 @@ def test_dictionary_request_encoding_and_parse():
     assert result.definitions[0]["definition"]=="The act of sharing information."
 
 
+def test_dictionary_parse_accepts_phonetic_text_without_audio():
+    payload=[{"word":"you","phonetics":[{"text":"/juː/","audio":""}],"meanings":[]}]
+    assert parse_dictionary_payload("you",payload).phonetic=="/juː/"
+
+
 @pytest.mark.parametrize("code,category",[(404,"not_found"),(429,"rate_limit"),(503,"server")])
 def test_dictionary_http_errors(code,category):
     def opener(*_args,**_kwargs): raise urllib.error.HTTPError("url",code,"error",{},None)

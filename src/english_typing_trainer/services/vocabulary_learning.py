@@ -65,9 +65,10 @@ class VocabularyLearningService:
             with self._lock: self._dictionary_inflight.discard(entry_id)
 
     def lookup_dictionary(self, entry_id: int, provider: DictionaryProvider) -> DictionaryResult | None:
-        entry=self.repository.get_entry(entry_id)
-        if not entry: raise ValueError("未找到单词。")
-        for candidate in self.normalization.safe_lemma_candidates(entry.normalized_word):
+        with self.database.independent_connection() as connection:
+            row=connection.execute("SELECT normalized_word FROM vocabulary_entries WHERE id=?",(entry_id,)).fetchone()
+        if not row: raise ValueError("未找到单词。")
+        for candidate in self.normalization.safe_lemma_candidates(row["normalized_word"]):
             try: return provider.lookup(candidate)
             except DictionaryProviderError as exc:
                 if exc.category != "not_found": raise
@@ -100,6 +101,9 @@ class VocabularyLearningService:
     def apply_explanation_result(self, context_id: int, result: WordExplanationResult) -> VocabularyContext:
         with self.database.transaction() as connection: self.repository.update_explanation(connection,context_id,result)
         return self.repository.get_context(context_id)  # type: ignore[return-value]
+
+    def mark_explanation_failed(self, context_id: int) -> None:
+        with self.database.transaction() as connection: self.repository.mark_ai_failed(connection,context_id)
 
     def explain_context(self, context_id: int, provider: DeepSeekWordExplanationProvider, *, force: bool=False) -> VocabularyContext:
         context=self.repository.get_context(context_id)

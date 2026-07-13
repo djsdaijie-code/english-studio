@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from time import monotonic
 
 import pytest
 
@@ -15,7 +16,10 @@ from PySide6.QtTest import QTest
 
 from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.models.vocabulary import VocabularyContext, VocabularyEntry, VocabularyLearningState
+from english_typing_trainer.services.dictionary_provider import DictionaryResult, DictionaryProviderError
+from english_typing_trainer.services.word_explanation_provider import WordExplanationResult
 from english_typing_trainer.ui.main_window import MainWindow
+import english_typing_trainer.ui.main_window as main_window_module
 from english_typing_trainer.ui.practice_view import FocusTextBrowser
 from english_typing_trainer.ui.theme import apply_theme
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
@@ -170,3 +174,84 @@ def test_cloze_and_context_switch_use_source_word_casing():
     attempts=[]; page.attempt_completed.connect(attempts.append)
     for char in "OpenAI":page._key(key(char))
     assert attempts[-1].expected_answer=="OPENAI" and attempts[-1].is_correct is False
+
+
+def test_auto_enrichment_for_queue_word_updates_details_in_place_and_reuses_cache(tmp_path:Path,monkeypatch):
+    application=app(); calls={"dictionary":0,"ai":0}
+    class FakeDictionary:
+        def lookup(self,word):
+            calls["dictionary"]+=1
+            return DictionaryResult(word,word,"/juː/","","pronoun",[],[{"word":word,"phonetic":"/juː/"}])
+    class FakeDeepSeek:
+        def __init__(self,*_args,**_kwargs):pass
+        def explain(self,**_kwargs):
+            calls["ai"]+=1
+            return WordExplanationResult("you","you","pronoun","你","当前句中的你。","you can","You can do it.","你可以做到。")
+    monkeypatch.setattr(main_window_module,"FreeDictionaryProvider",FakeDictionary)
+    monkeypatch.setattr(main_window_module,"DeepSeekWordExplanationProvider",FakeDeepSeek)
+    context=build_app_context(data_dir=tmp_path/"data")
+    window=None
+    try:
+        collected=context.vocabulary_learning_service.collect("you",sentence="You can do it.",start_offset=0,end_offset=3)
+        window=MainWindow(context); window.show(); window._open_word_learning(collected.entry.id); application.processEvents()
+        deadline=monotonic()+4
+        while monotonic()<deadline:
+            application.processEvents(); QTest.qWait(25)
+            entry,contexts,_=context.vocabulary_learning_service.detail(collected.entry.id)
+            if entry.dictionary_status=="ready" and contexts[0].ai_status=="ready":break
+        assert entry.phonetic=="/juː/" and contexts[0].contextual_meaning_zh=="你"
+        window.word_learning_page._key(key("y")); assert window.word_learning_page.input.toPlainText()=="y"
+        QTest.qWait(100); assert window.word_learning_page.input.toPlainText()=="y"
+        first_counts=dict(calls); window._open_word_learning(collected.entry.id); application.processEvents(); QTest.qWait(100)
+        assert calls==first_counts
+    finally:
+        if window:window.close()
+        context.database.close()
+
+
+def test_dictionary_and_ai_fail_independently_with_retry_status(tmp_path:Path,monkeypatch):
+    application=app(); calls={"dictionary":0,"ai":0}; succeed={"dictionary":False,"ai":False}
+    class FakeDictionary:
+        def lookup(self,_word):
+            calls["dictionary"]+=1
+            if not succeed["dictionary"]:raise DictionaryProviderError("network","无法连接词典服务。")
+            return DictionaryResult("you","you","/juː/","","pronoun",[],[])
+    class FakeDeepSeek:
+        def __init__(self,*_args,**_kwargs):pass
+        def explain(self,**_kwargs):
+            calls["ai"]+=1
+            if not succeed["ai"]:raise RuntimeError("DeepSeek 暂时不可用")
+            return WordExplanationResult("you","you","pronoun","你","解释","you can","You can.","你可以。")
+    monkeypatch.setattr(main_window_module,"FreeDictionaryProvider",FakeDictionary)
+    monkeypatch.setattr(main_window_module,"DeepSeekWordExplanationProvider",FakeDeepSeek)
+    context=build_app_context(data_dir=tmp_path/"data"); window=None
+    try:
+        collected=context.vocabulary_learning_service.collect("you",sentence="You can.",start_offset=0,end_offset=3)
+        window=MainWindow(context); window.show(); window._open_word_learning(collected.entry.id); application.processEvents(); QTest.qWait(300); application.processEvents()
+        assert "可重试" in window.word_learning_page.enrichment_status.text()
+        succeed["dictionary"]=True; succeed["ai"]=True; window._retry_current_word_enrichment(collected.entry.id,collected.context.id)
+        deadline=monotonic()+4
+        while monotonic()<deadline:
+            application.processEvents(); QTest.qWait(25)
+            entry,contexts,_=context.vocabulary_learning_service.detail(collected.entry.id)
+            if entry.dictionary_status=="ready" and contexts[0].ai_status=="ready":break
+        assert entry.dictionary_status=="ready" and contexts[0].ai_status=="ready"
+    finally:
+        if window:window.close()
+        context.database.close()
+
+
+def test_old_enrichment_callback_does_not_replace_current_queue_word(tmp_path:Path):
+    application=app(); context=build_app_context(data_dir=tmp_path/"data"); window=None
+    try:
+        first=context.vocabulary_learning_service.collect("you",sentence="You can.",start_offset=0,end_offset=3)
+        second=context.vocabulary_learning_service.collect("learn",sentence="Learn more.",start_offset=0,end_offset=5)
+        settings=context.settings_service.get_settings(); settings.vocabulary_auto_enrich=False; context.settings_service.save_settings(settings)
+        window=MainWindow(context); window.show(); window._open_word_learning(first.entry.id); window._open_word_learning(second.entry.id); application.processEvents()
+        result=WordExplanationResult("you","you","pronoun","你","旧词讲解","you can","You can.","你可以。")
+        window._word_explained(first.context.id,result,object()); application.processEvents()
+        assert window.word_learning_page.entry.id==second.entry.id
+        assert "旧词讲解" not in window.word_learning_page.explanation.text()
+    finally:
+        if window:window.close()
+        context.database.close()

@@ -15,6 +15,7 @@ class WordLearningPage(QWidget):
     back_requested=Signal(); play_word_requested=Signal(object, object); play_sentence_requested=Signal(str)
     attempt_completed=Signal(object); context_changed=Signal(int)
     current_entry_changed=Signal(int); queue_finished=Signal(object)
+    retry_enrichment_requested=Signal(int, object)
 
     def __init__(self,parent=None) -> None:
         super().__init__(parent); self.entry=None; self.contexts=[]; self.state=None; self.typed=""; self.errors=0; self.repeat_index=0; self.started=None; self.mode="typing"
@@ -46,6 +47,10 @@ class WordLearningPage(QWidget):
         self.play_word.setIcon(QIcon(str(resource_root()/"icons"/"speaker.svg")))
         head.addWidget(self.word,1); head.addWidget(self.play_word); rl.addLayout(head)
         self.phonetic=QLabel(""); self.phonetic.setProperty("role","subtitle"); rl.addWidget(self.phonetic)
+        enrichment_row=QHBoxLayout(); self.enrichment_status=QLabel(""); self.enrichment_status.setProperty("role","subtitle")
+        self.retry_enrichment_button=QPushButton("重试"); self.retry_enrichment_button.hide()
+        self.retry_enrichment_button.clicked.connect(self._retry_enrichment)
+        enrichment_row.addWidget(self.enrichment_status,1); enrichment_row.addWidget(self.retry_enrichment_button); rl.addLayout(enrichment_row)
         self.meaning=QLabel("等待获取中文讲解"); self.meaning.setWordWrap(True); self.meaning.setStyleSheet("font-size: 20px; font-weight: 600;"); rl.addWidget(self.meaning)
         self.explanation=QLabel(""); self.explanation.setWordWrap(True); rl.addWidget(self.explanation)
         self.collocation=QLabel(""); self.collocation.setWordWrap(True); rl.addWidget(self.collocation)
@@ -82,11 +87,14 @@ class WordLearningPage(QWidget):
         self.previous_button.setEnabled(self.queue_index>0); self.next_button.setEnabled(self.queue_index<len(self.queue)-1)
         self._render_entry(); self._reset_round(); self.current_entry_changed.emit(self.entry.id)
 
-    def _render_entry(self):
+    def _render_entry(self,preserve_context_id:int|None=None):
         entry=self.entry; contexts=self.contexts
         self.word.setText(entry.display_word); self.phonetic.setText(entry.phonetic or "暂无音标")
         self.context_combo.clear()
         for i,c in enumerate(contexts): self.context_combo.addItem(f"来源 {i+1}：{c.source_sentence[:36] or '手动添加'}",i)
+        if preserve_context_id is not None:
+            preserved=next((i for i,c in enumerate(contexts) if c.id==preserve_context_id),-1)
+            if preserved>=0:self.context_combo.setCurrentIndex(preserved)
         if not contexts:
             self.meaning.setText("等待获取中文讲解"); self.explanation.setText("该旧词条暂无来源句，可以继续打字学习并在联网后补充词典信息。")
             self.collocation.clear(); self.sentence.setText("暂无来源句"); self.play_sentence.setEnabled(False)
@@ -96,9 +104,17 @@ class WordLearningPage(QWidget):
 
     def update_details(self,entry:VocabularyEntry,contexts:list[VocabularyContext],state:VocabularyLearningState):
         if not self.entry or entry.id!=self.entry.id:return False
-        typed=self.typed; repeat=self.repeat_index; cursor=self.input.textCursor().position()
-        self.entry=entry; self.contexts=contexts; self.state=state; self.queue[self.queue_index]=(entry,contexts,state); self._render_entry()
+        typed=self.typed; repeat=self.repeat_index; cursor=self.input.textCursor().position(); context=self.current_context
+        preserve_context_id=context.id if context else None
+        self.entry=entry; self.contexts=contexts; self.state=state; self.queue[self.queue_index]=(entry,contexts,state); self._render_entry(preserve_context_id)
         self.typed=typed; self.repeat_index=repeat; self._render(); self._update_prompt(); self.input.setFocus(); return self.input.textCursor().position()>=min(cursor,len(typed))
+
+    def set_enrichment_status(self,text:str,retry:bool=False) -> None:
+        self.enrichment_status.setText(text)
+        self.retry_enrichment_button.setVisible(retry)
+
+    def _retry_enrichment(self) -> None:
+        if self.entry:self.retry_enrichment_requested.emit(self.entry.id,self.current_context.id if self.current_context else None)
 
     def _context_index_changed(self):
         c=self.current_context

@@ -305,7 +305,11 @@ class MainWindow(QMainWindow):
         self.word_learning_page.play_word_requested.connect(self._play_word_from_learning)
         self.word_learning_page.play_sentence_requested.connect(lambda text:self._request_speech(text,self.settings.tts_speed,self.practice_view.speech_controls) if text else None)
         self.word_learning_page.current_entry_changed.connect(self._ensure_current_word_enrichment)
+        self.word_learning_page.context_changed.connect(self._ensure_current_context_enrichment)
+        self.word_learning_page.retry_enrichment_requested.connect(self._retry_current_word_enrichment)
         self._vocabulary_workers: set[VocabularyTask] = set()
+        self._enrichment_loading: set[tuple[int,str]] = set()
+        self._enrichment_errors: dict[tuple[int,str],str] = {}
 
         self._build_ui()
         self._apply_settings()
@@ -1387,41 +1391,51 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self,"收藏单词",message); view._restore_focus(); self._refresh_vocabulary_page()
         if result.entry.id and self.settings.vocabulary_auto_enrich:self._start_vocabulary_enrichment(result.entry.id,result.context.id)
 
-    def _start_vocabulary_enrichment(self, entry_id: int, context_id: int | None) -> None:
+    def _start_vocabulary_enrichment(self, entry_id: int, context_id: int | None, *, force: bool=False) -> None:
         entry=self.context.vocabulary_learning_service.repository.get_entry(entry_id)
         context=self.context.vocabulary_learning_service.repository.get_context(context_id) if context_id else None
         not_found_fresh=entry and entry.dictionary_status=="not_found" and entry.dictionary_fetched_at and (datetime.now()-entry.dictionary_fetched_at).days<7
-        if entry and (entry.dictionary_status=="ready" or not_found_fresh):
-            if context and context.ai_status not in {"ready"} and not context.is_manual:self._start_word_explanation(context.id)
-            return
+        if entry and not force and (entry.dictionary_status=="ready" or not_found_fresh):
+            self._update_word_enrichment_status(entry_id,context_id); return
+        if (entry_id,"dictionary") in self._enrichment_loading:return
+        self._enrichment_errors.pop((entry_id,"dictionary"),None); self._enrichment_loading.add((entry_id,"dictionary")); self._update_word_enrichment_status(entry_id,context_id)
         task=VocabularyTask(lambda:self.context.vocabulary_learning_service.lookup_dictionary(entry_id,FreeDictionaryProvider()))
         self._vocabulary_workers.add(task)
         task.signals.completed.connect(lambda result,t=task:self._dictionary_enriched(entry_id,context_id,result,t))
-        task.signals.failed.connect(lambda error,t=task:self._vocabulary_task_failed(error,t))
+        task.signals.failed.connect(lambda error,t=task:self._vocabulary_task_failed(entry_id,context_id,"dictionary",error,t))
         self._thread_pool.start(task)
 
     def _dictionary_enriched(self,entry_id,context_id,result,task):
-        self._vocabulary_workers.discard(task); self.context.vocabulary_learning_service.apply_dictionary_result(entry_id,result); self._refresh_vocabulary_page()
-        self._refresh_open_word_details(entry_id)
-        if context_id:self._start_word_explanation(context_id)
+        self._vocabulary_workers.discard(task); self._enrichment_loading.discard((entry_id,"dictionary")); self.context.vocabulary_learning_service.apply_dictionary_result(entry_id,result); self._refresh_vocabulary_page()
+        self._refresh_open_word_details(entry_id,context_id); self._update_word_enrichment_status(entry_id,context_id)
 
-    def _start_word_explanation(self,context_id:int):
+    def _start_word_explanation(self,context_id:int, *, force: bool=False):
         try:
             payload,context=self.context.vocabulary_learning_service.build_explanation_request(context_id)
-            if context.ai_status=="ready" or context.is_manual:return
+            if context.is_manual or (context.ai_status in {"ready","failed"} and not force):
+                self._update_word_enrichment_status(context.vocabulary_entry_id,context_id); return
             provider=DeepSeekWordExplanationProvider(self.context.credential_store.get() or "",model=self.settings.translation_model)
         except Exception as exc:
-            self.vocabulary_page.set_status_message(str(exc)); return
+            entry_id=context.vocabulary_entry_id if "context" in locals() else 0
+            if entry_id:self._enrichment_errors[(entry_id,"ai")]=str(exc); self._update_word_enrichment_status(entry_id,context_id)
+            return
+        entry_id=context.vocabulary_entry_id
+        if (entry_id,"ai") in self._enrichment_loading:return
+        self._enrichment_errors.pop((entry_id,"ai"),None); self._enrichment_loading.add((entry_id,"ai")); self._update_word_enrichment_status(entry_id,context_id)
         task=VocabularyTask(lambda:provider.explain(**payload)); self._vocabulary_workers.add(task)
-        task.signals.completed.connect(lambda result,t=task:self._word_explained(context_id,result,t)); task.signals.failed.connect(lambda error,t=task:self._vocabulary_task_failed(error,t)); self._thread_pool.start(task)
+        task.signals.completed.connect(lambda result,t=task:self._word_explained(context_id,result,t)); task.signals.failed.connect(lambda error,t=task:self._vocabulary_task_failed(entry_id,context_id,"ai",error,t)); self._thread_pool.start(task)
 
     def _word_explained(self,context_id,result,task):
-        self._vocabulary_workers.discard(task); self.context.vocabulary_learning_service.apply_explanation_result(context_id,result); self._refresh_vocabulary_page()
+        self._vocabulary_workers.discard(task); context=self.context.vocabulary_learning_service.repository.get_context(context_id)
+        if not context:return
+        entry_id=context.vocabulary_entry_id; self._enrichment_loading.discard((entry_id,"ai")); self.context.vocabulary_learning_service.apply_explanation_result(context_id,result); self._refresh_vocabulary_page()
         context=self.context.vocabulary_learning_service.repository.get_context(context_id)
-        if context:self._refresh_open_word_details(context.vocabulary_entry_id)
+        if context:self._refresh_open_word_details(context.vocabulary_entry_id,context_id); self._update_word_enrichment_status(context.vocabulary_entry_id,context_id)
 
-    def _vocabulary_task_failed(self,error,task):
-        self._vocabulary_workers.discard(task); self.vocabulary_page.set_status_message(f"部分信息暂未获取：{error}")
+    def _vocabulary_task_failed(self,entry_id:int,context_id:int|None,kind:str,error,task):
+        self._vocabulary_workers.discard(task); self._enrichment_loading.discard((entry_id,kind)); self._enrichment_errors[(entry_id,kind)]=error
+        if kind=="ai" and context_id:self.context.vocabulary_learning_service.mark_explanation_failed(context_id)
+        self._update_word_enrichment_status(entry_id,context_id)
 
     def _open_word_learning(self,entry_id:int):
         rows=self._current_vocabulary_rows(); ids=[]
@@ -1440,20 +1454,59 @@ class MainWindow(QMainWindow):
             if entry and state:items.append((entry,contexts,state))
         if not items:return
         self.word_learning_page.load_queue(items); self.stack.setCurrentWidget(self.word_learning_page); self.sidebar.hide()
+        if self.word_learning_page.entry:self._ensure_current_word_enrichment(self.word_learning_page.entry.id)
 
     def _current_vocabulary_rows(self):
         return list(getattr(self.vocabulary_page,"_rows",[]))
 
-    def _refresh_open_word_details(self,entry_id:int):
-        if self.stack.currentWidget() is not self.word_learning_page or not self.word_learning_page.entry or self.word_learning_page.entry.id!=entry_id:return
+    def _is_current_word(self,entry_id:int,context_id:int|None) -> bool:
+        if self.stack.currentWidget() is not self.word_learning_page or not self.word_learning_page.entry or self.word_learning_page.entry.id!=entry_id:return False
+        return context_id is None or (self.word_learning_page.current_context and self.word_learning_page.current_context.id==context_id)
+
+    def _refresh_open_word_details(self,entry_id:int,context_id:int|None=None):
+        if not self._is_current_word(entry_id,context_id):return
         entry,contexts,state=self.context.vocabulary_learning_service.detail(entry_id)
         if entry and state:self.word_learning_page.update_details(entry,contexts,state)
+
+    def _update_word_enrichment_status(self,entry_id:int,context_id:int|None) -> None:
+        if not self._is_current_word(entry_id,context_id):return
+        entry=self.context.vocabulary_learning_service.repository.get_entry(entry_id); context=self.context.vocabulary_learning_service.repository.get_context(context_id) if context_id else None
+        if not entry:return
+        loading_dict=(entry_id,"dictionary") in self._enrichment_loading; loading_ai=(entry_id,"ai") in self._enrichment_loading
+        dict_error=self._enrichment_errors.get((entry_id,"dictionary")); ai_error=self._enrichment_errors.get((entry_id,"ai"))
+        if dict_error or ai_error:
+            detail="；".join(filter(None,("词典获取失败" if dict_error else "","中文讲解获取失败" if ai_error else "")))
+            if ai_error and "Key" in ai_error:self.word_learning_page.set_enrichment_status("未配置 DeepSeek Key",True)
+            else:self.word_learning_page.set_enrichment_status(f"{detail}，可重试",True)
+            return
+        labels=[]
+        if loading_dict:labels.append("正在获取词典")
+        elif entry.dictionary_status=="not_found":labels.append("词典未找到")
+        elif entry.dictionary_status=="ready":labels.append("词典已完成")
+        if context:
+            if loading_ai:labels.append("正在获取中文讲解")
+            elif context.ai_status=="failed":labels.append("中文讲解获取失败")
+            elif context.ai_status=="ready":labels.append("中文讲解已完成")
+        self.word_learning_page.set_enrichment_status("；".join(labels) or "等待获取",False)
+
+    def _retry_current_word_enrichment(self,entry_id:int,context_id:int|None) -> None:
+        self._enrichment_errors.pop((entry_id,"dictionary"),None); self._enrichment_errors.pop((entry_id,"ai"),None)
+        self._start_vocabulary_enrichment(entry_id,context_id,force=True)
+        if context_id:self._start_word_explanation(context_id,force=True)
 
     def _ensure_current_word_enrichment(self,entry_id:int):
         entry,contexts,_=self.context.vocabulary_learning_service.detail(entry_id)
         if not entry:return
         context_id=contexts[0].id if contexts else None
-        if self.settings.vocabulary_auto_enrich:self._start_vocabulary_enrichment(entry_id,context_id)
+        if self.settings.vocabulary_auto_enrich:
+            self._start_vocabulary_enrichment(entry_id,context_id)
+            if context_id:self._start_word_explanation(context_id)
+
+    def _ensure_current_context_enrichment(self,context_id:int):
+        page=self.word_learning_page
+        if not page.entry or not self.settings.vocabulary_auto_enrich:return
+        self._start_vocabulary_enrichment(page.entry.id,context_id)
+        self._start_word_explanation(context_id)
 
     def _record_vocabulary_attempt(self,attempt:VocabularyAttempt):
         self.context.vocabulary_learning_service.record_attempt(attempt)

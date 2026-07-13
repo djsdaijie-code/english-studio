@@ -66,10 +66,11 @@ def parse_dictionary_payload(query_word: str, payload) -> DictionaryResult:
         raise DictionaryProviderError("invalid_response", "词典返回数据无法解析。")
     entry = payload[0]
     phonetics = entry.get("phonetics") if isinstance(entry.get("phonetics"), list) else []
-    selected = next((p for p in phonetics if isinstance(p, dict) and p.get("audio") and p.get("text")), None)
-    selected = selected or next((p for p in phonetics if isinstance(p, dict) and p.get("audio")), None) or {}
-    phonetic = str(selected.get("text") or entry.get("phonetic") or "")
-    audio = str(selected.get("audio") or "")
+    selected_audio = next((p for p in phonetics if isinstance(p, dict) and p.get("audio")), None) or {}
+    selected_text = next((p for p in phonetics if isinstance(p, dict) and p.get("audio") and str(p.get("text") or "").strip()), None)
+    selected_text = selected_text or next((p for p in phonetics if isinstance(p, dict) and str(p.get("text") or "").strip()), None) or {}
+    phonetic = str(selected_text.get("text") or entry.get("phonetic") or "")
+    audio = str(selected_audio.get("audio") or "")
     if audio.startswith("//"): audio = "https:" + audio
     meanings = entry.get("meanings") if isinstance(entry.get("meanings"), list) else []
     definitions: list[dict[str, object]] = []
