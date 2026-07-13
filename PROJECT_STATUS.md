@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-v1.0.0-rc1：English Studio 发布候选构建。开发分支 `feature/v0.2-sentence-learning`，等待本机安装验证与发布。
+English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成，当前进入实际使用、Bug 收集和 v1.0.1 准备阶段。
 
 ## 架构与目录
 
@@ -35,6 +35,9 @@ v1.0.0-rc1：English Studio 发布候选构建。开发分支 `feature/v0.2-sent
 - 首页和单词本的“今日复习”使用 FSRS 6 默认参数与 fuzzing；每个词条独立维护拼写和词义卡，严格保留来源词形大小写。复习支持四级评分、稍后复习、跳过、暂停和每日新词上限。
 - 单词本与今日复习可进入听写：优先复用词典音频，缺失时回退到 MiniMax TTS 缓存/生成；单词严格判定，句子提供严格与学习模式。听写记录和 listening 卡与拼写/词义卡相互独立。
 - 可选跟读评分 Beta：QtMultimedia 负责本地录音、回放和取消清理；Azure Provider 仅在用户配置 Key 与区域后调用。未配置时保存明确状态而非虚假评分；真实 Azure 评分、延迟、计费、Prosody 与区域兼容性将在 v1.0.1 使用真实资源验证。
+- GitHub 源码已推送至 `main`；`v1.0.0-rc1` 和 `v1.0.0` tags 已发布。
+- RC Pre-release 和正式 Release 已创建；安装包、便携版、`SHA256SUMS.txt` 和 Release Notes 已上传。
+- 发布包已完成 API Key、数据库、日志、录音和个人配置审计。
 
 ## 数据目录与隐私
 
@@ -45,13 +48,15 @@ v1.0.0-rc1：English Studio 发布候选构建。开发分支 `feature/v0.2-sent
 
 ## 测试状态
 
-2026-07-13，Python 3.14.6：全量 pytest 222 passed。覆盖 v8→v11、事务回滚、FSRS 四级评分、卡片独立性、JSON 重启、旧复习日期兼容、延后/暂停/删除、保持率设置、听写、跟读 Beta 与无 Azure 配置降级；测试数量仍以每次实际 pytest 输出为准。
+2026-07-13，Python 3.14.6：全量 pytest 229 passed。覆盖 v8→v11、事务回滚、FSRS 四级评分、卡片独立性、JSON 重启、旧复习日期兼容、延后/暂停/删除、保持率设置、听写、跟读 Beta 与无 Azure 配置降级；测试数量仍以每次实际 pytest 输出为准。
 
 ## 尚未完成
 
 - 阶段 B 已完成真实 Free Dictionary、DeepSeek 三语境讲解、词典音频、MiniMax 单词回退和来源句缓存联调；隔离数据目录中二次运行未重复调用 DeepSeek/MiniMax。
-- GitHub 推送、Release 创建与资产上传；必须先确认远程仓库和 GitHub 身份。
 - 真实 Azure Speech 资源联调、实际评分准确性、Prosody 与多区域验证，计划 v1.0.1。
+- 安装器中文向导资源仍待补充；当前安装向导为英文，应用本体为中文。
+- 完整安装、覆盖安装、卸载和重装真人矩阵仍需在实际使用中持续验证。
+- 实际使用中的 Bug 收集与 v1.0.1 准备工作仍在进行。
 - 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
 - 排行榜、社交分享、商店、虚拟货币、装扮和复杂任务不在当前范围。
 - Azure Speech 真实资源联调、实际评分准确性、Prosody 与多区域验证留待 v1.0.1；其余跟读 Beta 的本地录音和安全降级已完成。

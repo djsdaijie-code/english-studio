@@ -39,7 +39,7 @@ py -3.14 -m venv .venv
 
 也可运行 `powershell -ExecutionPolicy Bypass -File .\scripts\run.ps1`。
 
-## Windows RC 构建
+## Windows 发布版
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1
@@ -57,7 +57,7 @@ MiniMax API Key 在设置页“语音服务”中配置，独立保存到 Window
 
 已缓存词条在离线时仍可查看音标、释义、中文讲解、来源句并完成三种练习；未缓存词条可先收藏，联网后再补充。FSRS 复习不依赖网络，默认期望保持率为 90%，可在设置中选择 85% / 90% / 93%；每日新词上限为 10 / 20 / 30。旧的 `next_review_at` 只作为首次 FSRS 建卡的到期参考，不会伪造复习历史。
 
-MiniMax 语音生成可能按字符产生费用，具体以 [MiniMax 官方语音价格页面](https://platform.minimax.io/docs/guides/pricing-speech) 为准，程序不写死价格。当前仅提供句子朗读，未接入词典真人音频或完整单词功能。
+MiniMax 语音生成可能按字符产生费用，具体以 [MiniMax 官方语音价格页面](https://platform.minimax.io/docs/guides/pricing-speech) 为准，程序不写死价格。单词优先使用 Free Dictionary 音频，缺失时回退 MiniMax；句子使用 MiniMax 朗读；已缓存内容可离线复用。
 
 按句翻译仅发送当前句及可选前后句，不发送整篇文章。使用在线翻译即表示相关文本会发送给所选服务商；离线时仍可读取已有缓存。
 
@@ -82,7 +82,7 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishStudio-isolated"
 
 ## 已知限制
 
-- v1.0.0 安装包仍在发布候选准备阶段；现有 v0.1.0 发布包不会被覆盖。
+- English Studio v1.0.0 已正式发布，GitHub Release 提供 Windows 安装包和便携版。安装器目前为英文，应用本体为中文；当前安装包未签名，Windows SmartScreen 可能提示。完整安装、覆盖安装、卸载和重装矩阵仍在真实使用中持续验证。
 - 真实 DeepSeek 调用需要用户自己的 API Key；自动测试只使用 mock provider。
 - 中途退出时保存 session 级字符进度；已完成句子保存 `sentence_attempts`，未完成句子暂不单独保存 attempt。
 - 真人连续输入和真实 API 联调必须由用户按人工验收清单完成，自动化不能替代。
