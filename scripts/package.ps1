@@ -92,11 +92,11 @@ if (-not $DebugBuild -and -not $SkipZip) {
 if (-not $DebugBuild -and -not $SkipInstaller) {
     $Iscc = Get-Command iscc -ErrorAction SilentlyContinue
     if (-not $Iscc) {
-        $Candidates = @(
+        $Candidates = @(@(
             (Join-Path ${env:LOCALAPPDATA} "Programs\Inno Setup 6\ISCC.exe"),
             (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"),
             (Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe")
-        ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+        ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) })
         if ($Candidates.Count -gt 0) { $Iscc = Get-Item -LiteralPath $Candidates[0] }
     }
     if (-not $Iscc) { throw "未找到 Inno Setup 编译器 iscc。请安装 Inno Setup 6 后重试。" }
