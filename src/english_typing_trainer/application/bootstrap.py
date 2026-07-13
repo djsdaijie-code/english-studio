@@ -29,8 +29,8 @@ def _install_exception_handler(log_path) -> None:
 
 def main() -> int:
     app = QApplication(sys.argv)
-    app.setApplicationName("英语打字练习")
-    app.setApplicationDisplayName("英语打字练习")
+    app.setApplicationName("English Studio")
+    app.setApplicationDisplayName("English Studio")
     context = None
     log_path = None
     try:
@@ -52,7 +52,7 @@ def main() -> int:
     except Exception:
         logging.getLogger(__name__).exception("应用启动失败")
         detail = f"\n\n错误日志：\n{log_path}" if log_path else ""
-        QMessageBox.critical(None, "启动失败", f"英语打字练习无法启动。{detail}")
+        QMessageBox.critical(None, "English Studio 启动失败", f"English Studio 无法启动。{detail}")
         return 1
     finally:
         if context is not None:

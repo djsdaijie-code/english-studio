@@ -24,7 +24,7 @@ def test_main_window_can_be_created_and_uses_chinese_navigation(tmp_path: Path) 
         window = MainWindow(context)
         window.show()
         app.processEvents()
-        assert window.windowTitle() == "英语打字练习"
+        assert window.windowTitle() == "English Studio"
         assert window.nav_buttons[0].text() == "文章库"
         assert window.nav_buttons[1].text() == "专项练习"
         assert window.nav_buttons[2].text() == "单词本"

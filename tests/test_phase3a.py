@@ -205,4 +205,4 @@ def test_default_localappdata_path_computation(monkeypatch) -> None:
     monkeypatch.delenv("ENGLISH_TYPING_TRAINER_DATA_DIR", raising=False)
     monkeypatch.setenv("LOCALAPPDATA", r"C:\Users\TestUser\AppData\Local")
     paths = AppPathService().get_paths()
-    assert str(paths.database_path) == r"C:\Users\TestUser\AppData\Local\EnglishTypingTrainer\typing_trainer.db"
+    assert str(paths.database_path) == r"C:\Users\TestUser\AppData\Local\EnglishStudio\typing_trainer.db"

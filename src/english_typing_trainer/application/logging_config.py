@@ -7,7 +7,7 @@ from pathlib import Path
 
 def configure_logging(logs_dir: Path) -> Path:
     logs_dir.mkdir(parents=True, exist_ok=True)
-    log_path = logs_dir / "EnglishTypingTrainer.log"
+    log_path = logs_dir / "EnglishStudio.log"
     handler = RotatingFileHandler(
         log_path,
         maxBytes=2 * 1024 * 1024,

@@ -7,7 +7,7 @@ from pathlib import Path
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.services.app_paths import AppPathService, AppPaths
 from english_typing_trainer.services.article_library import ArticleLibraryService
-from english_typing_trainer.services.credential_store import CredentialStore, MemoryCredentialStore, WindowsCredentialStore
+from english_typing_trainer.services.credential_store import CredentialStore, FallbackCredentialStore, MemoryCredentialStore, WindowsCredentialStore
 from english_typing_trainer.services.history_service import HistoryService
 from english_typing_trainer.services.practice_service import PracticeService
 from english_typing_trainer.services.review_planning import ReviewPlanningService
@@ -29,6 +29,7 @@ from english_typing_trainer.services.fsrs_review import FsrsReviewService
 from english_typing_trainer.services.dictation_service import DictationService
 from english_typing_trainer.services.pronunciation_service import PronunciationService as PronunciationAssessmentService
 from english_typing_trainer.services.recording_service import RecordingService
+from english_typing_trainer.services.data_management import DataManagementService
 
 
 @dataclass(slots=True)
@@ -61,6 +62,7 @@ class AppContext:
     pronunciation_assessment_service: PronunciationAssessmentService
     recording_service: RecordingService
     pronunciation_credential_store: CredentialStore
+    data_management_service: DataManagementService
 
 
 def build_app_context(data_dir: Path | None = None, credential_store: CredentialStore | None = None, tts_credential_store: CredentialStore | None = None, pronunciation_credential_store: CredentialStore | None = None) -> AppContext:
@@ -93,15 +95,18 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
     dictation_service = DictationService(database)
     pronunciation_assessment_service = PronunciationAssessmentService(database)
     recording_service = RecordingService(paths.recordings_dir)
+    data_management_service = DataManagementService(database, paths.backups_dir, paths.logs_dir)
     if credential_store is None:
-        credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else WindowsCredentialStore()
+        credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
+            WindowsCredentialStore("English Studio/DeepSeek API", "DeepSeek API"), WindowsCredentialStore()
+        )
     if tts_credential_store is None:
-        tts_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else WindowsCredentialStore(
-            "English Studio/MiniMax TTS", "MiniMax TTS"
+        tts_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
+            WindowsCredentialStore("English Studio/MiniMax TTS", "MiniMax TTS"), WindowsCredentialStore("EnglishTypingTrainer/MiniMax TTS", "MiniMax TTS")
         )
     if pronunciation_credential_store is None:
-        pronunciation_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else WindowsCredentialStore(
-            "English Studio/Azure Speech", "Azure Speech"
+        pronunciation_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
+            WindowsCredentialStore("English Studio/Azure Speech", "Azure Speech"), WindowsCredentialStore("EnglishTypingTrainer/Azure Speech", "Azure Speech")
         )
     special_practice_service = SpecialPracticeService(
         database,
@@ -137,4 +142,5 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
         pronunciation_assessment_service=pronunciation_assessment_service,
         recording_service=recording_service,
         pronunciation_credential_store=pronunciation_credential_store,
+        data_management_service=data_management_service,
     )

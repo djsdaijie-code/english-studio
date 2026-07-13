@@ -26,6 +26,22 @@ class MemoryCredentialStore:
         self.value = None
 
 
+class FallbackCredentialStore:
+    """Reads legacy credentials once without deleting them, then writes only to the new target."""
+    def __init__(self, primary: CredentialStore, legacy: CredentialStore | None = None) -> None:
+        self.primary=primary; self.legacy=legacy
+
+    def get(self) -> str | None:
+        value=self.primary.get()
+        if value or self.legacy is None:return value
+        value=self.legacy.get()
+        if value:self.primary.set(value)
+        return value
+
+    def set(self, secret: str) -> None: self.primary.set(secret)
+    def delete(self) -> None: self.primary.delete()
+
+
 class WindowsCredentialStore:
     CRED_TYPE_GENERIC = 1
     CRED_PERSIST_LOCAL_MACHINE = 2

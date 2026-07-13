@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-v0.5.0：跟读与发音评分 Beta。开发分支 `feature/v0.2-sentence-learning`，不包含排行榜、社交系统、复杂任务或新安装包。
+v0.9.0：English Studio 品牌与发布准备。开发分支 `feature/v0.2-sentence-learning`，准备 v1.0 RC。
 
 ## 架构与目录
 
@@ -12,7 +12,7 @@ v0.5.0：跟读与发音评分 Beta。开发分支 `feature/v0.2-sentence-learni
 - `services/learning_*`：有效学习时间状态机、档位、等级和成就计算。
 - `database`：标准库 SQLite、事务、v1-v11 迁移和 repository。
 - `services/fsrs_review.py`：FSRS profile、UTC 调度、评分、今日队列和延后处理。
-- `ui`：连续练习、逐句学习、翻译面板及设置页面。
+- `ui`：连续练习、逐句学习、翻译面板、跟读 Beta、设置及本地数据管理入口。
 - `tests`：临时数据库、fake clock、mock provider 和 UI 烟测。
 
 ## 数据库
@@ -38,7 +38,7 @@ v0.5.0：跟读与发音评分 Beta。开发分支 `feature/v0.2-sentence-learni
 
 ## 数据目录与隐私
 
-- 正式目录：`%LOCALAPPDATA%\EnglishTypingTrainer\`。
+- 正式目录：`%LOCALAPPDATA%\EnglishStudio\`；首次运行会兼容复制旧 `EnglishTypingTrainer` 数据并保留旧目录。
 - 开发/验收：`ENGLISH_TYPING_TRAINER_DATA_DIR` 指向独立目录。
 - API Key：Windows Credential Manager；测试使用内存凭据存储。
 - 翻译缓存：用户本地 SQLite；日志不记录 Key 或大段正文。
@@ -50,7 +50,7 @@ v0.5.0：跟读与发音评分 Beta。开发分支 `feature/v0.2-sentence-learni
 ## 尚未完成
 
 - 阶段 B 已完成真实 Free Dictionary、DeepSeek 三语境讲解、词典音频、MiniMax 单词回退和来源句缓存联调；隔离数据目录中二次运行未重复调用 DeepSeek/MiniMax。
-- v0.2 新安装包、无 Python 环境验证和发布签名。
+- v1.0.0-rc1 安装包、无 Python 环境验证、安装/卸载验证和发布签名。
 - 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
 - 排行榜、社交分享、商店、虚拟货币、装扮和复杂任务不在当前范围。
-- AI 中文答案判分、听写、语音识别和跟读评分留待后续版本。
+- Azure Speech 真实资源联调、实际评分准确性、Prosody 与多区域验证留待 v1.0.1；其余跟读 Beta 的本地录音和安全降级已完成。

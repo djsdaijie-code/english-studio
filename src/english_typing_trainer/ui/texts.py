@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True, slots=True)
 class UiTexts:
-    app_name: str = "英语打字练习"
-    window_title: str = "英语打字练习"
+    app_name: str = "English Studio"
+    window_title: str = "English Studio"
     nav_articles: str = "文章库"
     nav_special: str = "专项练习"
     nav_vocabulary: str = "生词本"
@@ -29,7 +29,7 @@ class UiTexts:
     article_resegment: str = "重新分段"
     article_more: str = "更多操作"
     article_empty_title: str = "还没有导入文章"
-    article_empty_body: str = "导入一篇英文 TXT，在打字过程中练习英语并记录速度和正确率。"
+    article_empty_body: str = "导入英文 TXT 后选择练习模式；在线翻译、语音和跟读均可稍后按需配置。"
     article_empty_button: str = "导入第一篇文章"
     article_unselected_title: str = "暂未选择文章"
     article_unselected_body: str = "从左侧选择一篇文章，查看详情并开始练习。"

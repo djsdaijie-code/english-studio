@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime
 from dataclasses import replace
+from pathlib import Path
 import re
 
 from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, QThreadPool
@@ -37,6 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 from english_typing_trainer.application.context import AppContext
+from english_typing_trainer import __version__
 from english_typing_trainer.models.article import Article
 from english_typing_trainer.models.practice import PracticeMaterial
 from english_typing_trainer.models.settings import AppSettings
@@ -241,7 +243,7 @@ class MainWindow(QMainWindow):
         self.current_practice_saved = True
         self.preview_special_material: PracticeMaterial | None = None
 
-        self.setWindowTitle("英语打字练习")
+        self.setWindowTitle("English Studio")
         self.setMinimumSize(1280, 720)
         self.resize(1500, 1000)
 
@@ -278,6 +280,10 @@ class MainWindow(QMainWindow):
         self.settings_page = SettingsScreen(str(self.context.paths.data_dir.resolve()))
         self.settings_page.save_button.clicked.connect(self._save_settings)
         self.settings_page.open_data_dir_button.clicked.connect(self._open_data_dir)
+        self.settings_page.backup_database_button.clicked.connect(self._backup_database)
+        self.settings_page.restore_database_button.clicked.connect(self._restore_database)
+        self.settings_page.export_diagnostics_button.clicked.connect(self._export_diagnostics)
+        self.settings_page.about_button.clicked.connect(self._show_about)
         self.settings_page.save_api_key_button.clicked.connect(self._save_api_key)
         self.settings_page.delete_api_key_button.clicked.connect(self._delete_api_key)
         self.settings_page.test_api_button.clicked.connect(self._test_api_connection)
@@ -373,9 +379,9 @@ class MainWindow(QMainWindow):
         sidebar_layout.setContentsMargins(18, 18, 18, 18)
         sidebar_layout.setSpacing(10)
 
-        app_title = QLabel("英语打字练习")
+        app_title = QLabel("English Studio")
         app_title.setProperty("role", "app-title")
-        app_subtitle = QLabel("专注速度、正确率与长期记忆")
+        app_subtitle = QLabel("通过阅读、打字、听写和复习学习英语")
         app_subtitle.setProperty("role", "subtitle")
         sidebar_layout.addWidget(app_title)
         sidebar_layout.addWidget(app_subtitle)
@@ -414,7 +420,7 @@ class MainWindow(QMainWindow):
             self.nav_buttons[index] = button
         sidebar_layout.addStretch(1)
 
-        version_label = QLabel("版本 0.3.0")
+        version_label = QLabel(f"版本 {__version__}")
         version_label.setProperty("role", "subtitle")
         sidebar_layout.addWidget(version_label)
 
@@ -488,7 +494,7 @@ class MainWindow(QMainWindow):
 
         self.empty_state = EmptyStateCard(
             "还没有导入文章",
-            "导入一篇英文 TXT，在打字过程中练习英语并记录速度和正确率。",
+            "1. 导入一篇英文 TXT。2. 选择逐句学习或连续练习。3. 翻译、语音和跟读服务均可稍后在设置中按需配置。",
             "导入第一篇文章",
         )
         self.empty_state.action_button.clicked.connect(self._import_articles)
@@ -1429,6 +1435,58 @@ class MainWindow(QMainWindow):
             self._bulk_progress.setLabelText("已取消，已完成的翻译仍保存在缓存中。")
     def _open_data_dir(self) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.context.paths.data_dir)))
+
+    def _backup_database(self) -> None:
+        try:
+            backup = self.context.data_management_service.backup_database()
+            QMessageBox.information(self, "备份完成", f"数据库备份已保存：\n{backup}")
+        except Exception as exc:
+            QMessageBox.critical(self, "备份失败", f"无法创建数据库备份：\n{exc}")
+
+    def _restore_database(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(self, "选择数据库备份", str(self.context.paths.backups_dir), "SQLite 数据库 (*.db);;所有文件 (*.*)")
+        if not path:
+            return
+        answer = QMessageBox.warning(
+            self,
+            "恢复数据库",
+            "恢复会替换当前数据库。程序会先创建当前数据的安全备份；Windows 凭据管理器中的 API Key 不受影响。是否继续？",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            safety_backup = self.context.data_management_service.restore_database(Path(path))
+            self.settings = self.context.settings_service.get_settings()
+            self._apply_settings()
+            self._reload_articles()
+            self._refresh_history()
+            self._refresh_statistics()
+            self._refresh_vocabulary_page()
+            self._refresh_daily_learning()
+            QMessageBox.information(self, "恢复完成", f"数据库已恢复。恢复前的安全备份：\n{safety_backup}")
+        except Exception as exc:
+            QMessageBox.critical(self, "恢复失败", f"数据库未能恢复：\n{exc}")
+
+    def _export_diagnostics(self) -> None:
+        directory = QFileDialog.getExistingDirectory(self, "选择诊断日志保存位置", str(self.context.paths.data_dir))
+        if not directory:
+            return
+        try:
+            archive = self.context.data_management_service.export_diagnostics(Path(directory))
+            QMessageBox.information(self, "导出完成", f"诊断日志已导出：\n{archive}")
+        except Exception as exc:
+            QMessageBox.critical(self, "导出失败", f"无法导出诊断日志：\n{exc}")
+
+    def _show_about(self) -> None:
+        QMessageBox.information(
+            self,
+            "关于 English Studio",
+            "English Studio\n通过阅读、打字、听写和复习学习英语\n\n"
+            "本程序默认把学习数据保存在本机。在线翻译、语音和发音评分仅在你主动配置对应服务后使用。\n\n"
+            "版本信息与隐私说明请查看项目 README、PRIVACY.md 和 THIRD_PARTY_NOTICES.md。",
+        )
 
     def _leave_practice_view(self) -> None:
         self.audio_playback.stop()

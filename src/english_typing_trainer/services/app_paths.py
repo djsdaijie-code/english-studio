@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -35,6 +36,8 @@ class AppPathService:
         )
 
     def ensure_directories(self) -> AppPaths:
+        if self._base_dir is None and self._environment_override() is None:
+            self._migrate_legacy_default_data()
         paths = self.get_paths()
         paths.data_dir.mkdir(parents=True, exist_ok=True)
         paths.logs_dir.mkdir(parents=True, exist_ok=True)
@@ -46,8 +49,28 @@ class AppPathService:
     def _default_data_dir(self) -> Path:
         local_app_data = os.environ.get("LOCALAPPDATA")
         if local_app_data:
-            return Path(local_app_data) / "EnglishTypingTrainer"
-        return Path.home() / "AppData" / "Local" / "EnglishTypingTrainer"
+            return Path(local_app_data) / "EnglishStudio"
+        return Path.home() / "AppData" / "Local" / "EnglishStudio"
+
+    def _legacy_data_dir(self) -> Path:
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        return (Path(local_app_data) if local_app_data else Path.home() / "AppData" / "Local") / "EnglishTypingTrainer"
+
+    def _migrate_legacy_default_data(self) -> None:
+        source=self._legacy_data_dir(); destination=self._default_data_dir(); marker=destination / ".legacy-migration-complete"
+        if marker.exists() or not source.exists() or (destination / "typing_trainer.db").exists(): return
+        staging=destination.with_name(destination.name + ".migration-staging")
+        try:
+            if staging.exists(): shutil.rmtree(staging)
+            shutil.copytree(source, staging, dirs_exist_ok=True)
+            if not (staging / "typing_trainer.db").exists(): return
+            destination.mkdir(parents=True, exist_ok=True)
+            for child in staging.iterdir():
+                target=destination / child.name
+                if not target.exists(): shutil.move(str(child), str(target))
+            marker.write_text("migrated from EnglishTypingTrainer; source retained\n",encoding="utf-8")
+        finally:
+            if staging.exists(): shutil.rmtree(staging, ignore_errors=True)
 
     def _environment_override(self) -> Path | None:
         override = os.environ.get("ENGLISH_TYPING_TRAINER_DATA_DIR")

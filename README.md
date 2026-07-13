@@ -1,6 +1,6 @@
-# 英语打字练习器
+# English Studio
 
-英语打字练习器是面向 Windows 的本地桌面应用。它支持导入英文 TXT、逐字或逐句练习、保存进度和历史，并根据错误记录安排专项与间隔复习。v0.5 新增可选的跟读评分 Beta：本地录音、回放和 Azure Speech Provider 架构均可用，未配置 Azure 时不会显示模拟评分。
+English Studio 是面向 Windows 的本地英语学习与打字应用，通过阅读、打字、听写和复习学习英语。它支持导入英文 TXT、逐字或逐句练习、保存进度和历史，并根据错误记录安排专项与间隔复习。可选的跟读评分 Beta 支持本地录音、回放和 Azure Speech Provider 架构；未配置 Azure 时不会显示模拟评分。
 
 ## 技术基线
 
@@ -8,7 +8,7 @@
 - PySide6 6.11.1
 - SQLite（标准库 `sqlite3`），schema version 11
 - pytest 9.1.1；PyInstaller 6.21.0
-- 当前开发版本 `0.5.0`；现有 v0.1.0 可移植包保持不变
+- 当前开发版本 `0.9.0`；正式安装包将在 v1.0.0 发布
 
 ## 功能
 
@@ -41,9 +41,9 @@ py -3.14 -m venv .venv
 
 ## 数据与隐私
 
-正式数据目录为 `%LOCALAPPDATA%\EnglishTypingTrainer\`，包含数据库、日志和迁移备份。翻译缓存保存在 `typing_trainer.db` 的 `sentence_translations` 表；DeepSeek API Key 使用 Windows Credential Manager 保存，不进入数据库、配置文件或日志。
+正式数据目录为 `%LOCALAPPDATA%\EnglishStudio\`，包含数据库、日志和迁移备份。首次启用新目录时会复制旧 `%LOCALAPPDATA%\EnglishTypingTrainer\` 数据，验证后保留旧目录不删除。翻译缓存保存在 `typing_trainer.db` 的 `sentence_translations` 表；DeepSeek API Key 使用 Windows Credential Manager 保存，不进入数据库、配置文件或日志。
 
-MiniMax API Key 在设置页“语音服务”中配置，独立保存到 Windows Credential Manager 的 `English Studio/MiniMax TTS` 凭据。音频文件保存在 `%LOCALAPPDATA%\EnglishTypingTrainer\audio_cache\`，索引位于 `tts_audio_cache`。相同文本、模型、音色和生成参数会直接复用缓存，不会再次请求或收费；设置页可查看数量/大小并清空缓存。
+MiniMax API Key 在设置页“语音服务”中配置，独立保存到 Windows Credential Manager 的 `English Studio/MiniMax TTS` 凭据。音频文件保存在 `%LOCALAPPDATA%\EnglishStudio\audio_cache\`，索引位于 `tts_audio_cache`。相同文本、模型、音色和生成参数会直接复用缓存，不会再次请求或收费；设置页可查看数量/大小并清空缓存。
 
 单词标准数据和中文讲解分开保存在 `vocabulary_entries` 与 `vocabulary_contexts`。Free Dictionary 请求只发送查询单词；DeepSeek 只接收单词、当前来源句和最多三条精简英文释义；MiniMax 只接收待朗读单词或来源句。Key 不进入 SQLite、配置文件或日志。词典音频会下载到现有 `audio_cache/`，后续离线直接播放；词典无音频时回退到 MiniMax。
 
@@ -56,7 +56,7 @@ MiniMax 语音生成可能按字符产生费用，具体以 [MiniMax 官方语�
 开发与验收必须使用隔离目录：
 
 ```powershell
-$env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishTypingTrainer-v03"
+$env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishStudio-isolated"
 .\.venv\Scripts\python.exe .\main.py
 ```
 
@@ -74,9 +74,9 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishTypingTrainer-v03"
 
 ## 已知限制
 
-- v0.3 尚未制作新安装包，现有 v0.1.0 发布包不会被覆盖。
+- v1.0.0 安装包仍在发布候选准备阶段；现有 v0.1.0 发布包不会被覆盖。
 - 真实 DeepSeek 调用需要用户自己的 API Key；自动测试只使用 mock provider。
 - 中途退出时保存 session 级字符进度；已完成句子保存 `sentence_attempts`，未完成句子暂不单独保存 attempt。
 - 真人连续输入和真实 API 联调必须由用户按人工验收清单完成，自动化不能替代。
 
-升级或迁移电脑前，请先退出程序并完整备份 `%LOCALAPPDATA%\EnglishTypingTrainer\`，避免遗漏 SQLite 的 WAL/SHM 文件。
+升级或迁移电脑前，请先退出程序并完整备份 `%LOCALAPPDATA%\EnglishStudio\`，避免遗漏 SQLite 的 WAL/SHM 文件。详细隐私说明见 [PRIVACY.md](PRIVACY.md)，开源与贡献说明见 [LICENSE](LICENSE) 和 [CONTRIBUTING.md](CONTRIBUTING.md)。
