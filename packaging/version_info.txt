@@ -19,7 +19,7 @@ VSVersionInfo(
          StringStruct(u'InternalName', u'EnglishStudio'),
          StringStruct(u'OriginalFilename', u'EnglishStudio.exe'),
          StringStruct(u'ProductName', u'English Studio'),
-         StringStruct(u'ProductVersion', u'1.0.0-rc1')]
+         StringStruct(u'ProductVersion', u'1.0.0')]
       )
     ]),
     VarFileInfo([VarStruct(u'Translation', [2052, 1200])])
