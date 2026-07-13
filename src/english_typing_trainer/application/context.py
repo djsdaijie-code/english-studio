@@ -26,6 +26,7 @@ from english_typing_trainer.database.learning_repository import LearningReposito
 from english_typing_trainer.services.learning_progress import LearningProgressService
 from english_typing_trainer.services.learning_time import LearningTimeTracker
 from english_typing_trainer.services.fsrs_review import FsrsReviewService
+from english_typing_trainer.services.dictation_service import DictationService
 
 
 @dataclass(slots=True)
@@ -54,6 +55,7 @@ class AppContext:
     learning_progress_service: LearningProgressService
     learning_time_tracker: LearningTimeTracker
     fsrs_review_service: FsrsReviewService
+    dictation_service: DictationService
 
 
 def build_app_context(data_dir: Path | None = None, credential_store: CredentialStore | None = None, tts_credential_store: CredentialStore | None = None) -> AppContext:
@@ -83,6 +85,7 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
         idle_timeout_seconds=learning_settings.learning_idle_timeout_seconds,
         health_reminders_enabled=learning_settings.health_reminders_enabled)
     fsrs_review_service = FsrsReviewService(database)
+    dictation_service = DictationService(database)
     if credential_store is None:
         credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else WindowsCredentialStore()
     if tts_credential_store is None:
@@ -119,4 +122,5 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
         learning_progress_service=learning_progress_service,
         learning_time_tracker=learning_time_tracker,
         fsrs_review_service=fsrs_review_service,
+        dictation_service=dictation_service,
     )

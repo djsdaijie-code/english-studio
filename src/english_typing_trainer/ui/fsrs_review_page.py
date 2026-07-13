@@ -15,6 +15,7 @@ class FsrsReviewPage(QWidget):
     rating_requested = Signal(int, str)
     defer_requested = Signal(int)
     learning_activity = Signal(str, object)
+    dictation_requested = Signal()
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -44,11 +45,15 @@ class FsrsReviewPage(QWidget):
         self.skip_button = QPushButton("跳过")
         self.skip_button.setProperty("variant", "ghost")
         self.skip_button.clicked.connect(self._skip)
+        self.dictation_button = QPushButton("听写模式")
+        self.dictation_button.setProperty("variant", "ghost")
+        self.dictation_button.clicked.connect(self.dictation_requested.emit)
         top.addWidget(back)
         top.addWidget(self.title, 1)
         top.addWidget(self.position)
         top.addWidget(self.defer_button)
         top.addWidget(self.skip_button)
+        top.addWidget(self.dictation_button)
         root.addLayout(top)
 
         card = QFrame()

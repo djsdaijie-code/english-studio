@@ -63,6 +63,7 @@ from english_typing_trainer.ui.vocabulary_page import VocabularyPage
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
 from english_typing_trainer.ui.daily_learning_card import DailyLearningCard
 from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
+from english_typing_trainer.ui.dictation_page import DictationPage
 from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
 from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
@@ -304,6 +305,7 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.row_learning_requested.connect(self._start_vocabulary_row)
         self.vocabulary_page.scope_changed.connect(lambda _scope:self._refresh_vocabulary_page())
         self.vocabulary_page.today_review_requested.connect(self._start_fsrs_review)
+        self.vocabulary_page.dictation_requested.connect(self._start_dictation)
         self.current_vocabulary_article_id = None
         self.word_learning_page = WordLearningPage()
         self.word_learning_page.back_requested.connect(self._show_vocabulary)
@@ -319,6 +321,13 @@ class MainWindow(QMainWindow):
         self.fsrs_review_page.rating_requested.connect(self._rate_fsrs_card)
         self.fsrs_review_page.defer_requested.connect(self._defer_fsrs_card)
         self.fsrs_review_page.learning_activity.connect(self._track_fsrs_learning_activity)
+        self.fsrs_review_page.dictation_requested.connect(self._start_dictation)
+        self.dictation_page = DictationPage(self.context.dictation_service)
+        self.dictation_page.back_requested.connect(self._show_vocabulary)
+        self.dictation_page.audio_requested.connect(self._play_dictation_audio)
+        self.dictation_page.attempt_completed.connect(self._save_dictation_attempt)
+        self.dictation_page.rating_requested.connect(self._rate_dictation_card)
+        self.dictation_page.learning_activity.connect(self._track_dictation_learning_activity)
         self._vocabulary_workers: set[VocabularyTask] = set()
         self._enrichment_loading: set[tuple[int,str]] = set()
         self._enrichment_errors: dict[tuple[int,str],str] = {}
@@ -368,6 +377,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.sentence_practice_view)
         self.stack.addWidget(self.word_learning_page)
         self.stack.addWidget(self.fsrs_review_page)
+        self.stack.addWidget(self.dictation_page)
 
         self.nav_buttons: dict[int, QPushButton] = {}
         nav_specs = [
@@ -550,7 +560,7 @@ class MainWindow(QMainWindow):
             button.style().polish(button)
 
     def _learning_page_changed(self, _index:int) -> None:
-        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page}:
+        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page,self.dictation_page}:
             self._handle_learning_update(self.context.learning_time_tracker.stop())
             self._refresh_daily_learning()
 
@@ -566,6 +576,13 @@ class MainWindow(QMainWindow):
 
     def _track_fsrs_learning_activity(self, event_type: str, vocabulary_id: object) -> None:
         item = self.fsrs_review_page.current
+        article_id = item.context.article_id if item and item.context else None
+        update = self.context.learning_time_tracker.activity(event_type, related_article_id=article_id, related_vocabulary_id=int(vocabulary_id) if vocabulary_id else None)
+        self._handle_learning_update(update)
+        self._refresh_daily_learning()
+
+    def _track_dictation_learning_activity(self, event_type: str, vocabulary_id: object) -> None:
+        item = self.dictation_page.current
         article_id = item.context.article_id if item and item.context else None
         update = self.context.learning_time_tracker.activity(event_type, related_article_id=article_id, related_vocabulary_id=int(vocabulary_id) if vocabulary_id else None)
         self._handle_learning_update(update)
@@ -638,6 +655,32 @@ class MainWindow(QMainWindow):
         self.fsrs_review_page.load_queue(queue.items)
         self.stack.setCurrentWidget(self.fsrs_review_page)
         self.sidebar.hide()
+
+    def _start_dictation(self) -> None:
+        queue = self.context.fsrs_review_service.build_today_queue(
+            new_limit=self.settings.fsrs_new_cards_per_day,
+            soft_limit=self.settings.fsrs_review_soft_limit,
+        )
+        items = []
+        seen: set[int] = set()
+        for item in queue.items:
+            if item.entry.id and item.entry.id not in seen:
+                seen.add(item.entry.id)
+                items.append(item)
+        if not items:
+            QMessageBox.information(self, "听写练习", "请先在单词本添加单词，或等待今日复习队列生成。")
+            return
+        self.dictation_page.load_queue(items)
+        self.stack.setCurrentWidget(self.dictation_page)
+        self.sidebar.hide()
+
+    def _save_dictation_attempt(self, attempt) -> None:
+        self.context.dictation_service.save(attempt)
+
+    def _rate_dictation_card(self, entry_id: int, rating: str) -> None:
+        card = self.context.fsrs_review_service.ensure_listening_card(entry_id)
+        self.context.fsrs_review_service.rate(card.id or 0, rating)
+        self._refresh_overview()
 
     def _rate_fsrs_card(self, card_id: int, rating: str) -> None:
         self.context.fsrs_review_service.rate(card_id, rating)
@@ -910,7 +953,8 @@ class MainWindow(QMainWindow):
             key = self.context.tts_credential_store.get()
             provider = MiniMaxTTSProvider(key or "", timeout=15.0)
         except Exception as exc:
-            controls.set_state("error", str(exc))
+            if controls:
+                controls.set_state("error", str(exc))
             return
         if controls: controls.set_state("loading", "生成中")
         worker = TTSWorker(self.context.tts_service, provider, request)
@@ -1646,22 +1690,31 @@ class MainWindow(QMainWindow):
         entry,contexts,_=self.context.vocabulary_learning_service.detail(entry_id)
         if entry:self._play_word_from_learning(entry,contexts[0] if contexts else None)
 
-    def _play_word_from_learning(self,entry,context):
+    def _play_dictation_audio(self, text: str, speed: float) -> None:
+        """Prefer the cached dictionary recording for a word, otherwise use cached/generated TTS."""
+        item = self.dictation_page.current
+        if item and self.dictation_page.kind.currentData() == "word":
+            self._play_word_from_learning(item.entry, item.context, focus_widget=self.dictation_page.input, speed=speed)
+            return
+        self._request_speech(text, speed)
+
+    def _play_word_from_learning(self,entry,context,focus_widget=None,speed=None):
         from english_typing_trainer.services.dictionary_provider import parse_dictionary_payload
         audio_url=""
         if isinstance(entry.dictionary_payload,list) and entry.dictionary_payload:
             try:audio_url=parse_dictionary_payload(entry.normalized_word,entry.dictionary_payload).audio_url
             except Exception:pass
+        playback_speed = self.settings.tts_speed if speed is None else speed
         if audio_url:
             task=VocabularyTask(lambda:self.context.dictionary_audio_service.get_or_download(audio_url,entry.display_word)); self._vocabulary_workers.add(task)
-            task.signals.completed.connect(lambda audio,t=task:self._dictionary_audio_ready(audio,t,entry.display_word)); task.signals.failed.connect(lambda _error,t=task:self._dictionary_audio_fallback(entry.display_word,t)); self._thread_pool.start(task)
-        else:self._request_speech(entry.display_word,self.settings.tts_speed)
+            task.signals.completed.connect(lambda audio,t=task,w=focus_widget:self._dictionary_audio_ready(audio,t,w)); task.signals.failed.connect(lambda _error,t=task,w=focus_widget,s=playback_speed:self._dictionary_audio_fallback(entry.display_word,t,w,s)); self._thread_pool.start(task)
+        else:self._request_speech(entry.display_word,playback_speed)
 
-    def _dictionary_audio_ready(self,audio,task,word):
-        self._vocabulary_workers.discard(task); self.context.tts_service.mark_played(audio.cache_key); self.audio_playback.toggle(audio.file_path); self.word_learning_page.input.setFocus()
+    def _dictionary_audio_ready(self,audio,task,focus_widget=None):
+        self._vocabulary_workers.discard(task); self.context.tts_service.mark_played(audio.cache_key); self.audio_playback.toggle(audio.file_path); (focus_widget or self.word_learning_page.input).setFocus()
 
-    def _dictionary_audio_fallback(self,word,task):
-        self._vocabulary_workers.discard(task); self._request_speech(word,self.settings.tts_speed)
+    def _dictionary_audio_fallback(self,word,task,focus_widget=None,speed=None):
+        self._vocabulary_workers.discard(task); self._request_speech(word,self.settings.tts_speed if speed is None else speed)
 
     def _delete_vocabulary_entry(self,entry_id:int):
         if QMessageBox.question(self,"删除单词","确定删除该词条、来源和学习记录吗？")!=QMessageBox.StandardButton.Yes:return

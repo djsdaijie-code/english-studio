@@ -39,13 +39,13 @@ def add_word(context, word: str = "English", sentence: str = "English helps peop
     return context.vocabulary_learning_service.collect(word, sentence=sentence)
 
 
-def test_schema_9_creates_fsrs_tables_and_defaults(tmp_path: Path) -> None:
+def test_schema_10_creates_fsrs_tables_and_defaults(tmp_path: Path) -> None:
     context = build_app_context(data_dir=tmp_path / "data")
     try:
         connection = context.database.connect()
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-        assert context.database.get_schema_version() == 9
-        assert {"fsrs_profiles", "vocabulary_review_cards", "vocabulary_review_logs"} <= tables
+        assert context.database.get_schema_version() == 10
+        assert {"fsrs_profiles", "vocabulary_review_cards", "vocabulary_review_logs", "dictation_attempts"} <= tables
         values = {row[0]: row[1] for row in connection.execute("SELECT key,value FROM settings")}
         assert values["fsrs_desired_retention"] == "0.90"
         assert values["fsrs_new_cards_per_day"] == "20"
@@ -53,7 +53,7 @@ def test_schema_9_creates_fsrs_tables_and_defaults(tmp_path: Path) -> None:
         context.database.close()
 
 
-def test_v8_to_v9_backup_and_rollback(tmp_path: Path, monkeypatch) -> None:
+def test_v8_to_v10_backup_and_rollback(tmp_path: Path, monkeypatch) -> None:
     data = tmp_path / "data"
     data.mkdir()
     database_path = data / "typing_trainer.db"
@@ -67,7 +67,7 @@ def test_v8_to_v9_backup_and_rollback(tmp_path: Path, monkeypatch) -> None:
     manager = DatabaseManager(database_path)
     manager.initialize()
     try:
-        assert manager.get_schema_version() == 9
+        assert manager.get_schema_version() == 10
         assert list((data / "backups").glob("typing_trainer-v8-*.db"))
     finally:
         manager.close()
@@ -78,12 +78,12 @@ def test_v8_to_v9_backup_and_rollback(tmp_path: Path, monkeypatch) -> None:
     runner = MigrationRunner()
     for version in range(1, 9):
         getattr(runner, f"_apply_version_{version}")(connection)
-    original = runner._apply_version_9
-    monkeypatch.setattr(runner, "_apply_version_9", lambda _connection: (_ for _ in ()).throw(RuntimeError("boom")))
+    original = runner._apply_version_10
+    monkeypatch.setattr(runner, "_apply_version_10", lambda _connection: (_ for _ in ()).throw(RuntimeError("boom")))
     with pytest.raises(RuntimeError):
         runner.migrate(connection)
     assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 8
-    monkeypatch.setattr(runner, "_apply_version_9", original)
+    monkeypatch.setattr(runner, "_apply_version_10", original)
     connection.close()
 
 

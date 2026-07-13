@@ -69,6 +69,7 @@ class VocabularyPage(QWidget):
     row_learning_requested = Signal(object)
     scope_changed = Signal(str)
     today_review_requested = Signal()
+    dictation_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -111,6 +112,7 @@ class VocabularyPage(QWidget):
         self.refresh_button.setProperty("variant", "ghost")
         self.today_review_button = QPushButton("今日复习")
         self.today_review_button.setProperty("variant", "primary")
+        self.dictation_button = QPushButton("听写练习")
         for widget in (
             self.scope_combo,
             self.search_input,
@@ -121,6 +123,7 @@ class VocabularyPage(QWidget):
             self.due_only_checkbox,
             self.refresh_button,
             self.today_review_button,
+            self.dictation_button,
         ):
             top_filters.addWidget(widget)
         filter_layout.addLayout(top_filters)
@@ -173,6 +176,7 @@ class VocabularyPage(QWidget):
         self.table.itemSelectionChanged.connect(self._update_action_state)
         self.refresh_button.clicked.connect(self.refresh_requested.emit)
         self.today_review_button.clicked.connect(self.today_review_requested.emit)
+        self.dictation_button.clicked.connect(self.dictation_requested.emit)
         self.add_button.clicked.connect(self._emit_add)
         self.edit_button.clicked.connect(self._open_editor)
         self.archive_button.clicked.connect(lambda: self._emit_archive(True))

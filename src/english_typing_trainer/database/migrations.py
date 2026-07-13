@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 9
+LATEST_SCHEMA_VERSION = 10
 
 
 class MigrationRunner:
@@ -46,6 +46,9 @@ class MigrationRunner:
                 current_version = 8
             if current_version < 9:
                 self._apply_version_9(connection)
+                current_version = 9
+            if current_version < 10:
+                self._apply_version_10(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -728,6 +731,35 @@ class MigrationRunner:
         )
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (9)")
+
+    def _apply_version_10(self, connection: sqlite3.Connection) -> None:
+        """Persist dictated answers without changing the existing learning attempts."""
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS dictation_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vocabulary_entry_id INTEGER,
+                vocabulary_context_id INTEGER,
+                dictation_type TEXT NOT NULL CHECK(dictation_type IN ('word','sentence')),
+                comparison_mode TEXT NOT NULL CHECK(comparison_mode IN ('strict','learning')),
+                expected_text TEXT NOT NULL,
+                user_input TEXT NOT NULL,
+                normalized_comparison TEXT NOT NULL,
+                error_count INTEGER NOT NULL DEFAULT 0,
+                omitted_count INTEGER NOT NULL DEFAULT 0,
+                inserted_count INTEGER NOT NULL DEFAULT 0,
+                replay_count INTEGER NOT NULL DEFAULT 0,
+                speed REAL NOT NULL DEFAULT 1.0,
+                duration_ms INTEGER NOT NULL DEFAULT 0,
+                rating TEXT CHECK(rating IN ('again','hard','good','easy')),
+                reviewed_at_utc TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (vocabulary_entry_id) REFERENCES vocabulary_entries(id) ON DELETE SET NULL,
+                FOREIGN KEY (vocabulary_context_id) REFERENCES vocabulary_contexts(id) ON DELETE SET NULL
+            )"""
+        )
+        connection.execute("CREATE INDEX IF NOT EXISTS idx_dictation_attempts_entry ON dictation_attempts(vocabulary_entry_id, reviewed_at_utc DESC)")
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (10)")
     def _ensure_column(
         self,
         connection: sqlite3.Connection,
