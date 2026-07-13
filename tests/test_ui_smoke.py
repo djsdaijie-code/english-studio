@@ -96,7 +96,7 @@ def test_existing_schema3_database_opens_in_new_ui(tmp_path: Path) -> None:
         window = MainWindow(reopened)
         window.show()
         app.processEvents()
-        assert reopened.database.get_schema_version() == 10
+        assert reopened.database.get_schema_version() == 11
     finally:
         reopened.database.close()
 

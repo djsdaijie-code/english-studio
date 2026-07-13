@@ -35,3 +35,7 @@ class AppSettings:
     fsrs_desired_retention: float = 0.90
     fsrs_new_cards_per_day: int = 20
     fsrs_review_soft_limit: int = 100
+    pronunciation_provider: str = "azure"
+    pronunciation_region: str = ""
+    pronunciation_locale: str = "en-US"
+    pronunciation_keep_recordings: bool = False

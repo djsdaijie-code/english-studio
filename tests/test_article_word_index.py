@@ -64,5 +64,5 @@ def test_v6_to_v7_migration_and_rollback(tmp_path:Path,monkeypatch):
     assert connection.execute("SELECT version FROM schema_version").fetchone()[0]==6
     assert connection.execute("SELECT name FROM sqlite_master WHERE name='article_word_occurrences'").fetchone() is None
     monkeypatch.setattr(runner,"_apply_version_7",original);runner.migrate(connection)
-    assert connection.execute("SELECT version FROM schema_version").fetchone()[0]==10
+    assert connection.execute("SELECT version FROM schema_version").fetchone()[0]==11
     connection.close()

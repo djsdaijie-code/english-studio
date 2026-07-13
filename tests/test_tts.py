@@ -130,7 +130,7 @@ def test_concurrent_requests_are_deduplicated(tmp_path: Path) -> None:
 def test_schema5_cache_table_defaults_and_v4_backup(tmp_path: Path) -> None:
     context = build_app_context(data_dir=tmp_path / "new")
     try:
-        assert context.database.get_schema_version() == 10
+        assert context.database.get_schema_version() == 11
         columns={row[1] for row in context.database.connect().execute("PRAGMA table_info(tts_audio_cache)")}
         assert {"cache_key","voice_id","file_path","size_bytes","status"} <= columns
         assert context.settings_service.get_settings().tts_model == "speech-2.8-hd"
@@ -146,8 +146,8 @@ def test_schema5_cache_table_defaults_and_v4_backup(tmp_path: Path) -> None:
     runner._apply_version_1(connection); runner._apply_version_2(connection); runner._apply_version_3(connection); runner._apply_version_4(connection); connection.commit(); connection.close()
     manager=DatabaseManager(db); manager.initialize()
     try:
-        assert manager.get_schema_version() == 10
-        backups=list((legacy_dir / "backups").glob("typing_trainer-v4-before-v10-*.db"))
+        assert manager.get_schema_version() == 11
+        backups=list((legacy_dir / "backups").glob("typing_trainer-v4-before-v11-*.db"))
         assert len(backups) == 1
     finally: manager.close()
 

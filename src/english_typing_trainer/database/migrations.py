@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 10
+LATEST_SCHEMA_VERSION = 11
 
 
 class MigrationRunner:
@@ -49,6 +49,9 @@ class MigrationRunner:
                 current_version = 9
             if current_version < 10:
                 self._apply_version_10(connection)
+                current_version = 10
+            if current_version < 11:
+                self._apply_version_11(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -760,6 +763,37 @@ class MigrationRunner:
         connection.execute("CREATE INDEX IF NOT EXISTS idx_dictation_attempts_entry ON dictation_attempts(vocabulary_entry_id, reviewed_at_utc DESC)")
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (10)")
+
+    def _apply_version_11(self, connection: sqlite3.Connection) -> None:
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS pronunciation_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target_type TEXT NOT NULL CHECK(target_type IN ('word','sentence')),
+                vocabulary_entry_id INTEGER,
+                vocabulary_context_id INTEGER,
+                reference_text_hash TEXT NOT NULL,
+                provider TEXT NOT NULL,
+                locale TEXT NOT NULL,
+                overall_score REAL,
+                accuracy_score REAL,
+                fluency_score REAL,
+                completeness_score REAL,
+                prosody_score REAL,
+                word_feedback_json TEXT NOT NULL DEFAULT '[]',
+                status TEXT NOT NULL CHECK(status IN ('not_configured','recorded','assessing','completed','failed','cancelled')),
+                error_code TEXT,
+                recorded_at TEXT NOT NULL,
+                audio_path TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (vocabulary_entry_id) REFERENCES vocabulary_entries(id) ON DELETE SET NULL,
+                FOREIGN KEY (vocabulary_context_id) REFERENCES vocabulary_contexts(id) ON DELETE SET NULL
+            )"""
+        )
+        connection.execute("CREATE INDEX IF NOT EXISTS idx_pronunciation_attempts_target ON pronunciation_attempts(vocabulary_entry_id, recorded_at DESC)")
+        defaults = {"pronunciation_provider": "azure", "pronunciation_region": "", "pronunciation_locale": "en-US", "pronunciation_keep_recordings": "0"}
+        connection.executemany("INSERT OR IGNORE INTO settings(key,value,updated_at) VALUES (?,?,datetime('now','localtime'))", defaults.items())
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (11)")
     def _ensure_column(
         self,
         connection: sqlite3.Connection,

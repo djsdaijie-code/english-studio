@@ -1,14 +1,14 @@
 # 英语打字练习器
 
-英语打字练习器是面向 Windows 的本地桌面应用。它支持导入英文 TXT、逐字或逐句练习、保存进度和历史，并根据错误记录安排专项与间隔复习。v0.4 新增单词与句子听写，复用已有词典音频、MiniMax 语音缓存和 FSRS 调度。
+英语打字练习器是面向 Windows 的本地桌面应用。它支持导入英文 TXT、逐字或逐句练习、保存进度和历史，并根据错误记录安排专项与间隔复习。v0.5 新增可选的跟读评分 Beta：本地录音、回放和 Azure Speech Provider 架构均可用，未配置 Azure 时不会显示模拟评分。
 
 ## 技术基线
 
 - Python `>=3.14,<3.15`，当前验证环境 Python 3.14.6
 - PySide6 6.11.1
-- SQLite（标准库 `sqlite3`），schema version 10
+- SQLite（标准库 `sqlite3`），schema version 11
 - pytest 9.1.1；PyInstaller 6.21.0
-- 当前开发版本 `0.4.0`；现有 v0.1.0 可移植包保持不变
+- 当前开发版本 `0.5.0`；现有 v0.1.0 可移植包保持不变
 
 ## 功能
 
@@ -25,6 +25,7 @@
 - 每日学习：首页显示有效学习时间、自动打卡、固定经验档位、连续天数、本周轨迹、长期等级和核心成就；90 秒无学习行为后自动停止计时，网络等待和非学习页面停留不计入。
 - FSRS 智能复习：首页和单词本均可进入“今日复习”。每个词条分别维护严格词形拼写卡和词义自评卡；支持忘记了、困难、记得、很熟、稍后复习、跳过与暂停，复习数据按 UTC 持久化并以本地时间显示。
 - 听写：单词听写严格保留大小写、撇号和连字符；句子听写支持严格模式与学习模式，后者仅忽略句首大小写、句末标点并规范空白。结果保存错误、遗漏、多余、重播、语速、时长和 FSRS listening 评分；比对完全离线。
+- 跟读评分 Beta：单词与来源句可播放标准发音、录音和回放；Azure Speech 区域与 Key 均由用户在设置中配置并仅保存到 Windows Credential Manager。未配置、无网络或 SDK 不可用时仅显示清晰状态，不显示 fake 或随机分数；临时录音默认在取消或评分完成后清理。
 - 产品界面：简体中文、浅色/深色主题和专注练习布局。
 
 ## 安装与运行
@@ -69,7 +70,7 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishTypingTrainer-v03"
 
 ## 数据库迁移
 
-迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v9 数据库可顺序升级到 v10。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v10 新增 `dictation_attempts`，不改变 WPM 计时或既有练习记录。
+迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v10 数据库可顺序升级到 v11。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v11 新增 `pronunciation_attempts`，不改变 WPM 计时或既有练习记录。
 
 ## 已知限制
 

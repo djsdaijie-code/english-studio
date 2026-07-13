@@ -70,6 +70,7 @@ class VocabularyPage(QWidget):
     scope_changed = Signal(str)
     today_review_requested = Signal()
     dictation_requested = Signal()
+    pronunciation_requested = Signal(int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -157,6 +158,7 @@ class VocabularyPage(QWidget):
         self.review_button.setProperty("variant", "primary")
         self.open_button = QPushButton("打开学习"); self.open_button.setProperty("variant", "primary")
         self.play_button = QPushButton("播放单词")
+        self.pronunciation_button = QPushButton("跟读练习")
         self.delete_button = QPushButton("删除"); self.delete_button.setProperty("variant", "danger")
         footer.addWidget(self.empty_label)
         footer.addStretch(1)
@@ -165,7 +167,7 @@ class VocabularyPage(QWidget):
         footer.addWidget(self.restore_button)
         footer.addWidget(self.mastered_button)
         footer.addWidget(self.learning_button)
-        footer.addWidget(self.play_button); footer.addWidget(self.delete_button); footer.addWidget(self.review_button); footer.addWidget(self.open_button)
+        footer.addWidget(self.play_button); footer.addWidget(self.pronunciation_button); footer.addWidget(self.delete_button); footer.addWidget(self.review_button); footer.addWidget(self.open_button)
         layout.addLayout(footer)
 
         self.status_label = QLabel("")
@@ -186,6 +188,7 @@ class VocabularyPage(QWidget):
         self.review_button.clicked.connect(self._emit_review)
         self.open_button.clicked.connect(self._emit_learning)
         self.play_button.clicked.connect(lambda: self._emit_id(self.play_requested))
+        self.pronunciation_button.clicked.connect(lambda: self._emit_id(self.pronunciation_requested))
         self.delete_button.clicked.connect(lambda: self._emit_id(self.delete_requested))
         self.table.cellDoubleClicked.connect(lambda _row,_column:self._emit_learning())
         self.search_input.textChanged.connect(lambda _text:self.refresh_requested.emit())
@@ -244,7 +247,7 @@ class VocabularyPage(QWidget):
         self.review_button.setEnabled(has_selection)
         self.mastered_button.setEnabled(has_selection)
         self.learning_button.setEnabled(has_selection)
-        self.open_button.setEnabled(has_selection); self.play_button.setEnabled(has_selection); self.delete_button.setEnabled(has_selection)
+        self.open_button.setEnabled(has_selection); self.play_button.setEnabled(has_selection); self.pronunciation_button.setEnabled(has_selection); self.delete_button.setEnabled(has_selection)
         mastered = bool(selected and selected.get("status") == "mastered")
         self.mastered_button.setVisible(has_selection and not mastered)
         self.learning_button.setVisible(has_selection and mastered)

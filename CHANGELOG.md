@@ -1,5 +1,18 @@
 # 更新日志
 
+## 0.5.0 - 2026-07-13
+
+### 新增
+
+- schema 11：`pronunciation_attempts` 保存跟读目标、隐私安全的参考文本哈希、Provider、评分字段、逐词反馈、状态和可选录音路径。
+- 跟读评分 Beta：单词与句子标准音频、本地录音、回放、取消和再试一次；临时录音默认在取消或评分完成后清理。
+- `PronunciationAssessmentProvider`、Azure Provider 和仅限测试的确定性 Fake Provider；正式 UI 永远不会选择 Fake Provider。
+- 设置页新增 Azure Speech 区域、Key 与本地录音保留选项；Key 仅进入 Windows Credential Manager。
+
+### 限制
+
+- 未验证 Azure 真实资源联调、实际评分字段、Prosody、延迟、计费和多区域兼容性；这些项目列入 v1.0.1，且不阻塞基础离线学习或 v1.0 发布。
+
 ## 0.4.0 - 2026-07-13
 
 ### 新增

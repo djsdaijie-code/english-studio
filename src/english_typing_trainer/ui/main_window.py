@@ -64,10 +64,13 @@ from english_typing_trainer.ui.word_learning_page import WordLearningPage
 from english_typing_trainer.ui.daily_learning_card import DailyLearningCard
 from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
 from english_typing_trainer.ui.dictation_page import DictationPage
+from english_typing_trainer.ui.pronunciation_page import PronunciationPage
 from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
 from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
 from english_typing_trainer.models.vocabulary import VocabularyAttempt
+from english_typing_trainer.models.pronunciation import PronunciationRequest
+from english_typing_trainer.services.pronunciation_provider import AzurePronunciationAssessmentProvider
 
 
 class MetricCard(QFrame):
@@ -282,6 +285,8 @@ class MainWindow(QMainWindow):
         self.settings_page.delete_tts_key_button.clicked.connect(self._delete_tts_key)
         self.settings_page.test_tts_button.clicked.connect(self._test_tts_connection)
         self.settings_page.clear_tts_cache_button.clicked.connect(self._clear_tts_cache)
+        self.settings_page.save_pronunciation_key_button.clicked.connect(self._save_pronunciation_key)
+        self.settings_page.delete_pronunciation_key_button.clicked.connect(self._delete_pronunciation_key)
         self.history_page = HistoryPage()
         self.history_page.view_detail_requested.connect(self._show_session_detail)
         self.history_page.delete_session_requested.connect(self._delete_session)
@@ -301,6 +306,7 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.review_requested.connect(self._open_word_learning)
         self.vocabulary_page.open_learning_requested.connect(self._open_word_learning)
         self.vocabulary_page.play_requested.connect(self._play_vocabulary_word)
+        self.vocabulary_page.pronunciation_requested.connect(self._start_pronunciation)
         self.vocabulary_page.delete_requested.connect(self._delete_vocabulary_entry)
         self.vocabulary_page.row_learning_requested.connect(self._start_vocabulary_row)
         self.vocabulary_page.scope_changed.connect(lambda _scope:self._refresh_vocabulary_page())
@@ -328,6 +334,16 @@ class MainWindow(QMainWindow):
         self.dictation_page.attempt_completed.connect(self._save_dictation_attempt)
         self.dictation_page.rating_requested.connect(self._rate_dictation_card)
         self.dictation_page.learning_activity.connect(self._track_dictation_learning_activity)
+        self.pronunciation_page = PronunciationPage()
+        self.pronunciation_page.back_requested.connect(self._leave_pronunciation)
+        self.pronunciation_page.standard_audio_requested.connect(self._play_pronunciation_reference)
+        self.pronunciation_page.record_requested.connect(self._start_pronunciation_recording)
+        self.pronunciation_page.stop_requested.connect(self._stop_pronunciation_recording)
+        self.pronunciation_page.cancel_requested.connect(self._cancel_pronunciation_recording)
+        self.pronunciation_page.playback_requested.connect(self._play_pronunciation_recording)
+        self.pronunciation_page.assess_requested.connect(self._assess_pronunciation)
+        self.context.recording_service.state_changed.connect(self._pronunciation_recording_state)
+        self.context.recording_service.failed.connect(lambda message: self.pronunciation_page.status.setText(message))
         self._vocabulary_workers: set[VocabularyTask] = set()
         self._enrichment_loading: set[tuple[int,str]] = set()
         self._enrichment_errors: dict[tuple[int,str],str] = {}
@@ -378,6 +394,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.word_learning_page)
         self.stack.addWidget(self.fsrs_review_page)
         self.stack.addWidget(self.dictation_page)
+        self.stack.addWidget(self.pronunciation_page)
 
         self.nav_buttons: dict[int, QPushButton] = {}
         nav_specs = [
@@ -674,6 +691,89 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.dictation_page)
         self.sidebar.hide()
 
+    def _start_pronunciation(self, entry_id: int) -> None:
+        entry, contexts, _state = self.context.vocabulary_learning_service.detail(entry_id)
+        if entry is None:
+            QMessageBox.information(self, "跟读练习", "该单词已不存在或无法读取。")
+            return
+        self.pronunciation_page.load_target(entry, contexts[0] if contexts else None)
+        self.stack.setCurrentWidget(self.pronunciation_page)
+        self.sidebar.hide()
+
+    def _leave_pronunciation(self) -> None:
+        self._cancel_pronunciation_recording()
+        self._show_vocabulary()
+
+    def _play_pronunciation_reference(self, text: str, speed: float) -> None:
+        item = self.pronunciation_page
+        if item.target_type.currentData() == "word" and item.entry is not None:
+            self._play_word_from_learning(item.entry, item.context, focus_widget=self.pronunciation_page)
+        else:
+            self._request_speech(text, speed)
+
+    def _start_pronunciation_recording(self) -> None:
+        path = self.context.recording_service.start()
+        if path:
+            self.pronunciation_page.status.setText("正在录音。完成后点击“停止录音”。")
+
+    def _stop_pronunciation_recording(self) -> None:
+        self.pronunciation_page.set_recorded(self.context.recording_service.stop())
+
+    def _cancel_pronunciation_recording(self) -> None:
+        self.context.recording_service.cancel()
+        self.pronunciation_page.audio_path = None
+
+    def _pronunciation_recording_state(self, state: str) -> None:
+        self.pronunciation_page.set_recording_state(state)
+
+    def _play_pronunciation_recording(self, path) -> None:
+        if path is None or not path.exists():
+            self.pronunciation_page.status.setText("录音文件尚未准备完成或已被清理。")
+            return
+        self.audio_playback.toggle(path)
+
+    def _assess_pronunciation(self, target_type: str, path, _unused_keep: bool) -> None:
+        page = self.pronunciation_page
+        if path is None or not path.exists():
+            page.status.setText("请先完成一段录音后再评分。")
+            return
+        key = self.context.pronunciation_credential_store.get() or ""
+        provider = AzurePronunciationAssessmentProvider(key, self.settings.pronunciation_region)
+        request = PronunciationRequest(page.reference_text(), self.settings.pronunciation_locale, path)
+        entry_id = page.entry.id if page.entry else None
+        context_id = page.context.id if page.context else None
+        if not key or not self.settings.pronunciation_region:
+            attempt = self.context.pronunciation_assessment_service.assess(
+                request, provider, target_type=target_type, entry_id=entry_id, context_id=context_id,
+                keep_audio=self.settings.pronunciation_keep_recordings,
+            )
+            self._pronunciation_assessed(attempt, None)
+            return
+        page.status.setText("正在准备评分请求……")
+        task = VocabularyTask(lambda: provider.assess(request))
+        self._vocabulary_workers.add(task)
+        task.signals.completed.connect(lambda result, worker=task, req=request, target=target_type, entry=entry_id, context=context_id: self._pronunciation_result_ready(result, worker, req, target, entry, context))
+        task.signals.failed.connect(lambda error, worker=task: self._pronunciation_assessment_failed(str(error), worker))
+        self._thread_pool.start(task)
+
+    def _pronunciation_assessed(self, attempt, worker) -> None:
+        if worker is not None:
+            self._vocabulary_workers.discard(worker)
+        self.pronunciation_page.show_attempt(attempt)
+        if not self.settings.pronunciation_keep_recordings:
+            self.pronunciation_page.audio_path = None
+
+    def _pronunciation_result_ready(self, result, worker, request, target_type: str, entry_id: int | None, context_id: int | None) -> None:
+        attempt = self.context.pronunciation_assessment_service.save_result(
+            request, result, target_type=target_type, entry_id=entry_id, context_id=context_id,
+            keep_audio=self.settings.pronunciation_keep_recordings,
+        )
+        self._pronunciation_assessed(attempt, worker)
+
+    def _pronunciation_assessment_failed(self, message: str, worker) -> None:
+        self._vocabulary_workers.discard(worker)
+        self.pronunciation_page.status.setText(f"评分失败：{message}")
+
     def _save_dictation_attempt(self, attempt) -> None:
         self.context.dictation_service.save(attempt)
 
@@ -707,6 +807,10 @@ class MainWindow(QMainWindow):
             self.settings_page.set_tts_api_key_status(mask_secret(self.context.tts_credential_store.get()))
         except Exception:
             self.settings_page.set_tts_api_key_status("读取失败")
+        try:
+            self.settings_page.set_pronunciation_key_status(mask_secret(self.context.pronunciation_credential_store.get()))
+        except Exception:
+            self.settings_page.set_pronunciation_key_status("读取失败")
         stats=self.context.tts_service.stats(); self.settings_page.set_tts_cache_stats(stats.file_count,stats.total_size_bytes)
         self._switch_page(5)
 
@@ -1142,6 +1246,27 @@ class MainWindow(QMainWindow):
         try:
             self.context.tts_credential_store.delete(); self.settings_page.tts_api_key_input.clear(); self.settings_page.set_tts_api_key_status("未保存")
         except Exception as exc: QMessageBox.critical(self,"删除失败",f"无法删除 MiniMax API Key：{exc}")
+
+    def _save_pronunciation_key(self) -> None:
+        key = self.settings_page.pronunciation_key_input.text().strip()
+        if not key:
+            QMessageBox.information(self, "未输入 Key", "请输入 Azure Speech Key。")
+            return
+        try:
+            self.context.pronunciation_credential_store.set(key)
+            self.settings_page.pronunciation_key_input.clear()
+            self.settings_page.set_pronunciation_key_status(mask_secret(key))
+            QMessageBox.information(self, "保存成功", "Azure Speech Key 已保存到 Windows 凭据管理器。")
+        except Exception as exc:
+            QMessageBox.critical(self, "保存失败", f"无法保存 Azure Speech Key：{exc}")
+
+    def _delete_pronunciation_key(self) -> None:
+        try:
+            self.context.pronunciation_credential_store.delete()
+            self.settings_page.pronunciation_key_input.clear()
+            self.settings_page.set_pronunciation_key_status("未保存")
+        except Exception as exc:
+            QMessageBox.critical(self, "删除失败", f"无法删除 Azure Speech Key：{exc}")
 
     def _test_tts_connection(self) -> None:
         try:
@@ -1751,6 +1876,7 @@ class MainWindow(QMainWindow):
             event.ignore()
             return
         self.audio_playback.stop()
+        self.context.recording_service.cancel()
         self._handle_learning_update(self.context.learning_time_tracker.stop())
         for worker in self._tts_workers:
             worker.cancel()
