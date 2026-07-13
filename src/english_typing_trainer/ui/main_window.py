@@ -4,7 +4,7 @@ from collections import Counter
 from datetime import datetime
 from dataclasses import replace
 
-from PySide6.QtCore import Qt, QTimer, QUrl, QThreadPool
+from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, QThreadPool
 from PySide6.QtGui import QAction, QCloseEvent, QDesktopServices
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -514,8 +514,8 @@ class MainWindow(QMainWindow):
 
         self.preview_content = QTextEdit()
         self.preview_content.setReadOnly(True)
-        self.preview_content.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.preview_content.customContextMenuRequested.connect(self._show_article_preview_menu)
+        self.preview_content.viewport().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.preview_content.viewport().installEventFilter(self)
         detail_layout.addWidget(self.preview_content, stretch=1)
         self.content_split.addWidget(detail_card, stretch=2)
         layout.addLayout(self.content_split, stretch=1)
@@ -528,6 +528,12 @@ class MainWindow(QMainWindow):
             button.setProperty("active", "true" if button_index == index else "false")
             button.style().unpolish(button)
             button.style().polish(button)
+
+    def eventFilter(self, watched, event) -> bool:
+        if watched is self.preview_content.viewport() and event.type()==QEvent.Type.ContextMenu:
+            self._show_article_preview_menu(event.pos())
+            return True
+        return super().eventFilter(watched,event)
 
     def _apply_settings(self) -> None:
         apply_theme(self, self.settings.theme, font_size=14)
@@ -702,13 +708,38 @@ class MainWindow(QMainWindow):
 
     def _show_article_preview_menu(self,position) -> None:
         if self.current_vocabulary_article_id is None:return
-        menu=QMenu(self.preview_content); view_action=menu.addAction("查看当前文章单词"); rebuild_action=menu.addAction("重新提取文章单词")
-        selected=menu.exec(self.preview_content.mapToGlobal(position))
+        menu,view_action,rebuild_action=self._build_article_preview_menu()
+        selected=menu.exec(self.preview_content.viewport().mapToGlobal(position))
         if selected is view_action:
-            index=self.vocabulary_page.scope_combo.findData("article"); self.vocabulary_page.scope_combo.setCurrentIndex(index); self._show_vocabulary()
+            self._show_current_article_words()
         elif selected is rebuild_action:
-            if QMessageBox.question(self,"重新提取文章单词","将重新分析当前文章中的单词，不会删除已收藏单词和学习记录。") == QMessageBox.StandardButton.Yes:
-                count=self.context.article_word_index_service.rebuild(self.current_vocabulary_article_id); QMessageBox.information(self,"提取完成",f"已记录 {count} 个单词位置。")
+            self._rebuild_current_article_words()
+
+    def _build_article_preview_menu(self):
+        menu=self.preview_content.createStandardContextMenu()
+        if menu.actions():menu.addSeparator()
+        view_action=menu.addAction("查看当前文章单词")
+        rebuild_action=menu.addAction("重新提取文章单词")
+        return menu,view_action,rebuild_action
+
+    def _show_current_article_words(self) -> None:
+        if self.current_vocabulary_article_id is None:return
+        self.context.article_word_index_service.ensure(self.current_vocabulary_article_id)
+        index=self.vocabulary_page.scope_combo.findData("article")
+        self.vocabulary_page.scope_combo.setCurrentIndex(index)
+        self._show_vocabulary()
+
+    def _rebuild_current_article_words(self) -> None:
+        article_id=self.current_vocabulary_article_id
+        if article_id is None:return
+        if QMessageBox.question(self,"重新提取文章单词","将重新分析当前文章中的单词，不会删除已收藏单词、来源语境或学习记录。") != QMessageBox.StandardButton.Yes:return
+        try:
+            count=self.context.article_word_index_service.rebuild(article_id)
+        except Exception as exc:
+            QMessageBox.warning(self,"提取失败",f"无法重新提取文章单词：{exc}")
+            return
+        if str(self.vocabulary_page.scope_combo.currentData())=="article":self._refresh_vocabulary_page()
+        QMessageBox.information(self,"提取完成",f"已记录 {count} 个单词位置。")
 
     def _start_vocabulary_row(self,row) -> None:
         entry_id=row.get("id")
