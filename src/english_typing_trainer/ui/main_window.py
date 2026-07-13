@@ -62,6 +62,7 @@ from english_typing_trainer.ui.theme import apply_theme
 from english_typing_trainer.ui.vocabulary_page import VocabularyPage
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
 from english_typing_trainer.ui.daily_learning_card import DailyLearningCard
+from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
 from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
 from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
@@ -302,6 +303,7 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.delete_requested.connect(self._delete_vocabulary_entry)
         self.vocabulary_page.row_learning_requested.connect(self._start_vocabulary_row)
         self.vocabulary_page.scope_changed.connect(lambda _scope:self._refresh_vocabulary_page())
+        self.vocabulary_page.today_review_requested.connect(self._start_fsrs_review)
         self.current_vocabulary_article_id = None
         self.word_learning_page = WordLearningPage()
         self.word_learning_page.back_requested.connect(self._show_vocabulary)
@@ -312,6 +314,11 @@ class MainWindow(QMainWindow):
         self.word_learning_page.context_changed.connect(self._ensure_current_context_enrichment)
         self.word_learning_page.retry_enrichment_requested.connect(self._retry_current_word_enrichment)
         self.word_learning_page.learning_activity.connect(self._track_learning_activity)
+        self.fsrs_review_page = FsrsReviewPage()
+        self.fsrs_review_page.back_requested.connect(self._show_vocabulary)
+        self.fsrs_review_page.rating_requested.connect(self._rate_fsrs_card)
+        self.fsrs_review_page.defer_requested.connect(self._defer_fsrs_card)
+        self.fsrs_review_page.learning_activity.connect(self._track_fsrs_learning_activity)
         self._vocabulary_workers: set[VocabularyTask] = set()
         self._enrichment_loading: set[tuple[int,str]] = set()
         self._enrichment_errors: dict[tuple[int,str],str] = {}
@@ -360,6 +367,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.practice_view)
         self.stack.addWidget(self.sentence_practice_view)
         self.stack.addWidget(self.word_learning_page)
+        self.stack.addWidget(self.fsrs_review_page)
 
         self.nav_buttons: dict[int, QPushButton] = {}
         nav_specs = [
@@ -379,7 +387,7 @@ class MainWindow(QMainWindow):
             self.nav_buttons[index] = button
         sidebar_layout.addStretch(1)
 
-        version_label = QLabel("版本 0.2.0-dev")
+        version_label = QLabel("版本 0.3.0")
         version_label.setProperty("role", "subtitle")
         sidebar_layout.addWidget(version_label)
 
@@ -420,6 +428,7 @@ class MainWindow(QMainWindow):
         layout.addLayout(top_row)
 
         self.daily_learning_card=DailyLearningCard()
+        self.daily_learning_card.review_requested.connect(self._start_fsrs_review)
         layout.addWidget(self.daily_learning_card)
 
         metrics = QGridLayout()
@@ -541,7 +550,7 @@ class MainWindow(QMainWindow):
             button.style().polish(button)
 
     def _learning_page_changed(self, _index:int) -> None:
-        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page}:
+        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page}:
             self._handle_learning_update(self.context.learning_time_tracker.stop())
             self._refresh_daily_learning()
 
@@ -554,6 +563,13 @@ class MainWindow(QMainWindow):
         vocabulary_id=self.word_learning_page.entry.id if self.stack.currentWidget() is self.word_learning_page and self.word_learning_page.entry else None
         update=self.context.learning_time_tracker.activity(event_type,related_article_id=article_id,related_sentence_id=sentence_id,related_vocabulary_id=vocabulary_id)
         self._handle_learning_update(update); self._refresh_daily_learning()
+
+    def _track_fsrs_learning_activity(self, event_type: str, vocabulary_id: object) -> None:
+        item = self.fsrs_review_page.current
+        article_id = item.context.article_id if item and item.context else None
+        update = self.context.learning_time_tracker.activity(event_type, related_article_id=article_id, related_vocabulary_id=int(vocabulary_id) if vocabulary_id else None)
+        self._handle_learning_update(update)
+        self._refresh_daily_learning()
 
     def _tick_learning_time(self) -> None:
         self._handle_learning_update(self.context.learning_time_tracker.tick())
@@ -610,6 +626,25 @@ class MainWindow(QMainWindow):
     def _show_vocabulary(self) -> None:
         self._switch_page(2)
         self._refresh_vocabulary_page()
+
+    def _start_fsrs_review(self) -> None:
+        queue = self.context.fsrs_review_service.build_today_queue(
+            new_limit=self.settings.fsrs_new_cards_per_day,
+            soft_limit=self.settings.fsrs_review_soft_limit,
+        )
+        if not queue.items:
+            QMessageBox.information(self, "今日复习", "当前没有到期或可加入的新复习卡。")
+            return
+        self.fsrs_review_page.load_queue(queue.items)
+        self.stack.setCurrentWidget(self.fsrs_review_page)
+        self.sidebar.hide()
+
+    def _rate_fsrs_card(self, card_id: int, rating: str) -> None:
+        self.context.fsrs_review_service.rate(card_id, rating)
+        self._refresh_overview()
+
+    def _defer_fsrs_card(self, card_id: int) -> None:
+        self.context.fsrs_review_service.defer(card_id)
 
     def _show_history(self) -> None:
         self._switch_page(3)
@@ -1024,6 +1059,7 @@ class MainWindow(QMainWindow):
 
     def _save_settings(self) -> None:
         self.settings = self.context.settings_service.save_settings(self.settings_page.build_settings())
+        self.context.fsrs_review_service.set_desired_retention(self.settings.fsrs_desired_retention)
         self._apply_settings()
         self.settings_page.status_label.setText("设置已保存，新练习会使用新的配置。")
         self._refresh_statistics()

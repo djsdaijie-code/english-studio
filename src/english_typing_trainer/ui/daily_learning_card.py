@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Property, QEasingCurve, QPropertyAnimation, Qt
+from PySide6.QtCore import Property, QEasingCurve, QPropertyAnimation, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen
-from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QHBoxLayout, QLabel, QProgressBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGraphicsOpacityEffect, QHBoxLayout, QLabel, QProgressBar, QPushButton, QVBoxLayout, QWidget
 
 from english_typing_trainer.models.learning import LearningDashboard
 from english_typing_trainer.services.learning_progress import ACHIEVEMENT_NAMES
@@ -32,6 +32,7 @@ class ProgressRing(QWidget):
 
 
 class DailyLearningCard(QFrame):
+    review_requested = Signal()
     def __init__(self,parent=None) -> None:
         super().__init__(parent); self.setObjectName("CardAccent"); self.setMaximumHeight(196); self._played=set(); self._animation=None; self._last_rank=None; self._effects=[]
         root=QHBoxLayout(self); root.setContentsMargins(24,18,24,18); root.setSpacing(22)
@@ -40,6 +41,7 @@ class DailyLearningCard(QFrame):
         self.tier_label=QLabel("开始一次学习，向今日目标出发"); self.tier_label.setProperty("role","subtitle"); main.addWidget(self.heading);main.addWidget(self.time_label);main.addWidget(self.tier_label);root.addLayout(main,2)
         stats=QVBoxLayout();stats.setSpacing(7);self.checkin_label=QLabel("今日未打卡");self.streak_label=QLabel("连续 0 天 · 本周 0/7");self.total_label=QLabel("累计有效打卡 0 天")
         for label in (self.checkin_label,self.streak_label,self.total_label):stats.addWidget(label)
+        self.review_button=QPushButton("开始今日复习"); self.review_button.setProperty("variant","primary"); self.review_button.clicked.connect(self.review_requested.emit); stats.addWidget(self.review_button)
         self.week_label=QLabel("○ ○ ○ ○ ○ ○ ○");self.week_label.setProperty("role","subtitle");stats.addWidget(self.week_label);root.addLayout(stats,2)
         rank=QVBoxLayout();rank.setSpacing(6);self.rank_badge=QLabel("启程 III");self.rank_badge.setAlignment(Qt.AlignmentFlag.AlignCenter);self.rank_badge.setMinimumWidth(120);self.rank_badge.setStyleSheet("padding: 8px 14px; border: 1px solid #8291a5; border-radius: 14px; font-weight: 650;")
         self.xp_label=QLabel("累计经验 0");self.rank_progress=QProgressBar();self.rank_progress.setTextVisible(False);self.rank_progress.setFixedHeight(7);self.rank_hint=QLabel("距离下一等级 1 天");self.rank_hint.setProperty("role","subtitle");self.achievement_label=QLabel("最近成就：尚未解锁成就");self.achievement_label.setProperty("role","subtitle")

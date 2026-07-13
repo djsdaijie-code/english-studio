@@ -56,7 +56,7 @@ class PracticeSessionRecord:
     practice_type: str = "article_section"
     longest_correct_streak: int = 0
     average_wpm: float | None = None
-    app_version: str = "0.2.0-dev"
+    app_version: str = "0.3.0"
     practice_set_id: int | None = None
     total_elapsed_seconds: float = 0.0
     learning_seconds: float = 0.0

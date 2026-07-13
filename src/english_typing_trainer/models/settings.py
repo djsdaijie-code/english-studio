@@ -32,3 +32,6 @@ class AppSettings:
     checkin_animation_enabled: bool = True
     health_reminders_enabled: bool = True
     reduce_motion: bool = False
+    fsrs_desired_retention: float = 0.90
+    fsrs_new_cards_per_day: int = 20
+    fsrs_review_soft_limit: int = 100

@@ -53,7 +53,7 @@ def test_v2_database_upgrades_to_v3_and_preserves_existing_data(tmp_path: Path) 
 
     MigrationRunner().migrate(connection)
 
-    assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 8
+    assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 9
     assert connection.execute("SELECT COUNT(*) FROM articles").fetchone()[0] == 1
     assert connection.execute("SELECT COUNT(*) FROM typing_errors").fetchone()[0] == 1
     practice_set_id_column = {row[1] for row in connection.execute("PRAGMA table_info(practice_sessions)").fetchall()}

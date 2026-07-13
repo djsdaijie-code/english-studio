@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 8
+LATEST_SCHEMA_VERSION = 9
 
 
 class MigrationRunner:
@@ -43,6 +43,9 @@ class MigrationRunner:
                 current_version = 7
             if current_version < 8:
                 self._apply_version_8(connection)
+                current_version = 8
+            if current_version < 9:
+                self._apply_version_9(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -664,6 +667,67 @@ class MigrationRunner:
         )
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (8)")
+
+    def _apply_version_9(self, connection: sqlite3.Connection) -> None:
+        statements = [
+            """
+            CREATE TABLE IF NOT EXISTS fsrs_profiles (
+                id INTEGER PRIMARY KEY CHECK(id=1),
+                scheduler_json TEXT NOT NULL,
+                desired_retention REAL NOT NULL DEFAULT 0.90,
+                parameters_version TEXT NOT NULL DEFAULT 'fsrs-6',
+                optimized_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS vocabulary_review_cards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vocabulary_entry_id INTEGER NOT NULL,
+                vocabulary_context_id INTEGER,
+                card_type TEXT NOT NULL CHECK(card_type IN ('spelling', 'meaning', 'listening')),
+                fsrs_card_json TEXT NOT NULL,
+                due_at_utc TEXT NOT NULL,
+                last_reviewed_at_utc TEXT,
+                state TEXT NOT NULL DEFAULT 'learning',
+                is_suspended INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (vocabulary_entry_id) REFERENCES vocabulary_entries(id) ON DELETE CASCADE,
+                FOREIGN KEY (vocabulary_context_id) REFERENCES vocabulary_contexts(id) ON DELETE SET NULL,
+                UNIQUE(vocabulary_entry_id, card_type)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS vocabulary_review_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vocabulary_review_card_id INTEGER NOT NULL,
+                rating TEXT NOT NULL CHECK(rating IN ('again', 'hard', 'good', 'easy')),
+                review_log_json TEXT NOT NULL,
+                previous_card_json TEXT NOT NULL,
+                reviewed_at_utc TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (vocabulary_review_card_id) REFERENCES vocabulary_review_cards(id) ON DELETE CASCADE
+            )
+            """,
+            "CREATE INDEX IF NOT EXISTS idx_review_cards_due ON vocabulary_review_cards(is_suspended, due_at_utc)",
+            "CREATE INDEX IF NOT EXISTS idx_review_cards_entry ON vocabulary_review_cards(vocabulary_entry_id, card_type)",
+            "CREATE INDEX IF NOT EXISTS idx_review_logs_card ON vocabulary_review_logs(vocabulary_review_card_id, reviewed_at_utc DESC)",
+        ]
+        for statement in statements:
+            connection.execute(statement)
+        defaults = {
+            "fsrs_desired_retention": "0.90",
+            "fsrs_new_cards_per_day": "20",
+            "fsrs_review_soft_limit": "100",
+        }
+        connection.executemany(
+            "INSERT OR IGNORE INTO settings(key,value,updated_at) VALUES (?,?,datetime('now','localtime'))",
+            defaults.items(),
+        )
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (9)")
     def _ensure_column(
         self,
         connection: sqlite3.Connection,

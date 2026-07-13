@@ -99,6 +99,8 @@ class SettingsPage(QWidget):
         self.checkin_animation_checkbox.toggled.connect(self._mark_dirty)
         self.health_reminders_checkbox.toggled.connect(self._mark_dirty)
         self.reduce_motion_checkbox.toggled.connect(self._mark_dirty)
+        self.fsrs_retention_combo.currentIndexChanged.connect(self._mark_dirty)
+        self.fsrs_new_cards_combo.currentIndexChanged.connect(self._mark_dirty)
         self._sentence_learning_enabled = True
 
     def _build_practice_card(self) -> QFrame:
@@ -255,6 +257,11 @@ class SettingsPage(QWidget):
         self.reduce_motion_checkbox=QCheckBox("减少动画")
         form.addRow("每日目标",self.daily_goal_combo); form.addRow("空闲截止",self.learning_idle_combo)
         form.addRow("打卡动画",self.checkin_animation_checkbox); form.addRow("健康提醒",self.health_reminders_checkbox); form.addRow("辅助选项",self.reduce_motion_checkbox)
+        self.fsrs_retention_combo=QComboBox()
+        for label,value in (("85%",0.85),("90%（推荐）",0.90),("93%",0.93)): self.fsrs_retention_combo.addItem(label,value)
+        self.fsrs_new_cards_combo=QComboBox()
+        for value in (10,20,30): self.fsrs_new_cards_combo.addItem(f"{value} 个",value)
+        form.addRow("FSRS 期望保持率",self.fsrs_retention_combo); form.addRow("每日新词上限",self.fsrs_new_cards_combo)
         layout.addLayout(form); return card
     def _build_data_card(self, data_dir: str) -> QFrame:
         card = QFrame()
@@ -303,6 +310,8 @@ class SettingsPage(QWidget):
         self.checkin_animation_checkbox.setChecked(settings.checkin_animation_enabled)
         self.health_reminders_checkbox.setChecked(settings.health_reminders_enabled)
         self.reduce_motion_checkbox.setChecked(settings.reduce_motion)
+        for combo,value in ((self.fsrs_retention_combo,settings.fsrs_desired_retention),(self.fsrs_new_cards_combo,settings.fsrs_new_cards_per_day)):
+            index=combo.findData(value); combo.setCurrentIndex(index if index>=0 else 0)
         self.status_label.setText("所有设置均已保存。")
 
     def build_settings(self) -> AppSettings:
@@ -334,6 +343,9 @@ class SettingsPage(QWidget):
             checkin_animation_enabled=self.checkin_animation_checkbox.isChecked(),
             health_reminders_enabled=self.health_reminders_checkbox.isChecked(),
             reduce_motion=self.reduce_motion_checkbox.isChecked(),
+            fsrs_desired_retention=float(self.fsrs_retention_combo.currentData()),
+            fsrs_new_cards_per_day=int(self.fsrs_new_cards_combo.currentData()),
+            fsrs_review_soft_limit=100,
         )
 
     def _mark_dirty(self, *_args) -> None:

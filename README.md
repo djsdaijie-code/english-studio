@@ -1,14 +1,14 @@
 # 英语打字练习器
 
-英语打字练习器是面向 Windows 的本地桌面应用。它支持导入英文 TXT、逐字或逐句练习、保存进度和历史，并根据错误记录安排专项与间隔复习。v0.2 开发版新增逐句学习、DeepSeek 翻译、全局句子缓存，以及独立的每日有效学习时间与长期成长记录。
+英语打字练习器是面向 Windows 的本地桌面应用。它支持导入英文 TXT、逐字或逐句练习、保存进度和历史，并根据错误记录安排专项与间隔复习。v0.3 新增基于 FSRS 的智能单词复习，复用已有词典、中文讲解和语音缓存。
 
 ## 技术基线
 
 - Python `>=3.14,<3.15`，当前验证环境 Python 3.14.6
 - PySide6 6.11.1
-- SQLite（标准库 `sqlite3`），schema version 8
+- SQLite（标准库 `sqlite3`），schema version 9
 - pytest 9.1.1；PyInstaller 6.21.0
-- 当前开发版本 `0.2.0-dev`；现有 v0.1.0 可移植包保持不变
+- 当前开发版本 `0.3.0`；现有 v0.1.0 可移植包保持不变
 
 ## 功能
 
@@ -23,6 +23,7 @@
 - 单词学习按当前筛选结果生成队列，默认排除已掌握词；完成目标次数后自动进入下一个，支持上一个、跳过、下一个和本轮结果。
 - 学习管理：历史记录、单次详情、学习统计、错误分析、错词/错误字符/原句专项练习、生词本和间隔复习。
 - 每日学习：首页显示有效学习时间、自动打卡、固定经验档位、连续天数、本周轨迹、长期等级和核心成就；90 秒无学习行为后自动停止计时，网络等待和非学习页面停留不计入。
+- FSRS 智能复习：首页和单词本均可进入“今日复习”。每个词条分别维护严格词形拼写卡和词义自评卡；支持忘记了、困难、记得、很熟、稍后复习、跳过与暂停，复习数据按 UTC 持久化并以本地时间显示。
 - 产品界面：简体中文、浅色/深色主题和专注练习布局。
 
 ## 安装与运行
@@ -44,7 +45,7 @@ MiniMax API Key 在设置页“语音服务”中配置，独立保存到 Window
 
 单词标准数据和中文讲解分开保存在 `vocabulary_entries` 与 `vocabulary_contexts`。Free Dictionary 请求只发送查询单词；DeepSeek 只接收单词、当前来源句和最多三条精简英文释义；MiniMax 只接收待朗读单词或来源句。Key 不进入 SQLite、配置文件或日志。词典音频会下载到现有 `audio_cache/`，后续离线直接播放；词典无音频时回退到 MiniMax。
 
-已缓存词条在离线时仍可查看音标、释义、中文讲解、来源句并完成三种练习；未缓存词条可先收藏，联网后再补充。第一版只采用简单的当日/1 天/3 天/7 天自评复习日期，不包含复杂间隔算法、中文开放式判分、听写、语音识别或跟读评分。
+已缓存词条在离线时仍可查看音标、释义、中文讲解、来源句并完成三种练习；未缓存词条可先收藏，联网后再补充。FSRS 复习不依赖网络，默认期望保持率为 90%，可在设置中选择 85% / 90% / 93%；每日新词上限为 10 / 20 / 30。旧的 `next_review_at` 只作为首次 FSRS 建卡的到期参考，不会伪造复习历史。
 
 MiniMax 语音生成可能按字符产生费用，具体以 [MiniMax 官方语音价格页面](https://platform.minimax.io/docs/guides/pricing-speech) 为准，程序不写死价格。当前仅提供句子朗读，未接入词典真人音频或完整单词功能。
 
@@ -53,7 +54,7 @@ MiniMax 语音生成可能按字符产生费用，具体以 [MiniMax 官方语�
 开发与验收必须使用隔离目录：
 
 ```powershell
-$env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishTypingTrainer-v02"
+$env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishTypingTrainer-v03"
 .\.venv\Scripts\python.exe .\main.py
 ```
 
@@ -67,11 +68,11 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishTypingTrainer-v02"
 
 ## 数据库迁移
 
-迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v7 数据库可顺序升级到 v8。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v8 新增每日学习汇总、批量学习事件、个人进度和成就表，不改变 WPM 计时或既有练习记录。
+迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v8 数据库可顺序升级到 v9。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v9 新增 `fsrs_profiles`、`vocabulary_review_cards` 和 `vocabulary_review_logs`，不改变 WPM 计时或既有练习记录。
 
 ## 已知限制
 
-- v0.2 尚未制作新安装包，现有 v0.1.0 发布包不会被覆盖。
+- v0.3 尚未制作新安装包，现有 v0.1.0 发布包不会被覆盖。
 - 真实 DeepSeek 调用需要用户自己的 API Key；自动测试只使用 mock provider。
 - 中途退出时保存 session 级字符进度；已完成句子保存 `sentence_attempts`，未完成句子暂不单独保存 attempt。
 - 真人连续输入和真实 API 联调必须由用户按人工验收清单完成，自动化不能替代。

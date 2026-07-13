@@ -42,6 +42,9 @@ class SettingsService:
             checkin_animation_enabled=self._to_bool(raw_values.get("checkin_animation_enabled"), True),
             health_reminders_enabled=self._to_bool(raw_values.get("health_reminders_enabled"), True),
             reduce_motion=self._to_bool(raw_values.get("reduce_motion"), False),
+            fsrs_desired_retention=float(raw_values.get("fsrs_desired_retention", 0.90)),
+            fsrs_new_cards_per_day=int(raw_values.get("fsrs_new_cards_per_day", 20)),
+            fsrs_review_soft_limit=int(raw_values.get("fsrs_review_soft_limit", 100)),
         )
 
     def save_settings(self, settings: AppSettings) -> AppSettings:
@@ -73,6 +76,9 @@ class SettingsService:
             "checkin_animation_enabled": "1" if settings.checkin_animation_enabled else "0",
             "health_reminders_enabled": "1" if settings.health_reminders_enabled else "0",
             "reduce_motion": "1" if settings.reduce_motion else "0",
+            "fsrs_desired_retention": str(settings.fsrs_desired_retention),
+            "fsrs_new_cards_per_day": str(settings.fsrs_new_cards_per_day),
+            "fsrs_review_soft_limit": str(settings.fsrs_review_soft_limit),
         }
         with self._database.transaction() as connection:
             self._repository.set_many(connection, values)

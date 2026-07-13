@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-v0.2.0-dev：每日学习打卡、长期等级与核心成就。开发分支 `feature/v0.2-sentence-learning`，不包含排行榜、社交系统、复杂任务或新安装包。
+v0.3.0：FSRS 智能复习。开发分支 `feature/v0.2-sentence-learning`，不包含排行榜、社交系统、复杂任务或新安装包。
 
 ## 架构与目录
 
@@ -10,13 +10,14 @@ v0.2.0-dev：每日学习打卡、长期等级与核心成就。开发分支 `fe
 - `services/sentence_*`：拆句、懒生成和集中式计时状态机。
 - `services/translation_*`：provider 抽象、DeepSeek 请求、缓存去重和重试。
 - `services/learning_*`：有效学习时间状态机、档位、等级和成就计算。
-- `database`：标准库 SQLite、事务、v1-v8 迁移和 repository。
+- `database`：标准库 SQLite、事务、v1-v9 迁移和 repository。
+- `services/fsrs_review.py`：FSRS profile、UTC 调度、评分、今日队列和延后处理。
 - `ui`：连续练习、逐句学习、翻译面板及设置页面。
 - `tests`：临时数据库、fake clock、mock provider 和 UI 烟测。
 
 ## 数据库
 
-当前 schema version 为 8。v8 新增 `daily_learning_stats`、`learning_events`、`achievements` 和 `profile_progress`。有效时间按内存累计、定期或关键状态批量保存，支持跨午夜拆分和迁移失败回滚；v7 数据与既有练习记录保持不变。
+当前 schema version 为 9。v8 新增 `daily_learning_stats`、`learning_events`、`achievements` 和 `profile_progress`；v9 新增 `fsrs_profiles`、`vocabulary_review_cards` 和 `vocabulary_review_logs`。FSRS 卡片与日志使用 UTC 保存；旧 `next_review_at` 只作为首次建卡的到期参考。迁移使用备份、事务和失败回滚，既有练习记录保持不变。
 
 ## 已完成
 
@@ -31,6 +32,7 @@ v0.2.0-dev：每日学习打卡、长期等级与核心成就。开发分支 `fe
 - 已完成句子保存 `sentence_attempts`；中途未完成句子按 session 级进度恢复。
 - 首页每日学习卡显示有效时间、自动打卡、固定经验档位、连续/累计天数、本周轨迹、长期等级和最近成就。
 - 集中式 `LearningTimeTracker` 只接收真实学习行为，使用单调时钟并在 90 秒空闲后截止；网络等待、列表停留和非学习页面不计时，WPM 计时保持独立。
+- 首页和单词本的“今日复习”使用 FSRS 6 默认参数与 fuzzing；每个词条独立维护拼写和词义卡，严格保留来源词形大小写。复习支持四级评分、稍后复习、跳过、暂停和每日新词上限。
 
 ## 数据目录与隐私
 
@@ -41,7 +43,7 @@ v0.2.0-dev：每日学习打卡、长期等级与核心成就。开发分支 `fe
 
 ## 测试状态
 
-2026-07-13，Python 3.14.6：全量 pytest `200 passed`。新增覆盖 v7→v8、事务回滚、假时钟、90 秒空闲、网络等待、跨午夜、经验封顶、连续天数、等级阈值、成就幂等、设置持久化及三种窗口尺寸；测试数量仍以每次实际 pytest 输出为准。
+2026-07-13，Python 3.14.6：全量 pytest 以实际输出为准。新增覆盖 v8→v9、事务回滚、FSRS 四级评分、卡片独立性、JSON 重启、旧复习日期兼容、延后/暂停/删除、保持率设置和严格拼写 UI；测试数量仍以每次实际 pytest 输出为准。
 
 ## 尚未完成
 
@@ -49,4 +51,4 @@ v0.2.0-dev：每日学习打卡、长期等级与核心成就。开发分支 `fe
 - v0.2 新安装包、无 Python 环境验证和发布签名。
 - 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
 - 排行榜、社交分享、商店、虚拟货币、装扮和复杂任务不在当前范围。
-- 复杂间隔重复、AI 中文答案判分、听写、语音识别和跟读评分留待后续版本。
+- AI 中文答案判分、听写、语音识别和跟读评分留待后续版本。
