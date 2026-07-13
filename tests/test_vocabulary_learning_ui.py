@@ -3,10 +3,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import pytest
+
 os.environ.setdefault("QT_QPA_PLATFORM","offscreen")
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent, QTextCursor
+from PySide6.QtGui import QColor, QKeyEvent, QTextCursor
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtTest import QTest
@@ -40,6 +42,7 @@ def test_source_browser_emits_selected_word_and_offsets():
 
 def test_word_learning_page_typing_errors_backspace_and_completion():
     app(); page=WordLearningPage(); entry,contexts,state=data(); page.load(entry,contexts,state); attempts=[]; page.attempt_completed.connect(attempts.append)
+    page.context_combo.setCurrentIndex(1)
     page._key(key("r")); page._key(key("x")); assert page.input.toPlainText()=="rx" and page.errors==1
     page._key(QKeyEvent(QKeyEvent.Type.KeyPress,Qt.Key.Key_Backspace,Qt.KeyboardModifier.NoModifier,"")); page._key(key("u")); page._key(key("n"))
     assert attempts and attempts[0].user_input=="run" and attempts[0].is_correct and attempts[0].accuracy<100
@@ -113,9 +116,57 @@ def test_input_survives_time_and_right_panel_updates():
 
 def test_learning_queue_navigation_auto_next_and_results():
     app(); page=WordLearningPage(); first,contexts,state=data(); state.typing_target_count=1
+    contexts=[contexts[1]]
     second=VocabularyEntry("learn","learn",id=4); second_context=[VocabularyContext(4,"learn","I learn English.",start_offset=2,end_offset=7,id=5)]; second_state=VocabularyLearningState(4,typing_target_count=1)
     page.load_queue([(first,contexts,state),(second,second_context,second_state)]); attempts=[]; results=[]; page.attempt_completed.connect(attempts.append); page.queue_finished.connect(results.append)
     for char in "run":page._key(key(char))
     QTest.qWait(500); assert page.entry.id==4 and page.queue_position.text()=="第 2 / 2 个"
     page.previous_word(); assert page.entry.id==1; page.next_word(); page.skip_word()
     assert results and results[-1]["total"]==2 and results[-1]["skipped"]==1
+
+
+@pytest.mark.parametrize(("target","typed","is_correct"),(
+    ("English","English",True),
+    ("English","english",False),
+    ("english","English",False),
+    ("API","API",True),
+    ("API","api",False),
+    ("OpenAI","OpenAI",True),
+    ("OpenAI","openai",False),
+))
+def test_vocabulary_typing_preserves_target_casing(target,typed,is_correct):
+    app(); page=WordLearningPage()
+    entry=VocabularyEntry(target.lower(),target,id=20)
+    context=VocabularyContext(20,target,f"Learn {target} today.",start_offset=6,end_offset=6+len(target),id=21)
+    state=VocabularyLearningState(20,typing_target_count=1); attempts=[]
+    page.load(entry,[context],state); page.attempt_completed.connect(attempts.append)
+    for char in typed:page._key(key(char))
+    assert page.prompt.text()==target
+    assert attempts[-1].expected_answer==target
+    assert attempts[-1].is_correct is is_correct
+
+
+def test_partial_cased_word_is_correct_so_far_and_waits_for_last_character():
+    app(); page=WordLearningPage()
+    entry=VocabularyEntry("english","English",id=20)
+    context=VocabularyContext(20,"English","Learn English today.",start_offset=6,end_offset=13,id=21)
+    page.load(entry,[context],VocabularyLearningState(20,typing_target_count=1)); attempts=[]; page.attempt_completed.connect(attempts.append)
+    for char in "Englis":page._key(key(char))
+    assert page.input.toPlainText()=="Englis" and page.errors==0 and not attempts
+    assert all(page._character_format(index,page._expected()).foreground().color()!=QColor("#c74444") for index in range(6))
+
+
+def test_cloze_and_context_switch_use_source_word_casing():
+    app(); page=WordLearningPage()
+    entry=VocabularyEntry("openai","OpenAI",id=20)
+    contexts=[
+        VocabularyContext(20,"OpenAI","OpenAI builds tools.",start_offset=0,end_offset=6,id=21),
+        VocabularyContext(20,"OPENAI","We wrote OPENAI here.",start_offset=9,end_offset=15,id=22),
+    ]
+    page.load(entry,contexts,VocabularyLearningState(20,typing_target_count=1)); page.mode_combo.setCurrentIndex(page.mode_combo.findData("sentence_cloze"))
+    assert page._expected()=="OpenAI" and "___" in page.prompt.text()
+    page.context_combo.setCurrentIndex(1)
+    assert page._expected()=="OPENAI" and "___" in page.prompt.text()
+    attempts=[]; page.attempt_completed.connect(attempts.append)
+    for char in "OpenAI":page._key(key(char))
+    assert attempts[-1].expected_answer=="OPENAI" and attempts[-1].is_correct is False

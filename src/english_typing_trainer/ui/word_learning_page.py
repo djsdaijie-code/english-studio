@@ -59,6 +59,15 @@ class WordLearningPage(QWidget):
     def current_context(self):
         index=self.context_combo.currentIndex(); return self.contexts[index] if 0<=index<len(self.contexts) else None
 
+    @property
+    def current_target_word(self) -> str:
+        context=self.current_context
+        if context and context.source_word:
+            return context.source_word
+        if self.entry and self.entry.display_word:
+            return self.entry.display_word
+        return self.entry.normalized_word if self.entry else ""
+
     def load(self,entry:VocabularyEntry,contexts:list[VocabularyContext],state:VocabularyLearningState):
         self.load_queue([(entry,contexts,state)])
 
@@ -100,15 +109,16 @@ class WordLearningPage(QWidget):
         self.sentence.setText(c.source_sentence or "暂无来源句")
         if c.id: self.context_changed.emit(c.id)
         self._update_prompt()
+        if self.typed:self._render()
 
     def _mode_changed(self): self.mode=str(self.mode_combo.currentData()); self.repeat_index=0; self._reset_round()
 
     def _update_prompt(self):
         if not self.entry:return
         c=self.current_context
-        if self.mode=="typing": self.prompt.setText(self.entry.display_word); self.progress.setText(f"当前进度 {self.repeat_index} / {self.state.typing_target_count if self.state else 5}")
+        if self.mode=="typing": self.prompt.setText(self.current_target_word); self.progress.setText(f"当前进度 {self.repeat_index} / {self.state.typing_target_count if self.state else 5}")
         elif self.mode=="sentence_cloze":
-            sentence=c.source_sentence if c else ""; word=c.source_word if c else self.entry.display_word
+            sentence=c.source_sentence if c else ""; word=self.current_target_word
             if c and 0<=c.start_offset<c.end_offset<=len(sentence) and sentence[c.start_offset:c.end_offset]==word:
                 sentence=sentence[:c.start_offset]+"___"+sentence[c.end_offset:]
             else: sentence=sentence.replace(word,"___",1)
@@ -146,8 +156,7 @@ class WordLearningPage(QWidget):
         return fmt
 
     def _expected(self) -> str:
-        if self.mode=="sentence_cloze" and self.current_context:return self.current_context.source_word
-        return self.entry.normalized_word if self.entry else ""
+        return self.current_target_word
 
     def _finish(self,expected):
         correct=self.typed==expected; duration=int(((monotonic()-(self.started or monotonic())))*1000); accuracy=max(0,(len(expected)-self.errors)/max(len(expected),1)*100)
