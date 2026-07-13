@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 5
+LATEST_SCHEMA_VERSION = 6
 
 
 class MigrationRunner:
@@ -34,6 +34,9 @@ class MigrationRunner:
                 current_version = 4
             if current_version < 5:
                 self._apply_version_5(connection)
+                current_version = 5
+            if current_version < 6:
+                self._apply_version_6(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -402,6 +405,154 @@ class MigrationRunner:
         )
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (5)")
+
+    def _apply_version_6(self, connection: sqlite3.Connection) -> None:
+        statements = [
+            """
+            CREATE TABLE IF NOT EXISTS vocabulary_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                normalized_word TEXT NOT NULL UNIQUE,
+                display_word TEXT NOT NULL,
+                lemma TEXT NOT NULL DEFAULT '',
+                phonetic TEXT NOT NULL DEFAULT '',
+                primary_part_of_speech TEXT NOT NULL DEFAULT '',
+                dictionary_status TEXT NOT NULL DEFAULT 'pending',
+                dictionary_payload_json TEXT NOT NULL DEFAULT '{}',
+                dictionary_fetched_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS vocabulary_contexts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vocabulary_entry_id INTEGER NOT NULL,
+                article_id INTEGER,
+                article_sentence_id INTEGER,
+                source_word TEXT NOT NULL,
+                source_sentence TEXT NOT NULL DEFAULT '',
+                start_offset INTEGER NOT NULL DEFAULT 0,
+                end_offset INTEGER NOT NULL DEFAULT 0,
+                contextual_part_of_speech TEXT NOT NULL DEFAULT '',
+                contextual_meaning_zh TEXT NOT NULL DEFAULT '',
+                explanation_zh TEXT NOT NULL DEFAULT '',
+                common_collocation TEXT NOT NULL DEFAULT '',
+                example_en TEXT NOT NULL DEFAULT '',
+                example_zh TEXT NOT NULL DEFAULT '',
+                ai_status TEXT NOT NULL DEFAULT 'pending',
+                ai_prompt_version TEXT NOT NULL DEFAULT 'word-context-v1',
+                ai_generated_at TEXT,
+                is_manual INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (vocabulary_entry_id) REFERENCES vocabulary_entries(id) ON DELETE CASCADE,
+                FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE SET NULL,
+                FOREIGN KEY (article_sentence_id) REFERENCES article_sentences(id) ON DELETE SET NULL,
+                UNIQUE(vocabulary_entry_id, article_id, article_sentence_id, start_offset, end_offset)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS vocabulary_learning_state (
+                vocabulary_entry_id INTEGER PRIMARY KEY,
+                status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new', 'learning', 'reviewing', 'mastered')),
+                typing_target_count INTEGER NOT NULL DEFAULT 5,
+                typing_completed_count INTEGER NOT NULL DEFAULT 0,
+                correct_attempts INTEGER NOT NULL DEFAULT 0,
+                incorrect_attempts INTEGER NOT NULL DEFAULT 0,
+                familiarity_level INTEGER NOT NULL DEFAULT 0,
+                last_practiced_at TEXT,
+                next_review_at TEXT,
+                mastered_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (vocabulary_entry_id) REFERENCES vocabulary_entries(id) ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS vocabulary_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vocabulary_entry_id INTEGER NOT NULL,
+                vocabulary_context_id INTEGER,
+                practice_type TEXT NOT NULL CHECK(practice_type IN ('typing', 'sentence_cloze', 'meaning_recall')),
+                expected_answer TEXT NOT NULL DEFAULT '',
+                user_input TEXT NOT NULL DEFAULT '',
+                is_correct INTEGER,
+                accuracy REAL NOT NULL DEFAULT 0,
+                duration_ms INTEGER NOT NULL DEFAULT 0,
+                self_rating TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (vocabulary_entry_id) REFERENCES vocabulary_entries(id) ON DELETE CASCADE,
+                FOREIGN KEY (vocabulary_context_id) REFERENCES vocabulary_contexts(id) ON DELETE SET NULL
+            )
+            """,
+            "CREATE INDEX IF NOT EXISTS idx_vocab_context_entry ON vocabulary_contexts(vocabulary_entry_id, created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_vocab_context_article ON vocabulary_contexts(article_id, article_sentence_id)",
+            "CREATE INDEX IF NOT EXISTS idx_vocab_learning_due ON vocabulary_learning_state(status, next_review_at)",
+            "CREATE INDEX IF NOT EXISTS idx_vocab_attempt_entry ON vocabulary_attempts(vocabulary_entry_id, created_at DESC)",
+        ]
+        for statement in statements:
+            connection.execute(statement)
+        for column_name, definition in (
+            ("source_type", "TEXT NOT NULL DEFAULT 'minimax'"),
+            ("source_url_hash", "TEXT NOT NULL DEFAULT ''"),
+            ("content_type", "TEXT NOT NULL DEFAULT 'sentence'"),
+        ):
+            self._ensure_column(connection, table_name="tts_audio_cache", column_name=column_name, definition=definition)
+
+        now = connection.execute("SELECT datetime('now')").fetchone()[0]
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO vocabulary_entries(
+                normalized_word, display_word, lemma, dictionary_status, created_at, updated_at
+            )
+            SELECT normalized_word, display_word, normalized_word, 'pending', created_at, updated_at
+            FROM vocabulary_items
+            """
+        )
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO vocabulary_learning_state(
+                vocabulary_entry_id, status, typing_target_count, correct_attempts,
+                incorrect_attempts, familiarity_level, last_practiced_at,
+                next_review_at, mastered_at, created_at, updated_at
+            )
+            SELECT e.id, CASE WHEN i.status IN ('new','learning','reviewing','mastered') THEN i.status ELSE 'new' END,
+                   5, i.correct_review_count, i.wrong_review_count, i.mastery_level,
+                   i.last_reviewed_at, i.next_review_at,
+                   CASE WHEN i.status = 'mastered' THEN i.last_reviewed_at ELSE NULL END,
+                   i.created_at, i.updated_at
+            FROM vocabulary_items i JOIN vocabulary_entries e ON e.normalized_word = i.normalized_word
+            """
+        )
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO vocabulary_contexts(
+                vocabulary_entry_id, article_id, article_sentence_id, source_word,
+                source_sentence, start_offset, end_offset, contextual_meaning_zh,
+                explanation_zh, ai_status, is_manual, created_at, updated_at
+            )
+            SELECT e.id, i.source_article_id, NULL, i.display_word, i.source_sentence,
+                   COALESCE(i.source_character_index, 0),
+                   COALESCE(i.source_character_index, 0) + length(i.display_word),
+                   i.meaning, i.note,
+                   CASE WHEN i.meaning != '' OR i.note != '' THEN 'ready' ELSE 'pending' END,
+                   CASE WHEN i.meaning != '' OR i.note != '' THEN 1 ELSE 0 END,
+                   i.created_at, i.updated_at
+            FROM vocabulary_items i JOIN vocabulary_entries e ON e.normalized_word = i.normalized_word
+            WHERE i.source_sentence != ''
+            """
+        )
+        defaults = {
+            "vocabulary_typing_count": "5",
+            "vocabulary_auto_enrich": "1",
+            "vocabulary_audio_preference": "dictionary",
+        }
+        connection.executemany(
+            "INSERT OR IGNORE INTO settings(key, value, updated_at) VALUES (?, ?, ?)",
+            [(key, value, now) for key, value in defaults.items()],
+        )
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (6)")
     def _ensure_column(
         self,
         connection: sqlite3.Connection,

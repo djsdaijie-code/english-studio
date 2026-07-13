@@ -27,6 +27,11 @@ tmp_stdout.log
 tmp_stderr.log
 logs/
 *.log
+audio_cache/
+.env
+.env.*
+credentials*.json
+credential*.tmp
 
 # Recovered Git metadata backup
 .git.corrupt-*/

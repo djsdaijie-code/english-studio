@@ -46,11 +46,13 @@ class SettingsPage(QWidget):
         appearance_card = self._build_appearance_card()
         translation_card = self._build_translation_card()
         speech_card = self._build_speech_card()
+        vocabulary_card = self._build_vocabulary_card()
         data_card = self._build_data_card(data_dir)
         content_layout.addWidget(practice_card)
         content_layout.addWidget(appearance_card)
         content_layout.addWidget(translation_card)
         content_layout.addWidget(speech_card)
+        content_layout.addWidget(vocabulary_card)
         content_layout.addWidget(data_card)
 
         footer = QHBoxLayout()
@@ -88,6 +90,8 @@ class SettingsPage(QWidget):
         self.tts_model_combo.currentIndexChanged.connect(self._mark_dirty)
         self.tts_voice_combo.currentIndexChanged.connect(self._mark_dirty)
         self.tts_speed_combo.currentIndexChanged.connect(self._mark_dirty)
+        self.vocabulary_typing_combo.currentIndexChanged.connect(self._mark_dirty)
+        self.vocabulary_auto_checkbox.toggled.connect(self._mark_dirty)
         self._sentence_learning_enabled = True
 
     def _build_practice_card(self) -> QFrame:
@@ -220,6 +224,16 @@ class SettingsPage(QWidget):
     def set_tts_cache_stats(self, file_count: int, size_bytes: int) -> None:
         size = f"{size_bytes / (1024*1024):.1f} MB" if size_bytes >= 1024*1024 else f"{size_bytes / 1024:.1f} KB" if size_bytes >= 1024 else f"{size_bytes} B"
         self.tts_cache_label.setText(f"语音缓存：{file_count} 个文件 · {size}")
+
+    def _build_vocabulary_card(self) -> QFrame:
+        card=QFrame(); card.setObjectName("Card"); layout=QVBoxLayout(card); layout.setContentsMargins(20,20,20,20)
+        title=QLabel("单词学习"); title.setProperty("role","page-title"); title.setStyleSheet("font-size: 18px;"); layout.addWidget(title)
+        form=QFormLayout(); self.vocabulary_typing_combo=QComboBox()
+        for value in (3,5,10): self.vocabulary_typing_combo.addItem(f"{value} 次",value)
+        self.vocabulary_auto_checkbox=QCheckBox("收藏后自动获取词典和中文讲解")
+        self.vocabulary_audio_label=QLabel("优先词典音频，无音频时使用 MiniMax")
+        form.addRow("每个单词打字次数",self.vocabulary_typing_combo); form.addRow("自动获取讲解",self.vocabulary_auto_checkbox); form.addRow("发音优先级",self.vocabulary_audio_label)
+        layout.addLayout(form); return card
     def _build_data_card(self, data_dir: str) -> QFrame:
         card = QFrame()
         card.setObjectName("Card")
@@ -260,6 +274,8 @@ class SettingsPage(QWidget):
         self.translation_model_combo.setCurrentIndex(model_index if model_index >= 0 else 0)
         for combo, value, fallback in ((self.tts_model_combo,settings.tts_model,0),(self.tts_voice_combo,settings.tts_voice_id,0),(self.tts_speed_combo,settings.tts_speed,1)):
             index=combo.findData(value); combo.setCurrentIndex(index if index >= 0 else fallback)
+        index=self.vocabulary_typing_combo.findData(settings.vocabulary_typing_count); self.vocabulary_typing_combo.setCurrentIndex(index if index>=0 else 1)
+        self.vocabulary_auto_checkbox.setChecked(settings.vocabulary_auto_enrich)
         self.status_label.setText("所有设置均已保存。")
 
     def build_settings(self) -> AppSettings:
@@ -283,6 +299,9 @@ class SettingsPage(QWidget):
             tts_voice_id=str(self.tts_voice_combo.currentData()),
             tts_speed=float(self.tts_speed_combo.currentData()),
             tts_auto_play=False,
+            vocabulary_typing_count=int(self.vocabulary_typing_combo.currentData()),
+            vocabulary_auto_enrich=self.vocabulary_auto_checkbox.isChecked(),
+            vocabulary_audio_preference="dictionary",
         )
 
     def _mark_dirty(self, *_args) -> None:

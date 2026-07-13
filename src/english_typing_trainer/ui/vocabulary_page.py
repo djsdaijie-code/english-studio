@@ -63,6 +63,9 @@ class VocabularyPage(QWidget):
     archive_requested = Signal(int, bool)
     mastery_requested = Signal(int, bool)
     review_requested = Signal(int)
+    open_learning_requested = Signal(int)
+    play_requested = Signal(int)
+    delete_requested = Signal(int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -73,9 +76,9 @@ class VocabularyPage(QWidget):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(16)
 
-        title = QLabel("生词本")
+        title = QLabel("单词本")
         title.setProperty("role", "page-title")
-        subtitle = QLabel("把常错单词和重点词汇集中起来，逐步复习直到真正掌握。")
+        subtitle = QLabel("收藏文章中的单词，用词典、语境讲解和输入练习逐步掌握。")
         subtitle.setProperty("role", "subtitle")
         layout.addWidget(title)
         layout.addWidget(subtitle)
@@ -110,22 +113,22 @@ class VocabularyPage(QWidget):
         add_row = QHBoxLayout()
         self.manual_word_input = QLineEdit()
         self.manual_word_input.setPlaceholderText("手动添加一个单词")
-        self.add_button = QPushButton("添加生词")
+        self.add_button = QPushButton("添加单词")
         self.add_button.setProperty("variant", "primary")
         add_row.addWidget(self.manual_word_input)
         add_row.addWidget(self.add_button)
         filter_layout.addLayout(add_row)
         layout.addWidget(filter_card)
 
-        self.table = QTableWidget(0, 6)
+        self.table = QTableWidget(0, 7)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.table.setHorizontalHeaderLabels(["单词", "中文释义", "熟练度", "状态", "下次复习", "最近复习"])
+        self.table.setHorizontalHeaderLabels(["单词", "音标", "中文意思", "词性", "来源文章", "状态", "最近练习"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, stretch=1)
 
         footer = QHBoxLayout()
-        self.empty_label = QLabel("生词本还是空的")
+        self.empty_label = QLabel("单词本还是空的")
         self.empty_label.setProperty("role", "muted")
         self.edit_button = QPushButton("编辑释义")
         self.archive_button = QPushButton("归档")
@@ -134,6 +137,9 @@ class VocabularyPage(QWidget):
         self.learning_button = QPushButton("重新设为学习中")
         self.review_button = QPushButton("立即复习")
         self.review_button.setProperty("variant", "primary")
+        self.open_button = QPushButton("打开学习"); self.open_button.setProperty("variant", "primary")
+        self.play_button = QPushButton("播放单词")
+        self.delete_button = QPushButton("删除"); self.delete_button.setProperty("variant", "danger")
         footer.addWidget(self.empty_label)
         footer.addStretch(1)
         footer.addWidget(self.edit_button)
@@ -141,7 +147,7 @@ class VocabularyPage(QWidget):
         footer.addWidget(self.restore_button)
         footer.addWidget(self.mastered_button)
         footer.addWidget(self.learning_button)
-        footer.addWidget(self.review_button)
+        footer.addWidget(self.play_button); footer.addWidget(self.delete_button); footer.addWidget(self.review_button); footer.addWidget(self.open_button)
         layout.addLayout(footer)
 
         self.status_label = QLabel("")
@@ -158,7 +164,15 @@ class VocabularyPage(QWidget):
         self.mastered_button.clicked.connect(lambda: self._emit_mastery(True))
         self.learning_button.clicked.connect(lambda: self._emit_mastery(False))
         self.review_button.clicked.connect(self._emit_review)
+        self.open_button.clicked.connect(lambda: self._emit_id(self.open_learning_requested))
+        self.play_button.clicked.connect(lambda: self._emit_id(self.play_requested))
+        self.delete_button.clicked.connect(lambda: self._emit_id(self.delete_requested))
+        self.table.cellDoubleClicked.connect(lambda _row,_column:self._emit_id(self.open_learning_requested))
+        self.search_input.textChanged.connect(lambda _text:self.refresh_requested.emit())
+        self.status_combo.currentIndexChanged.connect(lambda _index:self.refresh_requested.emit())
         self._update_action_state()
+        for obsolete in (self.edit_button,self.archive_button,self.restore_button,self.review_button,self.archived_checkbox,self.due_only_checkbox):
+            obsolete.hide()
 
     def populate_items(self, rows: list[dict[str, object]]) -> None:
         self._rows = rows
@@ -167,11 +181,12 @@ class VocabularyPage(QWidget):
         for row_index, row in enumerate(rows):
             values = [
                 row["display_word"],
-                row["meaning"] or "未填写",
-                row["mastery_level"],
+                row.get("phonetic") or "暂无",
+                row.get("meaning_zh") or row.get("meaning") or "待获取",
+                row.get("primary_part_of_speech") or "暂无",
+                row.get("article_title") or "手动添加",
                 self._status_label(str(row["status"])),
-                _local_text(row["next_review_at"] or None),
-                _local_text(row["last_reviewed_at"] or None),
+                _local_text(row.get("last_practiced_at") or row.get("last_reviewed_at") or None),
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(str(value))
@@ -201,13 +216,15 @@ class VocabularyPage(QWidget):
     def _update_action_state(self) -> None:
         selected = self._selected_row()
         has_selection = selected is not None
-        archived = bool(selected.get("is_archived")) if selected else False
         self.edit_button.setEnabled(has_selection)
         self.review_button.setEnabled(has_selection)
         self.mastered_button.setEnabled(has_selection)
         self.learning_button.setEnabled(has_selection)
-        self.archive_button.setVisible(has_selection and not archived)
-        self.restore_button.setVisible(has_selection and archived)
+        self.open_button.setEnabled(has_selection); self.play_button.setEnabled(has_selection); self.delete_button.setEnabled(has_selection)
+        mastered = bool(selected and selected.get("status") == "mastered")
+        self.mastered_button.setVisible(has_selection and not mastered)
+        self.learning_button.setVisible(has_selection and mastered)
+        self.edit_button.hide(); self.archive_button.hide(); self.restore_button.hide(); self.review_button.hide()
 
     def _emit_add(self) -> None:
         if self.manual_word_input.text().strip():
@@ -243,6 +260,10 @@ class VocabularyPage(QWidget):
         item_id = self.selected_item_id()
         if item_id is not None:
             self.review_requested.emit(item_id)
+
+    def _emit_id(self, signal) -> None:
+        item_id=self.selected_item_id()
+        if item_id is not None: signal.emit(item_id)
 
     def _status_label(self, status: str) -> str:
         mapping = {

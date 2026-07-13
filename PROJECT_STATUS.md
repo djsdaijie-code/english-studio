@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-v0.2.0-dev 阶段 A：MiniMax TTS 与可复用音频基础设施。开发分支 `feature/v0.2-sentence-learning`，本阶段不开发完整单词系统或新安装包。
+v0.2.0-dev 阶段 B：单词学习第一版。开发分支 `feature/v0.2-sentence-learning`，不包含复杂记忆算法、听写、跟读评分或新安装包。
 
 ## 架构与目录
 
@@ -15,7 +15,7 @@ v0.2.0-dev 阶段 A：MiniMax TTS 与可复用音频基础设施。开发分支 
 
 ## 数据库
 
-当前 schema version 为 5。v5 新增 `tts_audio_cache`，索引本地音频文件、模型、音色、速度、大小和播放时间；v4 升级前自动备份，迁移失败回滚。文章、练习、翻译和生词结构不变。
+当前 schema version 为 6。v6 新增 `vocabulary_entries`、`vocabulary_contexts`、`vocabulary_learning_state`、`vocabulary_attempts`，并最小扩展 `tts_audio_cache` 支持词典音频。v5 升级前自动备份，迁移失败回滚，旧生词兼容迁入。
 
 ## 已完成
 
@@ -24,6 +24,7 @@ v0.2.0-dev 阶段 A：MiniMax TTS 与可复用音频基础设施。开发分支 
 - 首次有效输入开始计时；默认 3 秒无输入自动暂停；句子完成后进入学习计时；Enter 进入下一句但不提前启动有效计时。
 - DeepSeek provider、Windows Credential Manager、异步请求、全局缓存、人工编辑、显式重新生成和整篇翻译已接入。
 - MiniMax 同步 T2A provider、独立凭据、异步生成、参数化缓存、并发去重、退避重试和 QtMultimedia 播放已接入逐句与连续练习。
+- Free Dictionary 标准词典、DeepSeek 当前句中文讲解、文章选词收藏、多来源语境、单词/来源句发音、重复打字、原句填空、自评复习和离线缓存已完成第一版。
 - 已完成句子保存 `sentence_attempts`；中途未完成句子按 session 级进度恢复。
 
 ## 数据目录与隐私
@@ -35,11 +36,12 @@ v0.2.0-dev 阶段 A：MiniMax TTS 与可复用音频基础设施。开发分支 
 
 ## 测试状态
 
-2026-07-12，Python 3.14.6：TTS 阶段 A 后全量 pytest `121 passed`。新增覆盖 MiniMax 请求/错误、缓存差异与损坏、并发去重、v4→v5 迁移回滚、播放器和两种练习页语音入口。
+2026-07-13，Python 3.14.6：阶段 B 全量 pytest `151 passed`，原 121 项均保留。新增覆盖 v5→v6、标准化、词条/语境去重、Free Dictionary、词典音频缓存、讲解 JSON、练习状态、UI 和连续模式收藏回归。
 
 ## 尚未完成
 
-- 真实 DeepSeek 与 MiniMax API 联调由用户提供 Key 后人工执行；自动验收只使用 mock provider。
+- 阶段 B 已完成真实 Free Dictionary、DeepSeek 三语境讲解、词典音频、MiniMax 单词回退和来源句缓存联调；隔离数据目录中二次运行未重复调用 DeepSeek/MiniMax。
 - v0.2 新安装包、无 Python 环境验证和发布签名。
 - 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
 - 全局单词体系、ABCD 测试、段位和字符速度分析留待后续版本。
+- 复杂间隔重复、AI 中文答案判分、听写、语音识别和跟读评分留待后续版本。

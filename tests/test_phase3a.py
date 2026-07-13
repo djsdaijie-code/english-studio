@@ -52,7 +52,7 @@ def test_migration_upgrades_v1_to_v2_and_preserves_data(tmp_path: Path) -> None:
         "SELECT name FROM sqlite_master WHERE type='table' AND name='typing_errors'"
     ).fetchone()
 
-    assert version == 5
+    assert version == 6
     assert article_count == 1
     assert session_count == 1
     assert typing_errors_exists is not None
@@ -67,7 +67,7 @@ def test_repeat_migration_does_not_duplicate_schema_changes(tmp_path: Path) -> N
     columns = connection.execute("PRAGMA table_info(practice_sessions)").fetchall()
     column_names = [row[1] for row in columns]
     assert column_names.count("practice_type") == 1
-    assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 5
+    assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 6
     connection.close()
 
 

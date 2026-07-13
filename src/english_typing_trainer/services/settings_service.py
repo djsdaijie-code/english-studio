@@ -34,6 +34,9 @@ class SettingsService:
             tts_voice_id=raw_values.get("tts_voice_id", "English_expressive_narrator"),
             tts_speed=float(raw_values.get("tts_speed", 1.0)),
             tts_auto_play=self._to_bool(raw_values.get("tts_auto_play"), False),
+            vocabulary_typing_count=int(raw_values.get("vocabulary_typing_count", 5)),
+            vocabulary_auto_enrich=self._to_bool(raw_values.get("vocabulary_auto_enrich"), True),
+            vocabulary_audio_preference=raw_values.get("vocabulary_audio_preference", "dictionary"),
         )
 
     def save_settings(self, settings: AppSettings) -> AppSettings:
@@ -57,6 +60,9 @@ class SettingsService:
             "tts_voice_id": settings.tts_voice_id,
             "tts_speed": str(settings.tts_speed),
             "tts_auto_play": "1" if settings.tts_auto_play else "0",
+            "vocabulary_typing_count": str(settings.vocabulary_typing_count),
+            "vocabulary_auto_enrich": "1" if settings.vocabulary_auto_enrich else "0",
+            "vocabulary_audio_preference": settings.vocabulary_audio_preference,
         }
         with self._database.transaction() as connection:
             self._repository.set_many(connection, values)

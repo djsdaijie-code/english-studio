@@ -24,3 +24,6 @@ class AppSettings:
     tts_voice_id: str = "English_expressive_narrator"
     tts_speed: float = 1.0
     tts_auto_play: bool = False
+    vocabulary_typing_count: int = 5
+    vocabulary_auto_enrich: bool = True
+    vocabulary_audio_preference: str = "dictionary"

@@ -25,7 +25,7 @@ def test_main_window_can_be_created_and_uses_chinese_navigation(tmp_path: Path) 
         assert window.windowTitle() == "英语打字练习"
         assert window.nav_buttons[0].text() == "文章库"
         assert window.nav_buttons[1].text() == "专项练习"
-        assert window.nav_buttons[2].text() == "生词本"
+        assert window.nav_buttons[2].text() == "单词本"
     finally:
         context.database.close()
 
@@ -94,6 +94,6 @@ def test_existing_schema3_database_opens_in_new_ui(tmp_path: Path) -> None:
         window = MainWindow(reopened)
         window.show()
         app.processEvents()
-        assert reopened.database.get_schema_version() == 5
+        assert reopened.database.get_schema_version() == 6
     finally:
         reopened.database.close()

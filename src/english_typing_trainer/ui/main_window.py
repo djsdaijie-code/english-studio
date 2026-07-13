@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from datetime import datetime
 from dataclasses import replace
 
 from PySide6.QtCore import Qt, QTimer, QUrl, QThreadPool
@@ -58,6 +59,11 @@ from english_typing_trainer.ui.special_practice_page import SpecialPracticePage
 from english_typing_trainer.ui.statistics_page import StatisticsPage
 from english_typing_trainer.ui.theme import apply_theme
 from english_typing_trainer.ui.vocabulary_page import VocabularyPage
+from english_typing_trainer.ui.word_learning_page import WordLearningPage
+from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
+from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
+from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
+from english_typing_trainer.models.vocabulary import VocabularyAttempt
 
 
 class MetricCard(QFrame):
@@ -237,6 +243,7 @@ class MainWindow(QMainWindow):
         self.practice_view.back_requested.connect(self._leave_practice_view)
         self.practice_view.speech_requested.connect(self._request_speech)
         self.practice_view.speech_sentence_changed.connect(self._speech_sentence_changed)
+        self.practice_view.word_collection_requested.connect(self._collect_selected_word)
         self.sentence_practice_view = SentencePracticeView()
         self.sentence_practice_view.session_completed.connect(self._handle_session_completed)
         self.sentence_practice_view.back_requested.connect(self._leave_practice_view)
@@ -246,6 +253,7 @@ class MainWindow(QMainWindow):
         self.sentence_practice_view.translate_article_requested.connect(self._translate_current_article)
         self.sentence_practice_view.speech_requested.connect(self._request_speech)
         self.sentence_practice_view.speech_sentence_changed.connect(self._speech_sentence_changed)
+        self.sentence_practice_view.word_collection_requested.connect(self._collect_selected_word)
         self._sentence_attempts = SentenceAttemptRepository(self.context.database.connect)
         self._sentence_attempt_ids: list[int] = []
         self._thread_pool = QThreadPool(self)
@@ -284,7 +292,16 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.save_requested.connect(self._save_vocabulary_item)
         self.vocabulary_page.archive_requested.connect(self._set_vocabulary_archived)
         self.vocabulary_page.mastery_requested.connect(self._set_vocabulary_mastery)
-        self.vocabulary_page.review_requested.connect(self._review_single_vocabulary)
+        self.vocabulary_page.review_requested.connect(self._open_word_learning)
+        self.vocabulary_page.open_learning_requested.connect(self._open_word_learning)
+        self.vocabulary_page.play_requested.connect(self._play_vocabulary_word)
+        self.vocabulary_page.delete_requested.connect(self._delete_vocabulary_entry)
+        self.word_learning_page = WordLearningPage()
+        self.word_learning_page.back_requested.connect(self._show_vocabulary)
+        self.word_learning_page.attempt_completed.connect(self._record_vocabulary_attempt)
+        self.word_learning_page.play_word_requested.connect(self._play_word_from_learning)
+        self.word_learning_page.play_sentence_requested.connect(lambda text:self._request_speech(text,self.settings.tts_speed,self.practice_view.speech_controls) if text else None)
+        self._vocabulary_workers: set[VocabularyTask] = set()
 
         self._build_ui()
         self._apply_settings()
@@ -326,12 +343,13 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.settings_page)
         self.stack.addWidget(self.practice_view)
         self.stack.addWidget(self.sentence_practice_view)
+        self.stack.addWidget(self.word_learning_page)
 
         self.nav_buttons: dict[int, QPushButton] = {}
         nav_specs = [
             (0, "文章库", QStyle.StandardPixmap.SP_DirHomeIcon),
             (1, "专项练习", QStyle.StandardPixmap.SP_MediaPlay),
-            (2, "生词本", QStyle.StandardPixmap.SP_FileDialogDetailedView),
+            (2, "单词本", QStyle.StandardPixmap.SP_FileDialogDetailedView),
             (3, "练习记录", QStyle.StandardPixmap.SP_FileDialogListView),
             (4, "学习统计", QStyle.StandardPixmap.SP_ComputerIcon),
             (5, "设置", QStyle.StandardPixmap.SP_FileDialogContentsView),
@@ -624,29 +642,9 @@ class MainWindow(QMainWindow):
         self.special_practice_page.populate_saved_sets(self.context.special_practice_service.list_saved_sets())
 
     def _refresh_vocabulary_page(self) -> None:
-        items = self.context.special_practice_service.list_vocabulary(
-            search=self.vocabulary_page.search_input.text(),
-            status=self.vocabulary_page.status_combo.currentData(),
-            archived=self.vocabulary_page.archived_checkbox.isChecked(),
-            due_only=self.vocabulary_page.due_only_checkbox.isChecked(),
-        )
-        rows = []
-        for item in items:
-            rows.append(
-                {
-                    "id": item.id,
-                    "display_word": item.display_word,
-                    "meaning": item.meaning,
-                    "status": item.status,
-                    "mastery_level": item.mastery_level,
-                    "next_review_at": item.next_review_at.isoformat() if item.next_review_at else "",
-                    "last_reviewed_at": item.last_reviewed_at.isoformat() if item.last_reviewed_at else "",
-                    "error_count": self.context.special_practice_service.vocabulary_error_count(item.normalized_word),
-                    "source_sentence": item.source_sentence,
-                    "note": item.note,
-                    "is_archived": item.is_archived,
-                }
-            )
+        items=self.context.vocabulary_learning_service.list_entries(
+            search=self.vocabulary_page.search_input.text(),status=str(self.vocabulary_page.status_combo.currentData()))
+        rows=[dict(item) | {"is_archived":False,"meaning":"","note":"","mastery_level":0} for item in items]
         self.vocabulary_page.populate_items(rows)
 
     def _selected_article_id(self) -> int | None:
@@ -737,7 +735,7 @@ class MainWindow(QMainWindow):
     def _active_practice_view(self):
         return self.sentence_practice_view if self.stack.currentWidget() is self.sentence_practice_view else self.practice_view
 
-    def _request_speech(self, text: str, speed: float, controls) -> None:
+    def _request_speech(self, text: str, speed: float, controls=None) -> None:
         request = TTSRequest(
             text=text, content_type="sentence", model=self.settings.tts_model,
             voice_id=self.settings.tts_voice_id, speed=speed,
@@ -755,7 +753,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             controls.set_state("error", str(exc))
             return
-        controls.set_state("loading", "生成中")
+        if controls: controls.set_state("loading", "生成中")
         worker = TTSWorker(self.context.tts_service, provider, request)
         self._tts_workers.add(worker)
         worker.signals.completed.connect(lambda item, audio, w=worker: self._speech_generated(item, audio, w))
@@ -1300,13 +1298,13 @@ class MainWindow(QMainWindow):
 
     def _add_vocabulary_word(self, word: str) -> None:
         try:
-            self.context.special_practice_service.add_vocabulary_word(word)
+            result=self.context.vocabulary_learning_service.collect(word,typing_target_count=self.settings.vocabulary_typing_count)
         except ValueError as exc:
             QMessageBox.warning(self, "无效单词", str(exc))
             return
         self._refresh_vocabulary_page()
-        self._refresh_special_practice_page()
-        self.vocabulary_page.set_status_message("已加入生词本。")
+        self.vocabulary_page.set_status_message("已加入单词本。" if result.entry_created else "该单词已收藏。")
+        if result.entry.id and self.settings.vocabulary_auto_enrich: self._start_vocabulary_enrichment(result.entry.id,result.context.id)
 
     def _save_vocabulary_item(self, item_id: int, meaning: str, note: str) -> None:
         self.context.special_practice_service.update_vocabulary_details(item_id, meaning, note)
@@ -1320,10 +1318,103 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.set_status_message("生词状态已更新。")
 
     def _set_vocabulary_mastery(self, item_id: int, mastered: bool) -> None:
-        self.context.special_practice_service.set_vocabulary_mastery(item_id, mastered)
+        self.context.vocabulary_learning_service.set_mastered(item_id,mastered)
         self._refresh_vocabulary_page()
         self._refresh_special_practice_page()
         self.vocabulary_page.set_status_message("熟练度状态已更新。")
+
+    def _collect_selected_word(self, text: str, start: int, end: int) -> None:
+        view=self._active_practice_view(); sentence=""; article_sentence_id=None; local_start=start
+        if view is self.sentence_practice_view and view.current_sentence:
+            current=view.current_sentence; sentence=current.normalized_text; article_sentence_id=current.id
+        elif self.current_material:
+            sentence=self.current_material.section_text
+            if self.current_material.section_id:
+                sentences=self.context.sentence_service.ensure_for_section(self.current_material.section_id)
+                section_start=min((s.start_offset for s in sentences),default=0)
+                for item in sentences:
+                    a=item.start_offset-section_start; b=item.end_offset-section_start
+                    if a<=start<b: sentence=item.normalized_text; article_sentence_id=item.id; local_start=start-a; break
+        try:
+            result=self.context.vocabulary_learning_service.collect(text,sentence=sentence,
+                article_id=self.current_material.article_id if self.current_material else None,
+                article_sentence_id=article_sentence_id,start_offset=local_start,end_offset=local_start+len(text),
+                typing_target_count=self.settings.vocabulary_typing_count)
+        except ValueError as exc:
+            QMessageBox.information(self,"收藏单词",str(exc)); view._restore_focus(); return
+        message="已加入新的来源句。" if not result.entry_created and result.context_created else "该单词已收藏。" if not result.context_created else "已加入单词本。"
+        QMessageBox.information(self,"收藏单词",message); view._restore_focus(); self._refresh_vocabulary_page()
+        if result.entry.id and self.settings.vocabulary_auto_enrich:self._start_vocabulary_enrichment(result.entry.id,result.context.id)
+
+    def _start_vocabulary_enrichment(self, entry_id: int, context_id: int | None) -> None:
+        entry=self.context.vocabulary_learning_service.repository.get_entry(entry_id)
+        context=self.context.vocabulary_learning_service.repository.get_context(context_id) if context_id else None
+        not_found_fresh=entry and entry.dictionary_status=="not_found" and entry.dictionary_fetched_at and (datetime.now()-entry.dictionary_fetched_at).days<7
+        if entry and (entry.dictionary_status=="ready" or not_found_fresh):
+            if context and context.ai_status not in {"ready"} and not context.is_manual:self._start_word_explanation(context.id)
+            return
+        task=VocabularyTask(lambda:self.context.vocabulary_learning_service.lookup_dictionary(entry_id,FreeDictionaryProvider()))
+        self._vocabulary_workers.add(task)
+        task.signals.completed.connect(lambda result,t=task:self._dictionary_enriched(entry_id,context_id,result,t))
+        task.signals.failed.connect(lambda error,t=task:self._vocabulary_task_failed(error,t))
+        self._thread_pool.start(task)
+
+    def _dictionary_enriched(self,entry_id,context_id,result,task):
+        self._vocabulary_workers.discard(task); self.context.vocabulary_learning_service.apply_dictionary_result(entry_id,result); self._refresh_vocabulary_page()
+        if context_id:self._start_word_explanation(context_id)
+
+    def _start_word_explanation(self,context_id:int):
+        try:
+            payload,context=self.context.vocabulary_learning_service.build_explanation_request(context_id)
+            if context.ai_status=="ready" or context.is_manual:return
+            provider=DeepSeekWordExplanationProvider(self.context.credential_store.get() or "",model=self.settings.translation_model)
+        except Exception as exc:
+            self.vocabulary_page.set_status_message(str(exc)); return
+        task=VocabularyTask(lambda:provider.explain(**payload)); self._vocabulary_workers.add(task)
+        task.signals.completed.connect(lambda result,t=task:self._word_explained(context_id,result,t)); task.signals.failed.connect(lambda error,t=task:self._vocabulary_task_failed(error,t)); self._thread_pool.start(task)
+
+    def _word_explained(self,context_id,result,task):
+        self._vocabulary_workers.discard(task); self.context.vocabulary_learning_service.apply_explanation_result(context_id,result); self._refresh_vocabulary_page()
+        if self.stack.currentWidget() is self.word_learning_page:self._open_word_learning(self.word_learning_page.entry.id)
+
+    def _vocabulary_task_failed(self,error,task):
+        self._vocabulary_workers.discard(task); self.vocabulary_page.set_status_message(f"部分信息暂未获取：{error}")
+
+    def _open_word_learning(self,entry_id:int):
+        entry,contexts,state=self.context.vocabulary_learning_service.detail(entry_id)
+        if not entry or not state:return
+        self.word_learning_page.load(entry,contexts,state); self.stack.setCurrentWidget(self.word_learning_page); self.sidebar.hide()
+
+    def _record_vocabulary_attempt(self,attempt:VocabularyAttempt):
+        self.context.vocabulary_learning_service.record_attempt(attempt)
+        if self.word_learning_page.entry:
+            self.word_learning_page.state=self.context.vocabulary_learning_service.repository.get_state(self.word_learning_page.entry.id)
+            self.word_learning_page._update_prompt()
+
+    def _play_vocabulary_word(self,entry_id:int):
+        entry,contexts,_=self.context.vocabulary_learning_service.detail(entry_id)
+        if entry:self._play_word_from_learning(entry,contexts[0] if contexts else None)
+
+    def _play_word_from_learning(self,entry,context):
+        from english_typing_trainer.services.dictionary_provider import parse_dictionary_payload
+        audio_url=""
+        if isinstance(entry.dictionary_payload,list) and entry.dictionary_payload:
+            try:audio_url=parse_dictionary_payload(entry.normalized_word,entry.dictionary_payload).audio_url
+            except Exception:pass
+        if audio_url:
+            task=VocabularyTask(lambda:self.context.dictionary_audio_service.get_or_download(audio_url,entry.display_word)); self._vocabulary_workers.add(task)
+            task.signals.completed.connect(lambda audio,t=task:self._dictionary_audio_ready(audio,t,entry.display_word)); task.signals.failed.connect(lambda _error,t=task:self._dictionary_audio_fallback(entry.display_word,t)); self._thread_pool.start(task)
+        else:self._request_speech(entry.display_word,self.settings.tts_speed)
+
+    def _dictionary_audio_ready(self,audio,task,word):
+        self._vocabulary_workers.discard(task); self.context.tts_service.mark_played(audio.cache_key); self.audio_playback.toggle(audio.file_path); self.word_learning_page.input.setFocus()
+
+    def _dictionary_audio_fallback(self,word,task):
+        self._vocabulary_workers.discard(task); self._request_speech(word,self.settings.tts_speed)
+
+    def _delete_vocabulary_entry(self,entry_id:int):
+        if QMessageBox.question(self,"删除单词","确定删除该词条、来源和学习记录吗？")!=QMessageBox.StandardButton.Yes:return
+        self.context.vocabulary_learning_service.delete(entry_id); self._refresh_vocabulary_page()
 
     def _review_single_vocabulary(self, item_id: int) -> None:
         generated = self.context.special_practice_service.generate_vocabulary_review_set(due_only=False, item_ids=[item_id])

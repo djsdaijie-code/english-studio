@@ -19,6 +19,8 @@ from english_typing_trainer.services.statistics_service import StatisticsService
 from english_typing_trainer.services.translation_service import TranslationService
 from english_typing_trainer.services.tts_service import PronunciationService, TTSService
 from english_typing_trainer.services.word_normalization import WordNormalizationService
+from english_typing_trainer.services.vocabulary_learning import VocabularyLearningService
+from english_typing_trainer.services.dictionary_audio import DictionaryAudioService
 
 
 @dataclass(slots=True)
@@ -40,6 +42,8 @@ class AppContext:
     tts_service: TTSService
     pronunciation_service: PronunciationService
     tts_credential_store: CredentialStore
+    vocabulary_learning_service: VocabularyLearningService
+    dictionary_audio_service: DictionaryAudioService
 
 
 def build_app_context(data_dir: Path | None = None, credential_store: CredentialStore | None = None, tts_credential_store: CredentialStore | None = None) -> AppContext:
@@ -59,6 +63,8 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
     translation_service = TranslationService(database)
     tts_service = TTSService(database, paths.audio_cache_dir)
     pronunciation_service = PronunciationService(tts_service)
+    vocabulary_learning_service = VocabularyLearningService(database, normalization_service)
+    dictionary_audio_service = DictionaryAudioService(database, paths.audio_cache_dir)
     if credential_store is None:
         credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else WindowsCredentialStore()
     if tts_credential_store is None:
@@ -88,4 +94,6 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
         tts_service=tts_service,
         pronunciation_service=pronunciation_service,
         tts_credential_store=tts_credential_store,
+        vocabulary_learning_service=vocabulary_learning_service,
+        dictionary_audio_service=dictionary_audio_service,
     )

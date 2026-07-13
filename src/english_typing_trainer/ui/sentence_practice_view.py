@@ -27,6 +27,7 @@ class SentencePracticeView(QWidget):
     translate_article_requested = Signal()
     speech_requested = Signal(str, float, object)
     speech_sentence_changed = Signal(str)
+    word_collection_requested = Signal(str, int, int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -87,6 +88,7 @@ class SentencePracticeView(QWidget):
         self.text_browser = FocusTextBrowser(); self.text_browser.setObjectName("PracticeSource"); self.text_browser.setReadOnly(True)
         self.text_browser.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth); self.text_browser.document().defaultTextOption().setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         self.text_browser.clicked.connect(lambda: QTimer.singleShot(0, self._restore_focus)); source_layout.addWidget(self.text_browser, stretch=1)
+        self.text_browser.word_selected.connect(self.word_collection_requested.emit)
         input_card = QFrame(); input_card.setObjectName("PracticeInputCard"); input_card.setMinimumHeight(140)
         input_layout = QVBoxLayout(input_card); input_layout.setContentsMargins(20, 16, 20, 18)
         heading = QHBoxLayout(); title = QLabel("我的输入"); title.setProperty("role", "section-title"); self.input_feedback = QLabel("等待输入"); self.input_feedback.setProperty("role", "muted")

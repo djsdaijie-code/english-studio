@@ -91,7 +91,7 @@ def test_schema4_tables_columns_and_new_install_defaults(tmp_path: Path) -> None
     context = build_app_context(data_dir=tmp_path / "data")
     try:
         connection = context.database.connect()
-        assert context.database.get_schema_version() == 5
+        assert context.database.get_schema_version() == 6
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         assert {"article_sentences", "sentence_translations", "sentence_attempts"} <= tables
         session_columns = {row[1] for row in connection.execute("PRAGMA table_info(practice_sessions)")}

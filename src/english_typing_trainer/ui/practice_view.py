@@ -25,10 +25,34 @@ from english_typing_trainer.ui.theme import resource_root
 
 class FocusTextBrowser(QTextBrowser):
     clicked = Signal()
+    word_selected = Signal(str, int, int)
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_word_menu)
 
     def mousePressEvent(self, event) -> None:  # type: ignore[override]
         super().mousePressEvent(event)
         self.clicked.emit()
+
+
+    def mouseDoubleClickEvent(self, event) -> None:  # type: ignore[override]
+        super().mouseDoubleClickEvent(event)
+        self._emit_selection()
+
+    def _show_word_menu(self, position) -> None:
+        from PySide6.QtWidgets import QMenu
+        menu = QMenu(self)
+        action = menu.addAction("加入单词本")
+        action.setEnabled(bool(self.textCursor().selectedText().strip()))
+        if menu.exec(self.mapToGlobal(position)) is action:
+            self._emit_selection()
+
+    def _emit_selection(self) -> None:
+        cursor = self.textCursor()
+        text = cursor.selectedText().replace("\u2029", "\n")
+        self.word_selected.emit(text, cursor.selectionStart(), cursor.selectionEnd())
 
 
 class PracticeInputEdit(QPlainTextEdit):
@@ -81,6 +105,7 @@ class PracticeView(QWidget):
     back_requested = Signal()
     speech_requested = Signal(str, float, object)
     speech_sentence_changed = Signal(str)
+    word_collection_requested = Signal(str, int, int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -186,6 +211,7 @@ class PracticeView(QWidget):
         self.text_browser.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.text_browser.viewport().installEventFilter(self)
         self.text_browser.clicked.connect(lambda: QTimer.singleShot(0, self._restore_focus))
+        self.text_browser.word_selected.connect(self.word_collection_requested.emit)
         source_layout.addWidget(self.text_browser, stretch=1)
 
         input_card = QFrame()
