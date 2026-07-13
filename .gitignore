@@ -54,6 +54,7 @@ Desktop.ini
 
 # Generated release artifacts
 release/*.zip
+release/*.exe
 release/SHA256SUMS.txt
 dist-debug/
 build-debug/

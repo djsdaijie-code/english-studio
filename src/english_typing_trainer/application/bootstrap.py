@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import sys
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from english_typing_trainer import __version__
@@ -10,6 +11,7 @@ from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.application.logging_config import configure_logging
 from english_typing_trainer.services.app_paths import AppPathService
 from english_typing_trainer.ui.main_window import MainWindow
+from english_typing_trainer.ui.theme import resource_root
 
 
 def _install_exception_handler(log_path) -> None:
@@ -31,6 +33,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("English Studio")
     app.setApplicationDisplayName("English Studio")
+    app.setWindowIcon(QIcon(str(resource_root() / "icons" / "english-studio.svg")))
     context = None
     log_path = None
     try:

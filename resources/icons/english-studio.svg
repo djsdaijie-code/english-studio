@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs><linearGradient id="orbit" x1="24" y1="24" x2="232" y2="232" gradientUnits="userSpaceOnUse"><stop stop-color="#4d8bff"/><stop offset="1" stop-color="#2458bf"/></linearGradient></defs>
+  <rect width="256" height="256" rx="58" fill="#10233f"/>
+  <circle cx="128" cy="128" r="75" fill="none" stroke="url(#orbit)" stroke-width="18"/>
+  <circle cx="183" cy="72" r="14" fill="#dbe9ff"/>
+  <path d="M93 82h70v19h-24v72h-22v-72H93V82Z" fill="#fff"/>
+</svg>

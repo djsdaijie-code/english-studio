@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-v0.9.0：English Studio 品牌与发布准备。开发分支 `feature/v0.2-sentence-learning`，准备 v1.0 RC。
+v1.0.0-rc1：English Studio 发布候选构建。开发分支 `feature/v0.2-sentence-learning`，等待本机安装验证与发布。
 
 ## 架构与目录
 
@@ -50,7 +50,8 @@ v0.9.0：English Studio 品牌与发布准备。开发分支 `feature/v0.2-sente
 ## 尚未完成
 
 - 阶段 B 已完成真实 Free Dictionary、DeepSeek 三语境讲解、词典音频、MiniMax 单词回退和来源句缓存联调；隔离数据目录中二次运行未重复调用 DeepSeek/MiniMax。
-- v1.0.0-rc1 安装包、无 Python 环境验证、安装/卸载验证和发布签名。
+- GitHub 推送、Release 创建与资产上传；必须先确认远程仓库和 GitHub 身份。
+- 真实 Azure Speech 资源联调、实际评分准确性、Prosody 与多区域验证，计划 v1.0.1。
 - 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
 - 排行榜、社交分享、商店、虚拟货币、装扮和复杂任务不在当前范围。
 - Azure Speech 真实资源联调、实际评分准确性、Prosody 与多区域验证留待 v1.0.1；其余跟读 Beta 的本地录音和安全降级已完成。

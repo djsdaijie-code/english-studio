@@ -8,7 +8,7 @@ English Studio 是面向 Windows 的本地英语学习与打字应用，通过�
 - PySide6 6.11.1
 - SQLite（标准库 `sqlite3`），schema version 11
 - pytest 9.1.1；PyInstaller 6.21.0
-- 当前开发版本 `0.9.0`；正式安装包将在 v1.0.0 发布
+- 当前发布候选版本 `1.0.0-rc1`；Windows 安装器和便携版由 `scripts/package.ps1` 构建
 
 ## 功能
 
@@ -38,6 +38,14 @@ py -3.14 -m venv .venv
 ```
 
 也可运行 `powershell -ExecutionPolicy Bypass -File .\scripts\run.ps1`。
+
+## Windows RC 构建
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1
+```
+
+构建会生成 `EnglishStudio-1.0.0-rc1-Setup.exe` 与 `EnglishStudio-1.0.0-rc1-win-x64-portable.zip`。安装器默认安装到当前用户目录，不需要管理员权限；卸载默认保留学习数据。未签名构建可能触发 SmartScreen，请先核对 `SHA256SUMS.txt`。
 
 ## 数据与隐私
 

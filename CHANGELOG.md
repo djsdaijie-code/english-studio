@@ -1,5 +1,13 @@
 # 更新日志
 
+## 1.0.0-rc1 - 2026-07-13
+
+### 发布候选
+
+- English Studio 使用 PyInstaller one-folder 构建、Inno Setup 非管理员安装器和可解压运行的 Windows x64 便携包。
+- 默认用户数据目录与凭据兼容策略保持不变；卸载默认保留学习数据，明确传入 `/PURGEDATA=1` 才删除 `%LOCALAPPDATA%\EnglishStudio`。
+- RC 为未签名构建，Windows SmartScreen 可能显示提示；请使用发布的 SHA-256 校验文件验证下载完整性。
+
 ## 0.9.0 - 2026-07-13
 
 ### 变更
