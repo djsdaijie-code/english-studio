@@ -37,6 +37,11 @@ class SettingsService:
             vocabulary_typing_count=int(raw_values.get("vocabulary_typing_count", 5)),
             vocabulary_auto_enrich=self._to_bool(raw_values.get("vocabulary_auto_enrich"), True),
             vocabulary_audio_preference=raw_values.get("vocabulary_audio_preference", "dictionary"),
+            daily_learning_goal_minutes=int(raw_values.get("daily_learning_goal_minutes", 15)),
+            learning_idle_timeout_seconds=int(raw_values.get("learning_idle_timeout_seconds", 90)),
+            checkin_animation_enabled=self._to_bool(raw_values.get("checkin_animation_enabled"), True),
+            health_reminders_enabled=self._to_bool(raw_values.get("health_reminders_enabled"), True),
+            reduce_motion=self._to_bool(raw_values.get("reduce_motion"), False),
         )
 
     def save_settings(self, settings: AppSettings) -> AppSettings:
@@ -63,6 +68,11 @@ class SettingsService:
             "vocabulary_typing_count": str(settings.vocabulary_typing_count),
             "vocabulary_auto_enrich": "1" if settings.vocabulary_auto_enrich else "0",
             "vocabulary_audio_preference": settings.vocabulary_audio_preference,
+            "daily_learning_goal_minutes": str(settings.daily_learning_goal_minutes),
+            "learning_idle_timeout_seconds": str(settings.learning_idle_timeout_seconds),
+            "checkin_animation_enabled": "1" if settings.checkin_animation_enabled else "0",
+            "health_reminders_enabled": "1" if settings.health_reminders_enabled else "0",
+            "reduce_motion": "1" if settings.reduce_motion else "0",
         }
         with self._database.transaction() as connection:
             self._repository.set_many(connection, values)

@@ -47,12 +47,14 @@ class SettingsPage(QWidget):
         translation_card = self._build_translation_card()
         speech_card = self._build_speech_card()
         vocabulary_card = self._build_vocabulary_card()
+        daily_learning_card = self._build_daily_learning_card()
         data_card = self._build_data_card(data_dir)
         content_layout.addWidget(practice_card)
         content_layout.addWidget(appearance_card)
         content_layout.addWidget(translation_card)
         content_layout.addWidget(speech_card)
         content_layout.addWidget(vocabulary_card)
+        content_layout.addWidget(daily_learning_card)
         content_layout.addWidget(data_card)
 
         footer = QHBoxLayout()
@@ -92,6 +94,11 @@ class SettingsPage(QWidget):
         self.tts_speed_combo.currentIndexChanged.connect(self._mark_dirty)
         self.vocabulary_typing_combo.currentIndexChanged.connect(self._mark_dirty)
         self.vocabulary_auto_checkbox.toggled.connect(self._mark_dirty)
+        self.daily_goal_combo.currentIndexChanged.connect(self._mark_dirty)
+        self.learning_idle_combo.currentIndexChanged.connect(self._mark_dirty)
+        self.checkin_animation_checkbox.toggled.connect(self._mark_dirty)
+        self.health_reminders_checkbox.toggled.connect(self._mark_dirty)
+        self.reduce_motion_checkbox.toggled.connect(self._mark_dirty)
         self._sentence_learning_enabled = True
 
     def _build_practice_card(self) -> QFrame:
@@ -234,6 +241,21 @@ class SettingsPage(QWidget):
         self.vocabulary_audio_label=QLabel("优先词典音频，无音频时使用 MiniMax")
         form.addRow("每个单词打字次数",self.vocabulary_typing_combo); form.addRow("自动获取讲解",self.vocabulary_auto_checkbox); form.addRow("发音优先级",self.vocabulary_audio_label)
         layout.addLayout(form); return card
+
+    def _build_daily_learning_card(self) -> QFrame:
+        card=QFrame(); card.setObjectName("Card")
+        layout=QVBoxLayout(card); layout.setContentsMargins(20,20,20,20)
+        title=QLabel("每日学习"); title.setProperty("role","page-title"); title.setStyleSheet("font-size: 18px;"); layout.addWidget(title)
+        form=QFormLayout(); self.daily_goal_combo=QComboBox()
+        for value in (15,30,45,60):self.daily_goal_combo.addItem(f"{value} 分钟",value)
+        self.learning_idle_combo=QComboBox()
+        for value in (60,90,120):self.learning_idle_combo.addItem(f"{value} 秒",value)
+        self.checkin_animation_checkbox=QCheckBox("达到目标时播放轻量动画")
+        self.health_reminders_checkbox=QCheckBox("显示 120 / 180 / 240 分钟健康提醒")
+        self.reduce_motion_checkbox=QCheckBox("减少动画")
+        form.addRow("每日目标",self.daily_goal_combo); form.addRow("空闲截止",self.learning_idle_combo)
+        form.addRow("打卡动画",self.checkin_animation_checkbox); form.addRow("健康提醒",self.health_reminders_checkbox); form.addRow("辅助选项",self.reduce_motion_checkbox)
+        layout.addLayout(form); return card
     def _build_data_card(self, data_dir: str) -> QFrame:
         card = QFrame()
         card.setObjectName("Card")
@@ -276,6 +298,11 @@ class SettingsPage(QWidget):
             index=combo.findData(value); combo.setCurrentIndex(index if index >= 0 else fallback)
         index=self.vocabulary_typing_combo.findData(settings.vocabulary_typing_count); self.vocabulary_typing_combo.setCurrentIndex(index if index>=0 else 1)
         self.vocabulary_auto_checkbox.setChecked(settings.vocabulary_auto_enrich)
+        for combo,value,fallback in ((self.daily_goal_combo,settings.daily_learning_goal_minutes,0),(self.learning_idle_combo,settings.learning_idle_timeout_seconds,1)):
+            index=combo.findData(value); combo.setCurrentIndex(index if index>=0 else fallback)
+        self.checkin_animation_checkbox.setChecked(settings.checkin_animation_enabled)
+        self.health_reminders_checkbox.setChecked(settings.health_reminders_enabled)
+        self.reduce_motion_checkbox.setChecked(settings.reduce_motion)
         self.status_label.setText("所有设置均已保存。")
 
     def build_settings(self) -> AppSettings:
@@ -302,6 +329,11 @@ class SettingsPage(QWidget):
             vocabulary_typing_count=int(self.vocabulary_typing_combo.currentData()),
             vocabulary_auto_enrich=self.vocabulary_auto_checkbox.isChecked(),
             vocabulary_audio_preference="dictionary",
+            daily_learning_goal_minutes=int(self.daily_goal_combo.currentData()),
+            learning_idle_timeout_seconds=int(self.learning_idle_combo.currentData()),
+            checkin_animation_enabled=self.checkin_animation_checkbox.isChecked(),
+            health_reminders_enabled=self.health_reminders_checkbox.isChecked(),
+            reduce_motion=self.reduce_motion_checkbox.isChecked(),
         )
 
     def _mark_dirty(self, *_args) -> None:

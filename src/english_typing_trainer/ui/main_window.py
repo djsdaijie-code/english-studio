@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime
 from dataclasses import replace
+import re
 
 from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, QThreadPool
 from PySide6.QtGui import QAction, QCloseEvent, QDesktopServices
@@ -60,6 +61,7 @@ from english_typing_trainer.ui.statistics_page import StatisticsPage
 from english_typing_trainer.ui.theme import apply_theme
 from english_typing_trainer.ui.vocabulary_page import VocabularyPage
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
+from english_typing_trainer.ui.daily_learning_card import DailyLearningCard
 from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
 from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
@@ -244,6 +246,7 @@ class MainWindow(QMainWindow):
         self.practice_view.speech_requested.connect(self._request_speech)
         self.practice_view.speech_sentence_changed.connect(self._speech_sentence_changed)
         self.practice_view.word_collection_requested.connect(self._collect_selected_word)
+        self.practice_view.learning_activity.connect(self._track_learning_activity)
         self.sentence_practice_view = SentencePracticeView()
         self.sentence_practice_view.session_completed.connect(self._handle_session_completed)
         self.sentence_practice_view.back_requested.connect(self._leave_practice_view)
@@ -254,6 +257,7 @@ class MainWindow(QMainWindow):
         self.sentence_practice_view.speech_requested.connect(self._request_speech)
         self.sentence_practice_view.speech_sentence_changed.connect(self._speech_sentence_changed)
         self.sentence_practice_view.word_collection_requested.connect(self._collect_selected_word)
+        self.sentence_practice_view.learning_activity.connect(self._track_learning_activity)
         self._sentence_attempts = SentenceAttemptRepository(self.context.database.connect)
         self._sentence_attempt_ids: list[int] = []
         self._thread_pool = QThreadPool(self)
@@ -307,17 +311,21 @@ class MainWindow(QMainWindow):
         self.word_learning_page.current_entry_changed.connect(self._ensure_current_word_enrichment)
         self.word_learning_page.context_changed.connect(self._ensure_current_context_enrichment)
         self.word_learning_page.retry_enrichment_requested.connect(self._retry_current_word_enrichment)
+        self.word_learning_page.learning_activity.connect(self._track_learning_activity)
         self._vocabulary_workers: set[VocabularyTask] = set()
         self._enrichment_loading: set[tuple[int,str]] = set()
         self._enrichment_errors: dict[tuple[int,str],str] = {}
 
         self._build_ui()
+        self.stack.currentChanged.connect(self._learning_page_changed)
+        self._learning_timer=QTimer(self); self._learning_timer.setInterval(1000); self._learning_timer.timeout.connect(self._tick_learning_time); self._learning_timer.start()
         self._apply_settings()
         self._reload_articles()
         self._refresh_history()
         self._refresh_statistics()
         self._refresh_special_practice_page()
         self._refresh_vocabulary_page()
+        self._refresh_daily_learning()
 
     def _build_ui(self) -> None:
         root = QWidget()
@@ -410,6 +418,9 @@ class MainWindow(QMainWindow):
         self.import_button.clicked.connect(self._import_articles)
         top_row.addWidget(self.import_button, alignment=Qt.AlignmentFlag.AlignRight)
         layout.addLayout(top_row)
+
+        self.daily_learning_card=DailyLearningCard()
+        layout.addWidget(self.daily_learning_card)
 
         metrics = QGridLayout()
         metrics.setSpacing(12)
@@ -529,6 +540,41 @@ class MainWindow(QMainWindow):
             button.style().unpolish(button)
             button.style().polish(button)
 
+    def _learning_page_changed(self, _index:int) -> None:
+        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page}:
+            self._handle_learning_update(self.context.learning_time_tracker.stop())
+            self._refresh_daily_learning()
+
+    def _track_learning_activity(self,event_type:str) -> None:
+        if self.stack.currentWidget() is self.word_learning_page and self.word_learning_page.current_context:
+            article_id=self.word_learning_page.current_context.article_id
+        else:
+            article_id=self.current_material.article_id if self.current_material else None
+        sentence_id=self.sentence_practice_view.current_sentence.id if self.stack.currentWidget() is self.sentence_practice_view and self.sentence_practice_view.current_sentence else None
+        vocabulary_id=self.word_learning_page.entry.id if self.stack.currentWidget() is self.word_learning_page and self.word_learning_page.entry else None
+        update=self.context.learning_time_tracker.activity(event_type,related_article_id=article_id,related_sentence_id=sentence_id,related_vocabulary_id=vocabulary_id)
+        self._handle_learning_update(update); self._refresh_daily_learning()
+
+    def _tick_learning_time(self) -> None:
+        self._handle_learning_update(self.context.learning_time_tracker.tick())
+        self._refresh_daily_learning()
+
+    def _handle_learning_update(self,update) -> None:
+        if not update:return
+        for minutes in update.milestones:
+            if self.settings.checkin_animation_enabled:self.daily_learning_card.play_milestone(minutes,self.settings.reduce_motion)
+        for achievement in update.achievements:
+            self.daily_learning_card.play_achievement(achievement,self.settings.reduce_motion)
+        if self.settings.health_reminders_enabled and update.reminders:
+            minutes=update.reminders[-1]
+            message={120:"已连续学习两小时，建议起身活动并让眼睛休息。",180:"今天已经学习三小时，建议安排较长休息。",240:"今天的学习量已经很充足，建议结束学习并充分休息。"}[minutes]
+            QMessageBox.information(self,"学习健康提醒",message)
+
+    def _refresh_daily_learning(self) -> None:
+        if not hasattr(self,"daily_learning_card"):return
+        dashboard=self.context.learning_repository.dashboard()
+        self.daily_learning_card.update_dashboard(dashboard,self.settings.daily_learning_goal_minutes,reduce_motion=self.settings.reduce_motion)
+
     def eventFilter(self, watched, event) -> bool:
         if watched is self.preview_content.viewport() and event.type()==QEvent.Type.ContextMenu:
             self._show_article_preview_menu(event.pos())
@@ -541,6 +587,8 @@ class MainWindow(QMainWindow):
         self.settings_page.load_settings(self.settings)
         self.preview_content.setStyleSheet(f"font-size: {max(14, self.settings.font_size - 1)}px;")
         self.practice_mode_control.set_value("sentence" if self.settings.sentence_learning_enabled else "continuous")
+        self.context.learning_time_tracker.configure(self.settings.learning_idle_timeout_seconds,self.settings.health_reminders_enabled)
+        if hasattr(self,"daily_learning_card"):self._refresh_daily_learning()
 
     def _set_practice_mode(self, mode: str) -> None:
         enabled = mode == "sentence"
@@ -860,6 +908,8 @@ class MainWindow(QMainWindow):
     def _speech_playback_state_changed(self, state: str) -> None:
         if self._active_speech_control:
             self._active_speech_control.set_state(state)
+        if state in {"stopped","finished"} and self.stack.currentWidget() in {self.practice_view,self.sentence_practice_view,self.word_learning_page}:
+            self._track_learning_activity("audio_finished")
 
     def _speech_playback_failed(self, message: str) -> None:
         if self._active_speech_control:
@@ -896,6 +946,7 @@ class MainWindow(QMainWindow):
             if decision.cached and decision.cached.status == "failed":
                 self.sentence_practice_view.show_translation_failed(decision.cached.error_message or "翻译失败")
             return
+        self._handle_learning_update(self.context.learning_time_tracker.suspend_for_network())
         try:
             api_key = self.context.credential_store.get()
             provider = DeepSeekTranslationProvider(api_key or "", model=self.settings.translation_model, timeout=10.0)
@@ -1238,6 +1289,10 @@ class MainWindow(QMainWindow):
         self._attach_sentence_attempts()
         if self.current_material.practice_set_id is not None:
             self.context.special_practice_service.note_set_practiced(self.current_material.practice_set_id)
+        correct_words=self._count_correct_words(self._active_practice_view().session)
+        self.context.learning_time_tracker.activity("correct_words",related_article_id=self.current_material.article_id,metadata={"count":correct_words})
+        self._handle_learning_update(self.context.learning_time_tracker.flush())
+        self.context.learning_time_tracker.activity("section_completed",related_article_id=self.current_material.article_id)
         review_changes = []
         if self.current_material.practice_type == "vocabulary_review" and self.current_material.practice_set_id is not None:
             mistaken = {
@@ -1293,6 +1348,15 @@ class MainWindow(QMainWindow):
                 self._begin_practice(retry_material)
                 return
         self._leave_practice_view()
+
+    @staticmethod
+    def _count_correct_words(session) -> int:
+        typed={item.position:item.is_correct for item in session.typed_characters}
+        count=0
+        for match in re.finditer(r"[A-Za-z]+(?:['’][A-Za-z]+)*(?:-[A-Za-z]+)*",session.content):
+            positions=range(match.start(),match.end())
+            if all(position in typed and typed[position] for position in positions):count+=1
+        return count
 
     def _build_retry_errors_material(self) -> PracticeMaterial | None:
         if self._active_practice_view().session is None or self.current_material is None:
@@ -1429,6 +1493,7 @@ class MainWindow(QMainWindow):
         if entry and not force and (entry.dictionary_status=="ready" or not_found_fresh):
             self._update_word_enrichment_status(entry_id,context_id); return
         if (entry_id,"dictionary") in self._enrichment_loading:return
+        if self._is_current_word(entry_id,context_id):self._handle_learning_update(self.context.learning_time_tracker.suspend_for_network())
         self._enrichment_errors.pop((entry_id,"dictionary"),None); self._enrichment_loading.add((entry_id,"dictionary")); self._update_word_enrichment_status(entry_id,context_id)
         task=VocabularyTask(lambda:self.context.vocabulary_learning_service.lookup_dictionary(entry_id,FreeDictionaryProvider()))
         self._vocabulary_workers.add(task)
@@ -1452,6 +1517,7 @@ class MainWindow(QMainWindow):
             return
         entry_id=context.vocabulary_entry_id
         if (entry_id,"ai") in self._enrichment_loading:return
+        if self._is_current_word(entry_id,context_id):self._handle_learning_update(self.context.learning_time_tracker.suspend_for_network())
         self._enrichment_errors.pop((entry_id,"ai"),None); self._enrichment_loading.add((entry_id,"ai")); self._update_word_enrichment_status(entry_id,context_id)
         task=VocabularyTask(lambda:provider.explain(**payload)); self._vocabulary_workers.add(task)
         task.signals.completed.connect(lambda result,t=task:self._word_explained(context_id,result,t)); task.signals.failed.connect(lambda error,t=task:self._vocabulary_task_failed(entry_id,context_id,"ai",error,t)); self._thread_pool.start(task)
@@ -1602,6 +1668,7 @@ class MainWindow(QMainWindow):
             event.ignore()
             return
         self.audio_playback.stop()
+        self._handle_learning_update(self.context.learning_time_tracker.stop())
         for worker in self._tts_workers:
             worker.cancel()
         self._thread_pool.clear()

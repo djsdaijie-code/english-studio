@@ -106,6 +106,7 @@ class PracticeView(QWidget):
     speech_requested = Signal(str, float, object)
     speech_sentence_changed = Signal(str)
     word_collection_requested = Signal(str, int, int)
+    learning_activity = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -360,6 +361,7 @@ class PracticeView(QWidget):
             return
         if event.key() == Qt.Key.Key_Backspace:
             if not self.session.is_paused and self.session.handle_backspace():
+                self.learning_activity.emit("typing_activity")
                 self.input_feedback_label.setText("已回退一格，可重新输入")
                 self._refresh_ui()
                 self._render_text()
@@ -387,6 +389,7 @@ class PracticeView(QWidget):
             event.accept()
             return
         typed = self.session.typed_characters[-1]
+        self.learning_activity.emit("typing_activity")
         if is_correct:
             self.input_feedback_label.setText("输入正确")
         else:
@@ -400,6 +403,7 @@ class PracticeView(QWidget):
             self._timer.stop()
             self._set_input_active(False)
             self.input_feedback_label.setText("本段练习已完成")
+            self.learning_activity.emit("section_completed")
             self.session_completed.emit(self.session.snapshot())
         event.accept()
 
@@ -602,6 +606,7 @@ class PracticeView(QWidget):
         QTimer.singleShot(0, self._restore_focus)
 
     def _request_speech(self, speed: float) -> None:
+        self.learning_activity.emit("audio_started")
         self._refresh_speech_sentence()
         if self._current_speech_text:
             self.speech_requested.emit(self._current_speech_text, speed, self.speech_controls)

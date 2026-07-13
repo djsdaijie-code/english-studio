@@ -27,3 +27,8 @@ class AppSettings:
     vocabulary_typing_count: int = 5
     vocabulary_auto_enrich: bool = True
     vocabulary_audio_preference: str = "dictionary"
+    daily_learning_goal_minutes: int = 15
+    learning_idle_timeout_seconds: int = 90
+    checkin_animation_enabled: bool = True
+    health_reminders_enabled: bool = True
+    reduce_motion: bool = False

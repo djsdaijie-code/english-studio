@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 7
+LATEST_SCHEMA_VERSION = 8
 
 
 class MigrationRunner:
@@ -40,6 +40,9 @@ class MigrationRunner:
                 current_version = 6
             if current_version < 7:
                 self._apply_version_7(connection)
+                current_version = 7
+            if current_version < 8:
+                self._apply_version_8(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -582,6 +585,85 @@ class MigrationRunner:
         connection.execute("CREATE INDEX IF NOT EXISTS idx_article_words_normalized ON article_word_occurrences(normalized_word, article_id)")
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (7)")
+
+    def _apply_version_8(self, connection: sqlite3.Connection) -> None:
+        statements = [
+            """
+            CREATE TABLE IF NOT EXISTS daily_learning_stats (
+                date TEXT PRIMARY KEY,
+                effective_seconds REAL NOT NULL DEFAULT 0,
+                checked_in INTEGER NOT NULL DEFAULT 0,
+                reached_15 INTEGER NOT NULL DEFAULT 0,
+                reached_30 INTEGER NOT NULL DEFAULT 0,
+                reached_45 INTEGER NOT NULL DEFAULT 0,
+                reached_60 INTEGER NOT NULL DEFAULT 0,
+                reached_90 INTEGER NOT NULL DEFAULT 0,
+                awarded_xp INTEGER NOT NULL DEFAULT 0,
+                reminder_120_shown INTEGER NOT NULL DEFAULT 0,
+                reminder_180_shown INTEGER NOT NULL DEFAULT 0,
+                reminder_240_shown INTEGER NOT NULL DEFAULT 0,
+                first_activity_at TEXT,
+                last_activity_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS learning_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                active_seconds REAL NOT NULL DEFAULT 0,
+                related_article_id INTEGER,
+                related_sentence_id INTEGER,
+                related_vocabulary_id INTEGER,
+                metadata_json TEXT NOT NULL DEFAULT '{}',
+                occurred_at TEXT NOT NULL,
+                FOREIGN KEY (related_article_id) REFERENCES articles(id) ON DELETE SET NULL,
+                FOREIGN KEY (related_sentence_id) REFERENCES article_sentences(id) ON DELETE SET NULL,
+                FOREIGN KEY (related_vocabulary_id) REFERENCES vocabulary_entries(id) ON DELETE SET NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS achievements (
+                achievement_key TEXT PRIMARY KEY,
+                unlocked_at TEXT,
+                progress REAL NOT NULL DEFAULT 0,
+                metadata_json TEXT NOT NULL DEFAULT '{}'
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS profile_progress (
+                id INTEGER PRIMARY KEY CHECK(id=1),
+                total_xp INTEGER NOT NULL DEFAULT 0,
+                total_checkin_days INTEGER NOT NULL DEFAULT 0,
+                current_streak INTEGER NOT NULL DEFAULT 0,
+                longest_streak INTEGER NOT NULL DEFAULT 0,
+                current_rank TEXT NOT NULL DEFAULT '启程 III',
+                updated_at TEXT NOT NULL
+            )
+            """,
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_occurred ON learning_events(occurred_at)",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_type ON learning_events(event_type, occurred_at)",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_sentence ON learning_events(related_sentence_id, event_type)",
+        ]
+        for statement in statements:
+            connection.execute(statement)
+        connection.execute(
+            "INSERT OR IGNORE INTO profile_progress(id,updated_at) VALUES (1,datetime('now','localtime'))"
+        )
+        defaults = {
+            "daily_learning_goal_minutes": "15",
+            "learning_idle_timeout_seconds": "90",
+            "checkin_animation_enabled": "1",
+            "health_reminders_enabled": "1",
+            "reduce_motion": "0",
+        }
+        connection.executemany(
+            "INSERT OR IGNORE INTO settings(key,value,updated_at) VALUES (?,?,datetime('now','localtime'))",
+            defaults.items(),
+        )
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (8)")
     def _ensure_column(
         self,
         connection: sqlite3.Connection,

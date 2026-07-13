@@ -28,6 +28,7 @@ class SentencePracticeView(QWidget):
     speech_requested = Signal(str, float, object)
     speech_sentence_changed = Signal(str)
     word_collection_requested = Signal(str, int, int)
+    learning_activity = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -150,7 +151,7 @@ class SentencePracticeView(QWidget):
             return
         if event.matches(QKeySequence.StandardKey.Paste): return
         if event.key() == Qt.Key.Key_Backspace:
-            if self.learning.handle_backspace() and self.session.handle_backspace(): self.input_feedback.setText("已回退一格")
+            if self.learning.handle_backspace() and self.session.handle_backspace(): self.input_feedback.setText("已回退一格"); self.learning_activity.emit("typing_activity")
             self._refresh(); return
         if event.modifiers() & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier | Qt.KeyboardModifier.MetaModifier): return
         character = self._event_text(event)
@@ -158,9 +159,11 @@ class SentencePracticeView(QWidget):
         result = self.learning.handle_character(character)
         if result is None: return
         self.session.handle_character(character)
+        self.learning_activity.emit("typing_activity")
         self.input_feedback.setText("输入正确" if result else "输入错误，已继续前进")
         self._emit_new_attempts(); self._refresh()
         if self.learning.state == SentenceLearningState.LEARNING_PAUSED:
+            self.learning_activity.emit("sentence_completed")
             self._set_input_active(False)
             self.state_label.setText("有效计时已暂停，请阅读翻译；按 Enter 进入下一句")
             if self._show_translation and self._auto_translate:
@@ -190,6 +193,7 @@ class SentencePracticeView(QWidget):
 
     def _next_sentence(self) -> None:
         if not self.learning or self.learning.state != SentenceLearningState.LEARNING_PAUSED: return
+        self.learning_activity.emit("next_item")
         if self.learning.next_sentence():
             self._show_sentence(); self.state_label.setText("输入第一个字符后开始计时"); self._set_input_active(True); self._restore_focus()
         else:
@@ -213,6 +217,7 @@ class SentencePracticeView(QWidget):
         label = "人工修改" if translation.is_user_edited else ("已缓存" if cached else "AI 翻译")
         self.translation_status.setText(label); self.translation_text.setText(translation.chinese_translation or "暂无翻译")
         self.expressions_label.setText("\n".join(f"• {item.get('expression', '')}：{item.get('meaning', '')}" for item in translation.key_expressions) or "暂无")
+        self.learning_activity.emit("meaning_revealed")
         self._set_translation_actions(True)
 
     def show_translation_failed(self, message: str) -> None:
@@ -230,6 +235,7 @@ class SentencePracticeView(QWidget):
 
     def _request_speech(self, speed: float) -> None:
         if self.current_sentence:
+            self.learning_activity.emit("audio_started")
             self.speech_requested.emit(self.current_sentence.normalized_text, speed, self.speech_controls)
         QTimer.singleShot(0, self._restore_focus)
 

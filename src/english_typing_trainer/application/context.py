@@ -22,6 +22,9 @@ from english_typing_trainer.services.word_normalization import WordNormalization
 from english_typing_trainer.services.vocabulary_learning import VocabularyLearningService
 from english_typing_trainer.services.dictionary_audio import DictionaryAudioService
 from english_typing_trainer.services.article_word_index import ArticleWordIndexService
+from english_typing_trainer.database.learning_repository import LearningRepository
+from english_typing_trainer.services.learning_progress import LearningProgressService
+from english_typing_trainer.services.learning_time import LearningTimeTracker
 
 
 @dataclass(slots=True)
@@ -46,6 +49,9 @@ class AppContext:
     vocabulary_learning_service: VocabularyLearningService
     dictionary_audio_service: DictionaryAudioService
     article_word_index_service: ArticleWordIndexService
+    learning_repository: LearningRepository
+    learning_progress_service: LearningProgressService
+    learning_time_tracker: LearningTimeTracker
 
 
 def build_app_context(data_dir: Path | None = None, credential_store: CredentialStore | None = None, tts_credential_store: CredentialStore | None = None) -> AppContext:
@@ -68,6 +74,12 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
     pronunciation_service = PronunciationService(tts_service)
     vocabulary_learning_service = VocabularyLearningService(database, normalization_service)
     dictionary_audio_service = DictionaryAudioService(database, paths.audio_cache_dir)
+    learning_repository = LearningRepository(database)
+    learning_progress_service = LearningProgressService(learning_repository)
+    learning_settings=settings_service.get_settings()
+    learning_time_tracker = LearningTimeTracker(learning_repository, learning_progress_service,
+        idle_timeout_seconds=learning_settings.learning_idle_timeout_seconds,
+        health_reminders_enabled=learning_settings.health_reminders_enabled)
     if credential_store is None:
         credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else WindowsCredentialStore()
     if tts_credential_store is None:
@@ -100,4 +112,7 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
         vocabulary_learning_service=vocabulary_learning_service,
         dictionary_audio_service=dictionary_audio_service,
         article_word_index_service=article_word_index_service,
+        learning_repository=learning_repository,
+        learning_progress_service=learning_progress_service,
+        learning_time_tracker=learning_time_tracker,
     )
