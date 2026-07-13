@@ -21,6 +21,7 @@ from english_typing_trainer.services.tts_service import PronunciationService, TT
 from english_typing_trainer.services.word_normalization import WordNormalizationService
 from english_typing_trainer.services.vocabulary_learning import VocabularyLearningService
 from english_typing_trainer.services.dictionary_audio import DictionaryAudioService
+from english_typing_trainer.services.article_word_index import ArticleWordIndexService
 
 
 @dataclass(slots=True)
@@ -44,6 +45,7 @@ class AppContext:
     tts_credential_store: CredentialStore
     vocabulary_learning_service: VocabularyLearningService
     dictionary_audio_service: DictionaryAudioService
+    article_word_index_service: ArticleWordIndexService
 
 
 def build_app_context(data_dir: Path | None = None, credential_store: CredentialStore | None = None, tts_credential_store: CredentialStore | None = None) -> AppContext:
@@ -56,7 +58,8 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
     review_planning_service = ReviewPlanningService()
     settings_service = SettingsService(database)
     sentence_service = SentenceService(database)
-    article_library = ArticleLibraryService(database, sectioning_service)
+    article_word_index_service=ArticleWordIndexService(database,normalization_service)
+    article_library = ArticleLibraryService(database, sectioning_service, article_word_index_service)
     practice_service = PracticeService(database)
     history_service = HistoryService(database)
     statistics_service = StatisticsService(database)
@@ -96,4 +99,5 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
         tts_credential_store=tts_credential_store,
         vocabulary_learning_service=vocabulary_learning_service,
         dictionary_audio_service=dictionary_audio_service,
+        article_word_index_service=article_word_index_service,
     )

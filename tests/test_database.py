@@ -21,7 +21,7 @@ def test_repeat_start_keeps_schema_intact(tmp_path: Path) -> None:
 
     second = build_app_context(data_dir=data_dir)
     try:
-        assert second.database.get_schema_version() == 6
+        assert second.database.get_schema_version() == 7
         assert second.database.get_foreign_keys_enabled() is True
     finally:
         second.database.close()
@@ -57,12 +57,12 @@ def test_v3_database_is_backed_up_before_v4_migration(tmp_path: Path) -> None:
 
     context = build_app_context(data_dir=data_dir)
     try:
-        assert context.database.get_schema_version() == 6
+        assert context.database.get_schema_version() == 7
         mode = context.database.connect().execute(
             "SELECT value FROM settings WHERE key = 'sentence_learning_enabled'"
         ).fetchone()[0]
         assert mode == "0"
-        backups = list((data_dir / "backups").glob("typing_trainer-v3-before-v6-*.db"))
+        backups = list((data_dir / "backups").glob("typing_trainer-v3-before-v7-*.db"))
         assert len(backups) == 1
         backup = sqlite3.connect(backups[0])
         assert backup.execute("SELECT version FROM schema_version").fetchone()[0] == 3

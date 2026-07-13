@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent, QTextCursor
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QMessageBox
+from PySide6.QtTest import QTest
 
 from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.models.vocabulary import VocabularyContext, VocabularyEntry, VocabularyLearningState
@@ -98,3 +99,23 @@ def test_continuous_practice_collects_selected_word_without_losing_focus(tmp_pat
         assert window.practice_view.input_edit.hasFocus()
         window.current_practice_saved=True; window.close()
     finally:context.database.close()
+
+
+def test_input_survives_time_and_right_panel_updates():
+    app(); page=WordLearningPage(); entry,contexts,state=data(); page.load(entry,contexts,state); page._key(key("r")); QTest.qWait(2100)
+    assert page.input.toPlainText()=="r"
+    updated=VocabularyEntry("run","Run",lemma="run",phonetic="/new/",primary_part_of_speech="verb",dictionary_status="ready",id=1)
+    updated_context=[VocabularyContext(1,"running","She is running fast.",start_offset=7,end_offset=14,contextual_meaning_zh="跑步",explanation_zh="新讲解",id=2)]
+    assert page.update_details(updated,updated_context,state)
+    assert page.input.toPlainText()=="r" and page.typed=="r" and page.repeat_index==0 and page.input.textCursor().position()==1
+    page.context_combo.setCurrentIndex(0); page._update_prompt(); assert page.input.toPlainText()=="r"
+
+
+def test_learning_queue_navigation_auto_next_and_results():
+    app(); page=WordLearningPage(); first,contexts,state=data(); state.typing_target_count=1
+    second=VocabularyEntry("learn","learn",id=4); second_context=[VocabularyContext(4,"learn","I learn English.",start_offset=2,end_offset=7,id=5)]; second_state=VocabularyLearningState(4,typing_target_count=1)
+    page.load_queue([(first,contexts,state),(second,second_context,second_state)]); attempts=[]; results=[]; page.attempt_completed.connect(attempts.append); page.queue_finished.connect(results.append)
+    for char in "run":page._key(key(char))
+    QTest.qWait(500); assert page.entry.id==4 and page.queue_position.text()=="第 2 / 2 个"
+    page.previous_word(); assert page.entry.id==1; page.next_word(); page.skip_word()
+    assert results and results[-1]["total"]==2 and results[-1]["skipped"]==1

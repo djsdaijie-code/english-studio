@@ -19,10 +19,11 @@ class ArticleImportResult:
 
 
 class ArticleLibraryService:
-    def __init__(self, database: DatabaseManager, sectioning: SectioningService) -> None:
+    def __init__(self, database: DatabaseManager, sectioning: SectioningService, word_index=None) -> None:
         self._database = database
         self._repository = ArticleRepository(database.connect)
         self._sectioning = sectioning
+        self._word_index = word_index
 
     def list_articles(self, search: str = "") -> list[Article]:
         return self._repository.list_articles(search=search)
@@ -57,6 +58,8 @@ class ArticleLibraryService:
 
         with self._database.transaction() as connection:
             created = self._repository.insert_article(connection, article, sections)
+        if self._word_index and created.id is not None:
+            self._word_index.rebuild(created.id)
 
         return ArticleImportResult("imported", created, "文章导入成功。")
 

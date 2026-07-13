@@ -135,7 +135,7 @@ class VocabularyLearningService:
         state=self.repository.get_state(attempt.vocabulary_entry_id)
         if not state: raise ValueError("未找到学习状态。")
         now=datetime.now(); state.last_practiced_at=now
-        if attempt.practice_type in {"typing","sentence_cloze"}:
+        if attempt.practice_type in {"typing","sentence_cloze"} and attempt.is_correct is not None:
             if attempt.is_correct: state.correct_attempts+=1
             else: state.incorrect_attempts+=1
         if attempt.practice_type=="typing" and attempt.is_correct:

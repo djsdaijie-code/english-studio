@@ -66,6 +66,8 @@ class VocabularyPage(QWidget):
     open_learning_requested = Signal(int)
     play_requested = Signal(int)
     delete_requested = Signal(int)
+    row_learning_requested = Signal(object)
+    scope_changed = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -88,6 +90,10 @@ class VocabularyPage(QWidget):
         filter_layout = QVBoxLayout(filter_card)
         filter_layout.setContentsMargins(16, 16, 16, 16)
         top_filters = QHBoxLayout()
+        self.scope_combo = QComboBox()
+        self.scope_combo.addItem("待学习", "learning")
+        self.scope_combo.addItem("当前文章", "article")
+        self.scope_combo.addItem("全部", "all")
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("搜索单词、释义或备注")
         self.status_combo = QComboBox()
@@ -96,13 +102,18 @@ class VocabularyPage(QWidget):
         self.status_combo.addItem("学习中", "learning")
         self.status_combo.addItem("复习中", "reviewing")
         self.status_combo.addItem("已掌握", "mastered")
+        self.sort_combo=QComboBox(); self.sort_combo.addItem("首次出现","first"); self.sort_combo.addItem("出现次数","frequency"); self.sort_combo.addItem("字母顺序","alpha")
+        self.hide_mastered_checkbox=QCheckBox("隐藏已掌握")
         self.archived_checkbox = QCheckBox("显示已归档")
         self.due_only_checkbox = QCheckBox("只看待复习")
         self.refresh_button = QPushButton("刷新")
         self.refresh_button.setProperty("variant", "ghost")
         for widget in (
+            self.scope_combo,
             self.search_input,
             self.status_combo,
+            self.sort_combo,
+            self.hide_mastered_checkbox,
             self.archived_checkbox,
             self.due_only_checkbox,
             self.refresh_button,
@@ -120,10 +131,10 @@ class VocabularyPage(QWidget):
         filter_layout.addLayout(add_row)
         layout.addWidget(filter_card)
 
-        self.table = QTableWidget(0, 7)
+        self.table = QTableWidget(0, 8)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.table.setHorizontalHeaderLabels(["单词", "音标", "中文意思", "词性", "来源文章", "状态", "最近练习"])
+        self.table.setHorizontalHeaderLabels(["单词", "出现次数", "音标", "中文意思", "词性", "来源文章", "状态", "最近练习"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.table, stretch=1)
 
@@ -164,12 +175,15 @@ class VocabularyPage(QWidget):
         self.mastered_button.clicked.connect(lambda: self._emit_mastery(True))
         self.learning_button.clicked.connect(lambda: self._emit_mastery(False))
         self.review_button.clicked.connect(self._emit_review)
-        self.open_button.clicked.connect(lambda: self._emit_id(self.open_learning_requested))
+        self.open_button.clicked.connect(self._emit_learning)
         self.play_button.clicked.connect(lambda: self._emit_id(self.play_requested))
         self.delete_button.clicked.connect(lambda: self._emit_id(self.delete_requested))
-        self.table.cellDoubleClicked.connect(lambda _row,_column:self._emit_id(self.open_learning_requested))
+        self.table.cellDoubleClicked.connect(lambda _row,_column:self._emit_learning())
         self.search_input.textChanged.connect(lambda _text:self.refresh_requested.emit())
         self.status_combo.currentIndexChanged.connect(lambda _index:self.refresh_requested.emit())
+        self.scope_combo.currentIndexChanged.connect(lambda _index:self.scope_changed.emit(str(self.scope_combo.currentData())))
+        self.sort_combo.currentIndexChanged.connect(lambda _index:self.refresh_requested.emit())
+        self.hide_mastered_checkbox.toggled.connect(lambda _checked:self.refresh_requested.emit())
         self._update_action_state()
         for obsolete in (self.edit_button,self.archive_button,self.restore_button,self.review_button,self.archived_checkbox,self.due_only_checkbox):
             obsolete.hide()
@@ -181,6 +195,7 @@ class VocabularyPage(QWidget):
         for row_index, row in enumerate(rows):
             values = [
                 row["display_word"],
+                row.get("occurrence_count") or "-",
                 row.get("phonetic") or "暂无",
                 row.get("meaning_zh") or row.get("meaning") or "待获取",
                 row.get("primary_part_of_speech") or "暂无",
@@ -264,6 +279,14 @@ class VocabularyPage(QWidget):
     def _emit_id(self, signal) -> None:
         item_id=self.selected_item_id()
         if item_id is not None: signal.emit(item_id)
+
+    def _emit_learning(self) -> None:
+        row=self._selected_row()
+        if row:self.row_learning_requested.emit(row)
+
+    def set_article_available(self,available:bool) -> None:
+        index=self.scope_combo.findData("article")
+        self.scope_combo.model().item(index).setEnabled(available)
 
     def _status_label(self, status: str) -> str:
         mapping = {

@@ -296,11 +296,15 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.open_learning_requested.connect(self._open_word_learning)
         self.vocabulary_page.play_requested.connect(self._play_vocabulary_word)
         self.vocabulary_page.delete_requested.connect(self._delete_vocabulary_entry)
+        self.vocabulary_page.row_learning_requested.connect(self._start_vocabulary_row)
+        self.vocabulary_page.scope_changed.connect(lambda _scope:self._refresh_vocabulary_page())
+        self.current_vocabulary_article_id = None
         self.word_learning_page = WordLearningPage()
         self.word_learning_page.back_requested.connect(self._show_vocabulary)
         self.word_learning_page.attempt_completed.connect(self._record_vocabulary_attempt)
         self.word_learning_page.play_word_requested.connect(self._play_word_from_learning)
         self.word_learning_page.play_sentence_requested.connect(lambda text:self._request_speech(text,self.settings.tts_speed,self.practice_view.speech_controls) if text else None)
+        self.word_learning_page.current_entry_changed.connect(self._ensure_current_word_enrichment)
         self._vocabulary_workers: set[VocabularyTask] = set()
 
         self._build_ui()
@@ -506,6 +510,8 @@ class MainWindow(QMainWindow):
 
         self.preview_content = QTextEdit()
         self.preview_content.setReadOnly(True)
+        self.preview_content.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.preview_content.customContextMenuRequested.connect(self._show_article_preview_menu)
         detail_layout.addWidget(self.preview_content, stretch=1)
         self.content_split.addWidget(detail_card, stretch=2)
         layout.addLayout(self.content_split, stretch=1)
@@ -642,9 +648,23 @@ class MainWindow(QMainWindow):
         self.special_practice_page.populate_saved_sets(self.context.special_practice_service.list_saved_sets())
 
     def _refresh_vocabulary_page(self) -> None:
-        items=self.context.vocabulary_learning_service.list_entries(
-            search=self.vocabulary_page.search_input.text(),status=str(self.vocabulary_page.status_combo.currentData()))
-        rows=[dict(item) | {"is_archived":False,"meaning":"","note":"","mastery_level":0} for item in items]
+        scope=str(self.vocabulary_page.scope_combo.currentData())
+        if scope in {"article","all"}:
+            article_id=self.current_vocabulary_article_id if scope=="article" else None
+            if scope=="article" and article_id is None:
+                self.vocabulary_page.populate_items([]); self.vocabulary_page.set_status_message("请先在文章库选择一篇文章。"); return
+            if article_id is not None:self.context.article_word_index_service.ensure(article_id)
+            items=self.context.article_word_index_service.list_words(article_id,search=self.vocabulary_page.search_input.text(),sort=str(self.vocabulary_page.sort_combo.currentData()),hide_mastered=self.vocabulary_page.hide_mastered_checkbox.isChecked())
+            rows=[]
+            for item in items:
+                row=dict(item); row["id"]=row.pop("vocabulary_entry_id"); row.update({"phonetic":"","meaning_zh":"","primary_part_of_speech":"","article_title":self.preview_title.text() if article_id else f"{row['article_count']} 篇文章","last_practiced_at":"","is_archived":False,"meaning":"","note":"","mastery_level":0})
+                if row["id"]:
+                    entry,contexts,state=self.context.vocabulary_learning_service.detail(row["id"]); row.update({"phonetic":entry.phonetic,"primary_part_of_speech":entry.primary_part_of_speech,"meaning_zh":contexts[0].contextual_meaning_zh if contexts else "","status":state.status})
+                rows.append(row)
+        else:
+            items=self.context.vocabulary_learning_service.list_entries(search=self.vocabulary_page.search_input.text(),status=str(self.vocabulary_page.status_combo.currentData()))
+            rows=[dict(item) | {"occurrence_count":"-","is_archived":False,"meaning":"","note":"","mastery_level":0} for item in items if item["status"]!="mastered"]
+        self.vocabulary_page.set_status_message("")
         self.vocabulary_page.populate_items(rows)
 
     def _selected_article_id(self) -> int | None:
@@ -658,6 +678,7 @@ class MainWindow(QMainWindow):
             self.preview_title.setText("暂未选择文章")
             self.preview_meta.setText("从左侧选择一篇文章，查看详情并开始练习。")
             self.preview_content.setPlainText("导入一篇英文 TXT，开始第一次练习")
+            self.current_vocabulary_article_id=None; self.vocabulary_page.set_article_available(False)
             return
         article = self.articles[row]
         imported = article.imported_at.strftime("%Y-%m-%d %H:%M") if article.imported_at else "暂无"
@@ -672,6 +693,26 @@ class MainWindow(QMainWindow):
         )
         self.preview_meta.setToolTip(article.source_path)
         self.preview_content.setPlainText(article.full_text[:3500])
+        self.current_vocabulary_article_id=article.id; self.vocabulary_page.set_article_available(True)
+        if article.id is not None:self.context.article_word_index_service.ensure(article.id)
+
+    def _show_article_preview_menu(self,position) -> None:
+        if self.current_vocabulary_article_id is None:return
+        menu=QMenu(self.preview_content); view_action=menu.addAction("查看当前文章单词"); rebuild_action=menu.addAction("重新提取文章单词")
+        selected=menu.exec(self.preview_content.mapToGlobal(position))
+        if selected is view_action:
+            index=self.vocabulary_page.scope_combo.findData("article"); self.vocabulary_page.scope_combo.setCurrentIndex(index); self._show_vocabulary()
+        elif selected is rebuild_action:
+            if QMessageBox.question(self,"重新提取文章单词","将重新分析当前文章中的单词，不会删除已收藏单词和学习记录。") == QMessageBox.StandardButton.Yes:
+                count=self.context.article_word_index_service.rebuild(self.current_vocabulary_article_id); QMessageBox.information(self,"提取完成",f"已记录 {count} 个单词位置。")
+
+    def _start_vocabulary_row(self,row) -> None:
+        entry_id=row.get("id")
+        if not entry_id:
+            source=row.get("source_sentence","") or ""; local=max(source.find(row["display_word"]),0)
+            collected=self.context.vocabulary_learning_service.collect(row["display_word"],sentence=source,article_id=self.current_vocabulary_article_id,start_offset=local,end_offset=local+len(row["display_word"]),typing_target_count=self.settings.vocabulary_typing_count)
+            entry_id=collected.entry.id; self._refresh_vocabulary_page()
+        if entry_id:self._open_word_learning(int(entry_id))
 
     def _import_articles(self) -> None:
         file_paths, _ = QFileDialog.getOpenFileNames(self, "导入 TXT 文章", "", "文本文件 (*.txt)")
@@ -1361,6 +1402,7 @@ class MainWindow(QMainWindow):
 
     def _dictionary_enriched(self,entry_id,context_id,result,task):
         self._vocabulary_workers.discard(task); self.context.vocabulary_learning_service.apply_dictionary_result(entry_id,result); self._refresh_vocabulary_page()
+        self._refresh_open_word_details(entry_id)
         if context_id:self._start_word_explanation(context_id)
 
     def _start_word_explanation(self,context_id:int):
@@ -1375,20 +1417,49 @@ class MainWindow(QMainWindow):
 
     def _word_explained(self,context_id,result,task):
         self._vocabulary_workers.discard(task); self.context.vocabulary_learning_service.apply_explanation_result(context_id,result); self._refresh_vocabulary_page()
-        if self.stack.currentWidget() is self.word_learning_page:self._open_word_learning(self.word_learning_page.entry.id)
+        context=self.context.vocabulary_learning_service.repository.get_context(context_id)
+        if context:self._refresh_open_word_details(context.vocabulary_entry_id)
 
     def _vocabulary_task_failed(self,error,task):
         self._vocabulary_workers.discard(task); self.vocabulary_page.set_status_message(f"部分信息暂未获取：{error}")
 
     def _open_word_learning(self,entry_id:int):
+        rows=self._current_vocabulary_rows(); ids=[]
+        for row in rows:
+            if row.get("status")=="mastered":continue
+            item_id=row.get("id")
+            if not item_id and row.get("display_word"):
+                source=row.get("source_sentence","") or ""; local=max(source.find(row["display_word"]),0)
+                collected=self.context.vocabulary_learning_service.collect(row["display_word"],sentence=source,article_id=self.current_vocabulary_article_id,start_offset=local,end_offset=local+len(row["display_word"]),typing_target_count=self.settings.vocabulary_typing_count)
+                item_id=collected.entry.id
+            if item_id:ids.append(int(item_id))
+        ids=[entry_id]+[item for item in ids if item!=entry_id]
+        items=[]
+        for item_id in ids:
+            entry,contexts,state=self.context.vocabulary_learning_service.detail(item_id)
+            if entry and state:items.append((entry,contexts,state))
+        if not items:return
+        self.word_learning_page.load_queue(items); self.stack.setCurrentWidget(self.word_learning_page); self.sidebar.hide()
+
+    def _current_vocabulary_rows(self):
+        return list(getattr(self.vocabulary_page,"_rows",[]))
+
+    def _refresh_open_word_details(self,entry_id:int):
+        if self.stack.currentWidget() is not self.word_learning_page or not self.word_learning_page.entry or self.word_learning_page.entry.id!=entry_id:return
         entry,contexts,state=self.context.vocabulary_learning_service.detail(entry_id)
-        if not entry or not state:return
-        self.word_learning_page.load(entry,contexts,state); self.stack.setCurrentWidget(self.word_learning_page); self.sidebar.hide()
+        if entry and state:self.word_learning_page.update_details(entry,contexts,state)
+
+    def _ensure_current_word_enrichment(self,entry_id:int):
+        entry,contexts,_=self.context.vocabulary_learning_service.detail(entry_id)
+        if not entry:return
+        context_id=contexts[0].id if contexts else None
+        if self.settings.vocabulary_auto_enrich:self._start_vocabulary_enrichment(entry_id,context_id)
 
     def _record_vocabulary_attempt(self,attempt:VocabularyAttempt):
         self.context.vocabulary_learning_service.record_attempt(attempt)
         if self.word_learning_page.entry:
             self.word_learning_page.state=self.context.vocabulary_learning_service.repository.get_state(self.word_learning_page.entry.id)
+            if self.word_learning_page.queue:self.word_learning_page.queue[self.word_learning_page.queue_index]=(self.word_learning_page.entry,self.word_learning_page.contexts,self.word_learning_page.state)
             self.word_learning_page._update_prompt()
 
     def _play_vocabulary_word(self,entry_id:int):

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 6
+LATEST_SCHEMA_VERSION = 7
 
 
 class MigrationRunner:
@@ -37,6 +37,9 @@ class MigrationRunner:
                 current_version = 5
             if current_version < 6:
                 self._apply_version_6(connection)
+                current_version = 6
+            if current_version < 7:
+                self._apply_version_7(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -553,6 +556,32 @@ class MigrationRunner:
         )
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (6)")
+
+    def _apply_version_7(self, connection: sqlite3.Connection) -> None:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS article_word_occurrences (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                article_id INTEGER NOT NULL,
+                article_sentence_id INTEGER,
+                normalized_word TEXT NOT NULL,
+                source_word TEXT NOT NULL,
+                source_sentence TEXT NOT NULL DEFAULT '',
+                start_offset INTEGER NOT NULL,
+                end_offset INTEGER NOT NULL,
+                occurrence_index INTEGER NOT NULL,
+                extraction_version TEXT NOT NULL DEFAULT 'word-v1',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+                FOREIGN KEY (article_sentence_id) REFERENCES article_sentences(id) ON DELETE SET NULL,
+                UNIQUE(article_id, start_offset, end_offset)
+            )
+            """
+        )
+        connection.execute("CREATE INDEX IF NOT EXISTS idx_article_words_article ON article_word_occurrences(article_id, occurrence_index)")
+        connection.execute("CREATE INDEX IF NOT EXISTS idx_article_words_normalized ON article_word_occurrences(normalized_word, article_id)")
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (7)")
     def _ensure_column(
         self,
         connection: sqlite3.Connection,

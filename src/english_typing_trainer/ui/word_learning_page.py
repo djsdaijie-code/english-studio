@@ -14,9 +14,11 @@ from english_typing_trainer.ui.theme import resource_root
 class WordLearningPage(QWidget):
     back_requested=Signal(); play_word_requested=Signal(object, object); play_sentence_requested=Signal(str)
     attempt_completed=Signal(object); context_changed=Signal(int)
+    current_entry_changed=Signal(int); queue_finished=Signal(object)
 
     def __init__(self,parent=None) -> None:
         super().__init__(parent); self.entry=None; self.contexts=[]; self.state=None; self.typed=""; self.errors=0; self.repeat_index=0; self.started=None; self.mode="typing"
+        self.queue=[]; self.queue_index=0; self.completed_words=0; self.skipped_words=0; self.queue_correct=0; self.queue_errors=0; self.queue_started=0.0; self._switch_token=0
         self._build()
 
     def _build(self):
@@ -24,17 +26,21 @@ class WordLearningPage(QWidget):
         top=QHBoxLayout(); self.back_button=QPushButton("返回单词本"); self.back_button.setProperty("variant","ghost"); self.back_button.clicked.connect(self.back_requested.emit)
         self.title=QLabel("单词学习"); self.title.setProperty("role","page-title")
         self.mode_combo=QComboBox(); self.mode_combo.addItem("单词打字","typing"); self.mode_combo.addItem("原句填空","sentence_cloze"); self.mode_combo.addItem("看英文回忆中文","meaning_recall"); self.mode_combo.currentIndexChanged.connect(self._mode_changed)
-        top.addWidget(self.back_button); top.addWidget(self.title,1); top.addWidget(self.mode_combo); root.addLayout(top)
+        self.queue_position=QLabel("第 0 / 0 个"); self.queue_position.setProperty("role","subtitle")
+        self.previous_button=QPushButton("上一个"); self.skip_button=QPushButton("跳过"); self.next_button=QPushButton("下一个")
+        self.previous_button.clicked.connect(self.previous_word); self.skip_button.clicked.connect(self.skip_word); self.next_button.clicked.connect(self._manual_next)
+        top.addWidget(self.back_button); top.addWidget(self.title,1); top.addWidget(self.queue_position); top.addWidget(self.previous_button); top.addWidget(self.skip_button); top.addWidget(self.next_button); top.addWidget(self.mode_combo); root.addLayout(top)
         split=QSplitter(Qt.Orientation.Horizontal); split.setChildrenCollapsible(False)
         left=QFrame(); left.setObjectName("Card"); ll=QVBoxLayout(left); ll.setContentsMargins(24,24,24,24); ll.setSpacing(16)
         self.prompt=QLabel(""); self.prompt.setWordWrap(True); self.prompt.setAlignment(Qt.AlignmentFlag.AlignCenter); self.prompt.setStyleSheet("font-size: 30px; font-weight: 600;")
         self.progress=QLabel(""); self.progress.setProperty("role","subtitle"); self.progress.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.input=PracticeInputEdit(); self.input.setMinimumHeight(140); self.input.key_received.connect(self._key)
         self.reveal=QPushButton("显示意思"); self.reveal.clicked.connect(self._reveal); self.reveal.hide()
+        result_actions=QHBoxLayout(); self.retry_queue_button=QPushButton("再练一遍"); self.retry_queue_button.clicked.connect(self.retry_queue); self.retry_queue_button.hide(); self.result_back_button=QPushButton("返回单词本"); self.result_back_button.clicked.connect(self.back_requested.emit); self.result_back_button.hide(); result_actions.addStretch(1); result_actions.addWidget(self.retry_queue_button); result_actions.addWidget(self.result_back_button); result_actions.addStretch(1)
         ratings=QHBoxLayout(); self.rating_buttons=[]
         for text,value in (("不认识","unknown"),("模糊","fuzzy"),("认识","known"),("很熟","familiar")):
             button=QPushButton(text); button.clicked.connect(lambda checked=False,v=value:self._rate(v)); button.hide(); ratings.addWidget(button); self.rating_buttons.append(button)
-        ll.addStretch(1); ll.addWidget(self.prompt); ll.addWidget(self.progress); ll.addWidget(self.input); ll.addWidget(self.reveal,alignment=Qt.AlignmentFlag.AlignCenter); ll.addLayout(ratings); ll.addStretch(1)
+        ll.addStretch(1); ll.addWidget(self.prompt); ll.addWidget(self.progress); ll.addWidget(self.input); ll.addWidget(self.reveal,alignment=Qt.AlignmentFlag.AlignCenter); ll.addLayout(ratings); ll.addLayout(result_actions); ll.addStretch(1)
         right=QFrame(); right.setObjectName("Card"); rl=QVBoxLayout(right); rl.setContentsMargins(24,24,24,24); rl.setSpacing(12)
         head=QHBoxLayout(); self.word=QLabel(""); self.word.setProperty("role","page-title"); self.play_word=QPushButton("播放单词"); self.play_word.clicked.connect(lambda:self.play_word_requested.emit(self.entry,self.current_context))
         self.play_word.setIcon(QIcon(str(resource_root()/"icons"/"speaker.svg")))
@@ -54,7 +60,21 @@ class WordLearningPage(QWidget):
         index=self.context_combo.currentIndex(); return self.contexts[index] if 0<=index<len(self.contexts) else None
 
     def load(self,entry:VocabularyEntry,contexts:list[VocabularyContext],state:VocabularyLearningState):
-        self.entry=entry; self.contexts=contexts; self.state=state; self.repeat_index=0
+        self.load_queue([(entry,contexts,state)])
+
+    def load_queue(self,items):
+        self.queue=list(items); self.queue_index=0; self.completed_words=0; self.skipped_words=0; self.queue_correct=0; self.queue_errors=0; self.queue_started=monotonic(); self.retry_queue_button.hide(); self.result_back_button.hide(); self._load_current()
+
+    def _load_current(self):
+        if not self.queue:
+            self._show_results(); return
+        self.entry,self.contexts,self.state=self.queue[self.queue_index]; self.repeat_index=0; self._switch_token+=1
+        self.queue_position.setText(f"第 {self.queue_index+1} / {len(self.queue)} 个")
+        self.previous_button.setEnabled(self.queue_index>0); self.next_button.setEnabled(self.queue_index<len(self.queue)-1)
+        self._render_entry(); self._reset_round(); self.current_entry_changed.emit(self.entry.id)
+
+    def _render_entry(self):
+        entry=self.entry; contexts=self.contexts
         self.word.setText(entry.display_word); self.phonetic.setText(entry.phonetic or "暂无音标")
         self.context_combo.clear()
         for i,c in enumerate(contexts): self.context_combo.addItem(f"来源 {i+1}：{c.source_sentence[:36] or '手动添加'}",i)
@@ -63,7 +83,13 @@ class WordLearningPage(QWidget):
             self.collocation.clear(); self.sentence.setText("暂无来源句"); self.play_sentence.setEnabled(False)
         else:
             self.play_sentence.setEnabled(True)
-        self._context_index_changed(); self._reset_round(); QTimer.singleShot(0,self.input.setFocus)
+        self._context_index_changed(); QTimer.singleShot(0,self.input.setFocus)
+
+    def update_details(self,entry:VocabularyEntry,contexts:list[VocabularyContext],state:VocabularyLearningState):
+        if not self.entry or entry.id!=self.entry.id:return False
+        typed=self.typed; repeat=self.repeat_index; cursor=self.input.textCursor().position()
+        self.entry=entry; self.contexts=contexts; self.state=state; self.queue[self.queue_index]=(entry,contexts,state); self._render_entry()
+        self.typed=typed; self.repeat_index=repeat; self._render(); self._update_prompt(); self.input.setFocus(); return self.input.textCursor().position()>=min(cursor,len(typed))
 
     def _context_index_changed(self):
         c=self.current_context
@@ -104,12 +130,20 @@ class WordLearningPage(QWidget):
         if len(self.typed)>=len(expected): self._finish(expected)
 
     def _render(self):
-        self.input.clear(); cursor=QTextCursor(self.input.document()); expected=self._expected()
-        for i,ch in enumerate(self.typed):
-            fmt=QTextCharFormat()
-            if i>=len(expected) or ch!=expected[i]: fmt.setForeground(QColor("#c74444")); fmt.setBackground(QColor("#fee2e2"))
-            cursor.insertText(ch,fmt)
+        cursor=QTextCursor(self.input.document()); expected=self._expected(); existing=self.input.toPlainText()
+        if self.typed==existing[:-1]:
+            cursor.movePosition(QTextCursor.MoveOperation.End); cursor.deletePreviousChar()
+        elif self.typed.startswith(existing) and len(self.typed)==len(existing)+1:
+            index=len(existing); cursor.movePosition(QTextCursor.MoveOperation.End); cursor.insertText(self.typed[-1],self._character_format(index,expected))
+        elif self.typed!=existing:
+            self.input.clear(); cursor=QTextCursor(self.input.document())
+            for i,ch in enumerate(self.typed):cursor.insertText(ch,self._character_format(i,expected))
         cursor.movePosition(QTextCursor.MoveOperation.End); self.input.setTextCursor(cursor); self.input.ensureCursorVisible()
+
+    def _character_format(self,index:int,expected:str) -> QTextCharFormat:
+        fmt=QTextCharFormat()
+        if index>=len(expected) or self.typed[index]!=expected[index]:fmt.setForeground(QColor("#c74444"));fmt.setBackground(QColor("#fee2e2"))
+        return fmt
 
     def _expected(self) -> str:
         if self.mode=="sentence_cloze" and self.current_context:return self.current_context.source_word
@@ -117,15 +151,46 @@ class WordLearningPage(QWidget):
 
     def _finish(self,expected):
         correct=self.typed==expected; duration=int(((monotonic()-(self.started or monotonic())))*1000); accuracy=max(0,(len(expected)-self.errors)/max(len(expected),1)*100)
+        self.queue_correct+=int(correct); self.queue_errors+=self.errors
         self.attempt_completed.emit(VocabularyAttempt(self.entry.id,self.mode,expected,self.typed,correct,accuracy,duration,vocabulary_context_id=self.current_context.id if self.current_context else None))
         if self.mode=="typing" and correct:
             self.repeat_index+=1
             if self.state and self.repeat_index>=self.state.typing_target_count:
-                self.progress.setText(f"已完成 {self.state.typing_target_count} 次单词打字"); self.input.setEnabled(False); return
+                self.progress.setText(f"已完成 {self.state.typing_target_count} 次单词打字"); self.input.setEnabled(False); self.completed_words+=1; QTimer.singleShot(450,self.next_word); return
+        elif self.mode=="sentence_cloze" and correct:
+            self.completed_words+=1; QTimer.singleShot(450,self.next_word); return
         QTimer.singleShot(250,self._reset_round)
 
     def _reveal(self):
         self.meaning.setText(self.current_context.contextual_meaning_zh or "暂无中文讲解"); self.reveal.hide(); [b.show() for b in self.rating_buttons]
 
     def _rate(self,rating):
-        self.attempt_completed.emit(VocabularyAttempt(self.entry.id,"meaning_recall",self.current_context.contextual_meaning_zh if self.current_context else "","",None,0,0,rating,self.current_context.id if self.current_context else None)); self._reset_round()
+        self.attempt_completed.emit(VocabularyAttempt(self.entry.id,"meaning_recall",self.current_context.contextual_meaning_zh if self.current_context else "","",None,0,0,rating,self.current_context.id if self.current_context else None)); self.completed_words+=1; QTimer.singleShot(450,self.next_word)
+
+    def previous_word(self):
+        if self.queue_index>0:self._save_incomplete(); self.queue_index-=1; self._load_current()
+
+    def skip_word(self):
+        if not self.queue:return
+        self.skipped_words+=1; self.next_word()
+
+    def next_word(self):
+        if self.queue_index+1<len(self.queue):self.queue_index+=1; self._load_current()
+        else:self._show_results()
+
+    def _manual_next(self):
+        self._save_incomplete(); self.next_word()
+
+    def _save_incomplete(self):
+        if self.entry and self.typed:
+            self.attempt_completed.emit(VocabularyAttempt(self.entry.id,self.mode,self._expected(),self.typed,None,0,int((monotonic()-(self.started or monotonic()))*1000),vocabulary_context_id=self.current_context.id if self.current_context else None))
+
+    def _show_results(self):
+        total=len(self.queue); elapsed=int(monotonic()-self.queue_started) if self.queue_started else 0
+        self.entry=None; self.input.clear(); self.input.setEnabled(False); self.reveal.hide(); [b.hide() for b in self.rating_buttons]
+        self.prompt.setText("本轮学习完成"); self.progress.setText(f"单词 {total} · 完成 {self.completed_words} · 跳过 {self.skipped_words} · 正确 {self.queue_correct} · 错误 {self.queue_errors} · 用时 {elapsed} 秒")
+        self.word.setText("学习结果"); self.meaning.setText("可以返回单词本，或重新开始本轮队列。")
+        self.retry_queue_button.show(); self.result_back_button.show(); result={"total":total,"completed":self.completed_words,"skipped":self.skipped_words,"correct":self.queue_correct,"errors":self.queue_errors,"elapsed_seconds":elapsed}; self.queue_finished.emit(result)
+
+    def retry_queue(self):
+        if self.queue:self.load_queue(self.queue)

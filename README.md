@@ -6,7 +6,7 @@
 
 - Python `>=3.14,<3.15`，当前验证环境 Python 3.14.6
 - PySide6 6.11.1
-- SQLite（标准库 `sqlite3`），schema version 6
+- SQLite（标准库 `sqlite3`），schema version 7
 - pytest 9.1.1；PyInstaller 6.21.0
 - 当前开发版本 `0.2.0-dev`；现有 v0.1.0 可移植包保持不变
 
@@ -19,7 +19,8 @@
 - 语音：MiniMax `speech-2.8-hd`/`speech-2.8-turbo` 句子与单词朗读、三档语速、英语系统音色、本地音频缓存和 QtMultimedia 播放。
 - 单词学习：在逐句或连续练习原文中双击/选中单词，通过右键“加入单词本”；Free Dictionary 提供音标、英文释义和词典音频，DeepSeek 只结合当前来源句生成简短中文语境讲解。
 - 单词练习：支持 3/5/10 次重复打字、原句填空，以及“看英文回忆中文”后由用户自评；中文表达不做机械逐字判错。
-- 当前只支持用户在练习原文中主动收藏需要学习的词，不提供文章自动拆词、文章词汇列表或批量加入。
+- 文章导入后由本地程序自动提取英文词和精确位置，不调用外部 API。单词本提供“待学习 / 当前文章 / 全部”范围；自动索引不会把全部词加入长期收藏，用户开始学习或主动收藏后才建立学习词条。
+- 单词学习按当前筛选结果生成队列，默认排除已掌握词；完成目标次数后自动进入下一个，支持上一个、跳过、下一个和本轮结果。
 - 学习管理：历史记录、单次详情、学习统计、错误分析、错词/错误字符/原句专项练习、生词本和间隔复习。
 - 产品界面：简体中文、浅色/深色主题和专注练习布局。
 
@@ -65,7 +66,7 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishTypingTrainer-v02"
 
 ## 数据库迁移
 
-迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v5 数据库可顺序升级到 v6。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v3 旧生词会兼容迁入新的词条、语境和学习状态表。
+迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v6 数据库可顺序升级到 v7。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v7 只创建文章单词 occurrence 索引表，旧文章首次访问时懒生成，避免迁移阶段扫描全部文章。
 
 ## 已知限制
 

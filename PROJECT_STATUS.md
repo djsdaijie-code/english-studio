@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-v0.2.0-dev 阶段 B：单词学习第一版。开发分支 `feature/v0.2-sentence-learning`，不包含复杂记忆算法、听写、跟读评分或新安装包。
+v0.2.0-dev：文章本地拆词与连续单词学习队列。开发分支 `feature/v0.2-sentence-learning`，不包含复杂记忆算法、听写、跟读评分或新安装包。
 
 ## 架构与目录
 
@@ -15,7 +15,7 @@ v0.2.0-dev 阶段 B：单词学习第一版。开发分支 `feature/v0.2-sentenc
 
 ## 数据库
 
-当前 schema version 为 6。v6 新增 `vocabulary_entries`、`vocabulary_contexts`、`vocabulary_learning_state`、`vocabulary_attempts`，并最小扩展 `tts_audio_cache` 支持词典音频。v5 升级前自动备份，迁移失败回滚，旧生词兼容迁入。
+当前 schema version 为 7。v7 新增 `article_word_occurrences`，保存文章中每次词出现的原始词形、标准词、来源句和精确 offset；不在迁移阶段扫描旧文章。v6 数据和学习记录保持不变。
 
 ## 已完成
 
@@ -25,6 +25,8 @@ v0.2.0-dev 阶段 B：单词学习第一版。开发分支 `feature/v0.2-sentenc
 - DeepSeek provider、Windows Credential Manager、异步请求、全局缓存、人工编辑、显式重新生成和整篇翻译已接入。
 - MiniMax 同步 T2A provider、独立凭据、异步生成、参数化缓存、并发去重、退避重试和 QtMultimedia 播放已接入逐句与连续练习。
 - Free Dictionary 标准词典、DeepSeek 当前句中文讲解、文章选词收藏、多来源语境、单词/来源句发音、重复打字、原句填空、自评复习和离线缓存已完成第一版。
+- 新文章导入后本地拆词，旧文章首次访问懒生成；单词本支持待学习、当前文章和全部范围，文章预览可查看或重新提取。
+- 单词学习使用连续队列，异步词典/讲解只原位刷新右栏，不重载输入状态；完成后自动下一个并显示本轮结果。
 - 已完成句子保存 `sentence_attempts`；中途未完成句子按 session 级进度恢复。
 
 ## 数据目录与隐私
@@ -36,7 +38,7 @@ v0.2.0-dev 阶段 B：单词学习第一版。开发分支 `feature/v0.2-sentenc
 
 ## 测试状态
 
-2026-07-13，Python 3.14.6：阶段 B 全量 pytest `151 passed`，原 121 项均保留。新增覆盖 v5→v6、标准化、词条/语境去重、Free Dictionary、词典音频缓存、讲解 JSON、练习状态、UI 和连续模式收藏回归。
+2026-07-13，Python 3.14.6：当前全量 pytest `157 passed`。新增覆盖 v6→v7、文章词 offset/重复统计、URL/邮箱排除、懒生成、重建、输入稳定和队列自动切换。
 
 ## 尚未完成
 
