@@ -33,6 +33,7 @@ from english_typing_trainer.services.recording_service import RecordingService
 from english_typing_trainer.services.data_management import DataManagementService
 from english_typing_trainer.courses.repository import CourseRepository
 from english_typing_trainer.services.course_progress import CourseProgressService
+from english_typing_trainer.services.course_learning import CourseLearningService
 
 
 @dataclass(slots=True)
@@ -69,6 +70,7 @@ class AppContext:
     course_repository: CourseRepository
     course_progress_repository: CourseProgressRepository
     course_progress_service: CourseProgressService
+    course_learning_service: CourseLearningService
 
 
 def build_app_context(
@@ -111,6 +113,7 @@ def build_app_context(
     course_repository = CourseRepository(courses_root)
     course_progress_repository = CourseProgressRepository(database)
     course_progress_service = CourseProgressService(course_repository, course_progress_repository)
+    course_learning_service = CourseLearningService(course_repository, course_progress_service)
     if credential_store is None:
         credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
             WindowsCredentialStore("English Studio/DeepSeek API", "DeepSeek API"), WindowsCredentialStore()
@@ -161,4 +164,5 @@ def build_app_context(
         course_repository=course_repository,
         course_progress_repository=course_progress_repository,
         course_progress_service=course_progress_service,
+        course_learning_service=course_learning_service,
     )

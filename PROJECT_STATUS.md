@@ -11,9 +11,9 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 - `services/translation_*`：provider 抽象、DeepSeek 请求、缓存去重和重试。
 - `services/learning_*`：有效学习时间状态机、档位、等级和成就计算。
 - `database`：标准库 SQLite、事务、v1-v12 迁移和 repository。
-- `courses` 与 `services/course_progress.py`：只读课程加载、stable key 关联、最小 enrollment/Item 状态和动态进度聚合；课程 UI 尚未实现。
+- `courses`、`services/course_progress.py` 与 `services/course_learning.py`：只读课程加载、stable key 状态关联、动态进度聚合，以及不持久化正文的课程打字会话适配。
 - `services/fsrs_review.py`：FSRS profile、UTC 调度、评分、今日队列和延后处理。
-- `ui`：连续练习、逐句学习、翻译面板、跟读 Beta、设置及本地数据管理入口。
+- `ui`：连续练习、逐句学习、课程列表/层级/Day 浏览、课程打字会话、翻译面板、跟读 Beta、设置及本地数据管理入口。
 - `tests`：临时数据库、fake clock、mock provider 和 UI 烟测。
 
 ## 数据库
@@ -23,6 +23,8 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 ## 已完成
 
 - 原有文章库、连续练习、历史统计、错误分析、专项练习、生词本和间隔复习保持兼容。
+- 内置课程可从主窗口浏览 Course、Level、Unit 和 Day，显示动态进度，支持推荐继续、自由进入和已完成 Day 复习。
+- 课程 Sentence Item 复用现有逐句字符判定与计时；首次输入和完成事件写入 schema 12 状态，但课程正文不写文章、文章句子、普通句子尝试或练习记录表。
 - 普通文章可默认进入逐句学习；老数据库升级默认保留连续模式，新安装默认启用逐句模式。
 - 首次有效输入开始计时；默认 3 秒无输入自动暂停；句子完成后进入学习计时；Enter 进入下一句但不提前启动有效计时。
 - DeepSeek provider、Windows Credential Manager、异步请求、全局缓存、人工编辑、显式重新生成和整篇翻译已接入。
@@ -49,7 +51,7 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 
 ## 测试状态
 
-2026-07-16，Python 3.14.6：全量 pytest 260 passed。覆盖 schema 11→12、事务回滚、课程 enrollment、stable key 内容升级、动态完成率和下一课计算，以及既有 FSRS、听写、跟读 Beta 与无 Azure 配置降级；测试数量仍以每次实际 pytest 输出为准。
+2026-07-16，Python 3.14.6：全量 pytest 269 passed。覆盖 schema 11→12、事务回滚、课程 enrollment、stable key 内容升级、动态完成率、课程浏览/打字会话/错误隔离，以及既有 FSRS、听写、跟读 Beta 与无 Azure 配置降级；测试数量仍以每次实际 pytest 输出为准。
 
 ## 尚未完成
 

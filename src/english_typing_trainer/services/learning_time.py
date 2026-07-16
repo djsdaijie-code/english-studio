@@ -33,7 +33,7 @@ class LearningTimeTracker:
         else:self.last_monotonic=now_mono; self.last_wall=now_wall
         self.active=True; self.last_activity_monotonic=now_mono; self.current_event_type=event_type
         self.related_article_id=related_article_id; self.related_sentence_id=related_sentence_id; self.related_vocabulary_id=related_vocabulary_id
-        if metadata or event_type not in {"typing_activity","source_changed"}:
+        if metadata or event_type not in {"typing_activity","source_changed","course_typing_activity"}:
             self.pending.append(LearningEvent(event_type,0,now_wall,related_article_id,related_sentence_id,related_vocabulary_id,metadata or {}))
         if self.pending_seconds>=self.flush_interval_seconds:return self.flush()
         return LearningUpdate()

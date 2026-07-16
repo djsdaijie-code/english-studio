@@ -17,8 +17,8 @@ class SentenceSegment:
 @dataclass(slots=True)
 class ArticleSentence:
     id: int | None
-    article_id: int
-    section_id: int
+    article_id: int | None
+    section_id: int | None
     sentence_index: int
     text: str
     normalized_text: str

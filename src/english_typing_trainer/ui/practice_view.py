@@ -29,8 +29,12 @@ class FocusTextBrowser(QTextBrowser):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self._word_collection_enabled = True
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_word_menu)
+
+    def set_word_collection_enabled(self, enabled: bool) -> None:
+        self._word_collection_enabled = enabled
 
     def mousePressEvent(self, event) -> None:  # type: ignore[override]
         super().mousePressEvent(event)
@@ -39,9 +43,12 @@ class FocusTextBrowser(QTextBrowser):
 
     def mouseDoubleClickEvent(self, event) -> None:  # type: ignore[override]
         super().mouseDoubleClickEvent(event)
-        self._emit_selection()
+        if self._word_collection_enabled:
+            self._emit_selection()
 
     def _show_word_menu(self, position) -> None:
+        if not self._word_collection_enabled:
+            return
         from PySide6.QtWidgets import QMenu
         menu = QMenu(self)
         action = menu.addAction("加入单词本")

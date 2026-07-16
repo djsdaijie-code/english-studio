@@ -4,6 +4,7 @@ from collections import Counter
 from datetime import datetime
 from dataclasses import replace
 from pathlib import Path
+import logging
 import re
 
 from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, QThreadPool
@@ -67,12 +68,14 @@ from english_typing_trainer.ui.daily_learning_card import DailyLearningCard
 from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
 from english_typing_trainer.ui.dictation_page import DictationPage
 from english_typing_trainer.ui.pronunciation_page import PronunciationPage
+from english_typing_trainer.ui.course_page import CoursePage
 from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
 from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
 from english_typing_trainer.models.vocabulary import VocabularyAttempt
 from english_typing_trainer.models.pronunciation import PronunciationRequest
 from english_typing_trainer.services.pronunciation_provider import AzurePronunciationAssessmentProvider
+from english_typing_trainer.services.course_learning import CourseLearningSession
 
 
 class MetricCard(QFrame):
@@ -240,8 +243,10 @@ class MainWindow(QMainWindow):
         self.settings = self.context.settings_service.get_settings()
         self.articles: list[Article] = []
         self.current_material: PracticeMaterial | None = None
+        self.current_course_session: CourseLearningSession | None = None
         self.current_practice_saved = True
         self.preview_special_material: PracticeMaterial | None = None
+        self._logger = logging.getLogger(__name__)
 
         self.setWindowTitle("English Studio")
         self.setMinimumSize(1280, 720)
@@ -297,6 +302,11 @@ class MainWindow(QMainWindow):
         self.history_page.view_detail_requested.connect(self._show_session_detail)
         self.history_page.delete_session_requested.connect(self._delete_session)
         self.statistics_page = StatisticsPage()
+        self.course_page = CoursePage(
+            self.context.course_repository,
+            self.context.course_progress_service,
+        )
+        self.course_page.lesson_start_requested.connect(self._start_course_lesson)
         self.special_practice_page = SpecialPracticePage()
         self.special_practice_page.generate_requested.connect(self._generate_special_preview)
         self.special_practice_page.start_preview_requested.connect(self._start_preview_special_practice)
@@ -395,6 +405,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.history_page)
         self.stack.addWidget(self.statistics_page)
         self.stack.addWidget(self.settings_page)
+        self.stack.addWidget(self.course_page)
         self.stack.addWidget(self.practice_view)
         self.stack.addWidget(self.sentence_practice_view)
         self.stack.addWidget(self.word_learning_page)
@@ -410,6 +421,7 @@ class MainWindow(QMainWindow):
             (3, "练习记录", QStyle.StandardPixmap.SP_FileDialogListView),
             (4, "学习统计", QStyle.StandardPixmap.SP_ComputerIcon),
             (5, "设置", QStyle.StandardPixmap.SP_FileDialogContentsView),
+            (6, "课程", QStyle.StandardPixmap.SP_DirOpenIcon),
         ]
         for index, text, icon_type in nav_specs:
             button = QPushButton(text)
@@ -576,7 +588,9 @@ class MainWindow(QMainWindow):
 
     def _switch_page(self, index: int) -> None:
         self.stack.setCurrentIndex(index)
-        self.sidebar.setVisible(index not in {6, 7})
+        self.sidebar.setVisible(self.stack.currentWidget() not in {self.practice_view, self.sentence_practice_view})
+        if self.stack.currentWidget() is self.course_page:
+            self.course_page.reload()
         for button_index, button in self.nav_buttons.items():
             button.setProperty("active", "true" if button_index == index else "false")
             button.style().unpolish(button)
@@ -588,6 +602,22 @@ class MainWindow(QMainWindow):
             self._refresh_daily_learning()
 
     def _track_learning_activity(self,event_type:str) -> None:
+        if self.current_course_session is not None and self.stack.currentWidget() is self.sentence_practice_view:
+            if self.sentence_practice_view.learning is not None:
+                self.current_course_session.sync_index(self.sentence_practice_view.learning.current_index)
+            if event_type == "typing_activity":
+                item_stable_key = self.current_course_session.current_item_stable_key
+                if item_stable_key and self.current_course_session.mark_item_started(item_stable_key):
+                    try:
+                        self.context.course_progress_service.start_item(
+                            self.current_course_session.course_id,
+                            item_stable_key,
+                        )
+                    except Exception as exc:
+                        self._handle_course_state_error("开始课程句子失败", item_stable_key, exc)
+            update=self.context.learning_time_tracker.activity(f"course_{event_type}")
+            self._handle_learning_update(update); self._refresh_daily_learning()
+            return
         if self.stack.currentWidget() is self.word_learning_page and self.word_learning_page.current_context:
             article_id=self.word_learning_page.current_context.article_id
         else:
@@ -662,6 +692,9 @@ class MainWindow(QMainWindow):
     def _show_special_practice(self) -> None:
         self._switch_page(1)
         self._refresh_special_practice_page()
+
+    def _show_courses(self) -> None:
+        self._switch_page(6)
 
     def _show_vocabulary(self) -> None:
         self._switch_page(2)
@@ -1010,6 +1043,7 @@ class MainWindow(QMainWindow):
         self._begin_practice(material)
 
     def _begin_practice(self, material: PracticeMaterial) -> None:
+        self.current_course_session = None
         self.current_material = material
         self.current_practice_saved = False
         self._sentence_attempt_ids = []
@@ -1044,10 +1078,67 @@ class MainWindow(QMainWindow):
             button.style().unpolish(button)
             button.style().polish(button)
 
+    def _start_course_lesson(self, course_id: str, lesson_id: str, session_mode: str) -> None:
+        self._persist_current_practice()
+        try:
+            if self.context.course_progress_service.get_enrollment(course_id) is None:
+                self.context.course_progress_service.enroll(course_id)
+            course_session = self.context.course_learning_service.build_session(
+                course_id,
+                lesson_id,
+                session_mode=session_mode,  # type: ignore[arg-type]
+            )
+        except Exception as exc:
+            try:
+                course = self.context.course_repository.get_course(course_id)
+            except Exception:
+                course = None
+            self._logger.error(
+                "course learning session failed course_id=%s course_stable_key=%s lesson_id=%s reason=%s",
+                course_id,
+                course.stable_key if course else None,
+                lesson_id,
+                exc,
+            )
+            QMessageBox.warning(
+                self,
+                "无法开始课程",
+                f"这个 Day 暂时无法开始：{exc}\n请返回课程页面重新加载后再试。",
+            )
+            self._show_courses()
+            return
+
+        self.current_course_session = course_session
+        self.current_material = PracticeMaterial(
+            article_id=None,
+            article_title=f"{course_session.course_title} · {course_session.lesson_title}",
+            section_id=None,
+            section_index=0,
+            section_count=1,
+            section_text=course_session.section_text,
+            practice_type="course_lesson",
+        )
+        self.current_practice_saved = False
+        self._sentence_attempt_ids = []
+        self.sentence_practice_view.start_course_practice(
+            self.current_material,
+            list(course_session.typing_sentences),
+            course_session.chinese_translations,
+            self.settings,
+        )
+        self.stack.setCurrentWidget(self.sentence_practice_view)
+        self.sidebar.hide()
+        for button in self.nav_buttons.values():
+            button.setProperty("active", "false")
+            button.style().unpolish(button)
+            button.style().polish(button)
+
     def _active_practice_view(self):
         return self.sentence_practice_view if self.stack.currentWidget() is self.sentence_practice_view else self.practice_view
 
     def _request_speech(self, text: str, speed: float, controls=None) -> None:
+        if self.current_course_session is not None:
+            return
         request = TTSRequest(
             text=text, content_type="sentence", model=self.settings.tts_model,
             voice_id=self.settings.tts_voice_id, speed=speed,
@@ -1109,9 +1200,42 @@ class MainWindow(QMainWindow):
         return view.current_snapshot() if view is self.sentence_practice_view else view.session.snapshot()
 
     def _save_sentence_attempt(self, attempt) -> None:
+        if self.current_course_session is not None:
+            if self.sentence_practice_view.learning is not None:
+                self.current_course_session.sync_index(self.sentence_practice_view.learning.current_index)
+            item_stable_key = self.current_course_session.current_item_stable_key
+            if item_stable_key:
+                try:
+                    self.context.course_progress_service.complete_item(
+                        self.current_course_session.course_id,
+                        item_stable_key,
+                    )
+                except Exception as exc:
+                    self._handle_course_state_error("保存课程进度失败", item_stable_key, exc)
+            return
         with self.context.database.transaction() as connection:
             attempt_id = self._sentence_attempts.insert(connection, attempt)
         self._sentence_attempt_ids.append(attempt_id)
+
+    def _handle_course_state_error(
+        self,
+        action: str,
+        item_stable_key: str | None,
+        exc: Exception,
+    ) -> None:
+        session = self.current_course_session
+        self._logger.error(
+            "course learning state error action=%s course_id=%s course_stable_key=%s lesson_stable_key=%s item_stable_key=%s reason=%s",
+            action,
+            session.course_id if session else None,
+            session.course_stable_key if session else None,
+            session.lesson_stable_key if session else None,
+            item_stable_key,
+            exc,
+        )
+        self.sentence_practice_view.state_label.setText(
+            f"{action}。课程内容可能已刷新；当前输入仍可继续，退出后请重新加载课程。"
+        )
 
     def _attach_sentence_attempts(self) -> None:
         session = self._active_practice_view().session
@@ -1492,6 +1616,14 @@ class MainWindow(QMainWindow):
         self.audio_playback.stop()
         if not self._confirm_leave_practice():
             return
+        if self.current_course_session is not None:
+            course_id = self.current_course_session.course_id
+            lesson_id = self.current_course_session.lesson_id
+            self.current_course_session = None
+            self.current_material = None
+            self._show_courses()
+            self.course_page.show_lesson(course_id, lesson_id)
+            return
         if self.current_material and self.current_material.practice_type not in {"article", "article_section"}:
             self._show_special_practice()
         else:
@@ -1499,6 +1631,11 @@ class MainWindow(QMainWindow):
 
     def _persist_current_practice(self) -> None:
         if self.current_practice_saved:
+            return
+        if self.current_course_session is not None:
+            if self.sentence_practice_view.learning is not None:
+                self.current_course_session.sync_index(self.sentence_practice_view.learning.current_index)
+            self.current_practice_saved = True
             return
         if self.current_material is None or self._active_practice_view().session is None:
             self.current_practice_saved = True
@@ -1516,6 +1653,9 @@ class MainWindow(QMainWindow):
         self._refresh_special_practice_page()
 
     def _confirm_leave_practice(self) -> bool:
+        if self.current_course_session is not None:
+            self._persist_current_practice()
+            return True
         if self.current_practice_saved or self.current_material is None or self._active_practice_view().session is None:
             self._persist_current_practice()
             return True
@@ -1542,6 +1682,9 @@ class MainWindow(QMainWindow):
 
     def _handle_session_completed(self, snapshot) -> None:
         if self.current_material is None or self._active_practice_view().session is None:
+            return
+        if self.current_course_session is not None:
+            self._handle_course_session_completed(snapshot)
             return
         next_material = self.context.practice_service.save_completed_session(
             self.current_material,
@@ -1610,6 +1753,77 @@ class MainWindow(QMainWindow):
             if retry_material is not None:
                 self._begin_practice(retry_material)
                 return
+        self._leave_practice_view()
+
+    def _handle_course_session_completed(self, snapshot) -> None:
+        course_session = self.current_course_session
+        typing_session = self.sentence_practice_view.session
+        if course_session is None or typing_session is None:
+            return
+        self.current_practice_saved = True
+        correct_words = self._count_correct_words(typing_session)
+        self.context.learning_time_tracker.activity(
+            "course_correct_words",
+            metadata={"count": correct_words},
+        )
+        self.context.learning_time_tracker.activity("course_lesson_completed")
+        self._handle_learning_update(self.context.learning_time_tracker.flush())
+
+        next_lesson = None
+        extra_lines: list[str] = []
+        try:
+            lesson_progress = self.context.course_progress_service.get_lesson_progress(
+                course_session.course_id,
+                course_session.lesson_id,
+            )
+            course_progress = self.context.course_progress_service.get_course_progress(
+                course_session.course_id
+            )
+            next_lesson = self.context.course_progress_service.get_next_lesson(
+                course_session.course_id
+            )
+            extra_lines.extend(
+                [
+                    f"Day 进度：{lesson_progress.completed_required_items}/{lesson_progress.total_required_items}",
+                    f"课程总进度：{course_progress.completion_percentage:.0f}%",
+                ]
+            )
+        except Exception as exc:
+            self._handle_course_state_error("刷新课程进度失败", None, exc)
+            extra_lines.append("课程进度暂时无法刷新，请返回课程页重新加载。")
+        if self.sentence_practice_view.learning is not None:
+            timing = self.sentence_practice_view.learning.timing_snapshot()
+            extra_lines.extend(
+                [
+                    f"总学习时间：{timing.total_elapsed_seconds:.1f} 秒",
+                    f"译文阅读时间：{timing.learning_seconds:.1f} 秒",
+                ]
+            )
+        self.course_page.reload()
+        dialog = ResultDialog(
+            typing_session,
+            snapshot,
+            has_next_section=next_lesson is not None,
+            title="课程 Day 完成",
+            extra_lines=extra_lines,
+            next_button_text="学习下一课",
+            parent=self,
+        )
+        dialog.exec()
+        if dialog.action == "next" and next_lesson is not None:
+            self._start_course_lesson(
+                course_session.course_id,
+                next_lesson.lesson_id,
+                "recommended",
+            )
+            return
+        if dialog.action == "restart":
+            self._start_course_lesson(
+                course_session.course_id,
+                course_session.lesson_id,
+                "review",
+            )
+            return
         self._leave_practice_view()
 
     @staticmethod
@@ -1721,6 +1935,10 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.set_status_message("熟练度状态已更新。")
 
     def _collect_selected_word(self, text: str, start: int, end: int) -> None:
+        if self.current_course_session is not None:
+            QMessageBox.information(self, "课程词汇", "课程词汇与单词本的映射将在后续阶段接入。")
+            self._active_practice_view()._restore_focus()
+            return
         view=self._active_practice_view(); sentence=""; article_sentence_id=None; local_start=start
         if view is self.sentence_practice_view and view.current_sentence:
             current=view.current_sentence; sentence=current.normalized_text; article_sentence_id=current.id

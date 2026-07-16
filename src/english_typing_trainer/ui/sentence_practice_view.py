@@ -38,6 +38,8 @@ class SentencePracticeView(QWidget):
         self.session: TypingSession | None = None
         self._font_size = 22
         self._emitted_attempts = 0
+        self._course_mode = False
+        self._course_translations: tuple[str, ...] = ()
         self._timer = QTimer(self)
         self._timer.setInterval(250)
         self._timer.timeout.connect(self._tick)
@@ -127,6 +129,28 @@ class SentencePracticeView(QWidget):
         return self.learning.current_sentence if self.learning else None
 
     def start_practice(self, material: PracticeMaterial, sentences: list[ArticleSentence], settings: AppSettings) -> None:
+        self._course_mode = False
+        self._course_translations = ()
+        self.translate_article_button.setVisible(True)
+        self.speech_controls.setVisible(True)
+        self.text_browser.set_word_collection_enabled(True)
+        self._start_session(material, sentences, settings)
+
+    def start_course_practice(
+        self,
+        material: PracticeMaterial,
+        sentences: list[ArticleSentence],
+        translations: tuple[str, ...],
+        settings: AppSettings,
+    ) -> None:
+        self._course_mode = True
+        self._course_translations = translations
+        self.translate_article_button.setVisible(False)
+        self.speech_controls.setVisible(False)
+        self.text_browser.set_word_collection_enabled(False)
+        self._start_session(material, sentences, settings)
+
+    def _start_session(self, material: PracticeMaterial, sentences: list[ArticleSentence], settings: AppSettings) -> None:
         self.material = material; self.sentences = sentences; self._emitted_attempts = 0
         section_start = min(item.start_offset for item in sentences)
         absolute = section_start + material.resume_character_index
@@ -166,7 +190,9 @@ class SentencePracticeView(QWidget):
             self.learning_activity.emit("sentence_completed")
             self._set_input_active(False)
             self.state_label.setText("有效计时已暂停，请阅读翻译；按 Enter 进入下一句")
-            if self._show_translation and self._auto_translate:
+            if self._course_mode:
+                self._show_course_translation()
+            elif self._show_translation and self._auto_translate:
                 self._request_translation(False)
             else:
                 self.translation_status.setText("翻译已关闭" if not self._show_translation else "可按重试按钮翻译")
@@ -203,11 +229,14 @@ class SentencePracticeView(QWidget):
         sentence = self.current_sentence
         if not sentence or not self.learning: return
         self.sentence_label.setText(f"第 {self.learning.current_index + 1} / {len(self.sentences)} 句")
-        self.translation_source.setText(sentence.normalized_text); self.translation_status.setText("完成当前句后显示翻译")
+        self.translation_source.setText("" if self._course_mode else sentence.normalized_text); self.translation_status.setText("完成当前句后显示课程译文" if self._course_mode else "完成当前句后显示翻译")
         self.translation_text.setText("翻译尚未显示"); self.expressions_label.setText("暂无"); self._set_translation_actions(False); self._refresh()
         self.speech_sentence_changed.emit(sentence.normalized_text)
 
     def _request_translation(self, retry: bool) -> None:
+        if self._course_mode:
+            self._show_course_translation()
+            return
         if self.current_sentence:
             self.translation_status.setText("正在翻译……"); self.translation_text.setText("请稍候，您也可以按 Enter 继续下一句。")
             self.next_button.setVisible(True)
@@ -225,15 +254,35 @@ class SentencePracticeView(QWidget):
         self.retry_button.setText("重试翻译"); self._set_translation_actions(True)
 
     def _set_translation_actions(self, visible: bool) -> None:
+        if self._course_mode:
+            self.retry_button.setVisible(False)
+            self.edit_button.setVisible(False)
+            self.copy_button.setVisible(visible)
+            self.next_button.setVisible(bool(self.learning and self.learning.state == SentenceLearningState.LEARNING_PAUSED))
+            return
         if visible and self.translation_status.text() != "翻译失败":
             self.retry_button.setText("重新生成 AI 翻译")
         self.retry_button.setVisible(visible); self.edit_button.setVisible(visible); self.copy_button.setVisible(visible)
         self.next_button.setVisible(bool(self.learning and self.learning.state == SentenceLearningState.LEARNING_PAUSED))
 
+    def _show_course_translation(self) -> None:
+        if not self.learning:
+            return
+        index = self.learning.current_index
+        translation = self._course_translations[index] if index < len(self._course_translations) else ""
+        self.translation_status.setText("课程译文")
+        self.translation_text.setText(translation or "本句暂无中文译文。")
+        self.expressions_label.setText("本阶段未接入课程词汇能力。")
+        self.learning_activity.emit("meaning_revealed")
+        self._set_translation_actions(True)
+
     def _copy_translation(self) -> None:
         QApplication.clipboard().setText(self.translation_text.text())
 
     def _request_speech(self, speed: float) -> None:
+        if self._course_mode:
+            QTimer.singleShot(0, self._restore_focus)
+            return
         if self.current_sentence:
             self.learning_activity.emit("audio_started")
             self.speech_requested.emit(self.current_sentence.normalized_text, speed, self.speech_controls)

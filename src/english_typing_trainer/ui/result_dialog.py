@@ -18,6 +18,7 @@ class ResultDialog(QDialog):
         title: str = "练习完成",
         extra_lines: list[str] | None = None,
         allow_retry_errors: bool = False,
+        next_button_text: str = "继续下一段",
         parent=None,
     ) -> None:
         super().__init__(parent)
@@ -67,7 +68,7 @@ class ResultDialog(QDialog):
         layout.addWidget(common_label)
 
         if has_next_section:
-            next_button = QPushButton("继续下一段")
+            next_button = QPushButton(next_button_text)
             next_button.setProperty("variant", "primary")
             next_button.clicked.connect(self._accept_next)
             layout.addWidget(next_button)
