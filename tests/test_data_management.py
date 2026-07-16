@@ -15,7 +15,7 @@ def test_backup_is_consistent_sqlite_snapshot(tmp_path) -> None:
         service = DataManagementService(context.database, context.paths.backups_dir, context.paths.logs_dir)
         backup = service.backup_database()
         assert backup.parent == context.paths.backups_dir
-        assert service.validate_backup(backup) == 11
+        assert service.validate_backup(backup) == 12
         assert sqlite3.connect(backup).execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     finally:
         context.database.close()
@@ -29,7 +29,7 @@ def test_restore_rejects_non_database_without_overwriting_user_data(tmp_path) ->
         invalid.write_text("not sqlite", encoding="utf-8")
         with pytest.raises(ValueError):
             service.restore_database(invalid)
-        assert context.database.get_schema_version() == 11
+        assert context.database.get_schema_version() == 12
     finally:
         context.database.close()
 

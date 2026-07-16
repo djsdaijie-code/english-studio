@@ -23,5 +23,5 @@ def test_foundations_sample_stays_small_and_spans_two_days() -> None:
     assert all(sentence["status"] == "draft" for sentence in unit["sentences"])
 
 
-def test_course_architecture_round_does_not_upgrade_database_schema() -> None:
-    assert LATEST_SCHEMA_VERSION == 11
+def test_course_progress_round_upgrades_database_schema_once() -> None:
+    assert LATEST_SCHEMA_VERSION == 12

@@ -44,7 +44,7 @@ def test_schema_10_creates_fsrs_tables_and_defaults(tmp_path: Path) -> None:
     try:
         connection = context.database.connect()
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-        assert context.database.get_schema_version() == 11
+        assert context.database.get_schema_version() == 12
         assert {"fsrs_profiles", "vocabulary_review_cards", "vocabulary_review_logs", "dictation_attempts"} <= tables
         values = {row[0]: row[1] for row in connection.execute("SELECT key,value FROM settings")}
         assert values["fsrs_desired_retention"] == "0.90"
@@ -67,7 +67,7 @@ def test_v8_to_v10_backup_and_rollback(tmp_path: Path, monkeypatch) -> None:
     manager = DatabaseManager(database_path)
     manager.initialize()
     try:
-        assert manager.get_schema_version() == 11
+        assert manager.get_schema_version() == 12
         assert list((data / "backups").glob("typing_trainer-v8-*.db"))
     finally:
         manager.close()

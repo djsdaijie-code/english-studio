@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 11
+LATEST_SCHEMA_VERSION = 12
 
 
 class MigrationRunner:
@@ -52,6 +52,9 @@ class MigrationRunner:
                 current_version = 10
             if current_version < 11:
                 self._apply_version_11(connection)
+                current_version = 11
+            if current_version < 12:
+                self._apply_version_12(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -794,6 +797,58 @@ class MigrationRunner:
         connection.executemany("INSERT OR IGNORE INTO settings(key,value,updated_at) VALUES (?,?,datetime('now','localtime'))", defaults.items())
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (11)")
+
+    def _apply_version_12(self, connection: sqlite3.Connection) -> None:
+        """Store course enrollment and sparse item state; course content stays in JSON."""
+        statements = [
+            """
+            CREATE TABLE IF NOT EXISTS course_enrollments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                course_stable_key TEXT NOT NULL UNIQUE,
+                status TEXT NOT NULL DEFAULT 'active'
+                    CHECK(status IN ('active', 'paused', 'completed', 'archived')),
+                current_lesson_stable_key TEXT,
+                course_version TEXT NOT NULL,
+                content_version TEXT NOT NULL,
+                enrolled_at TEXT NOT NULL,
+                last_studied_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS course_item_progress (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                enrollment_id INTEGER NOT NULL,
+                course_stable_key TEXT NOT NULL,
+                unit_stable_key TEXT NOT NULL,
+                lesson_stable_key TEXT NOT NULL,
+                item_stable_key TEXT NOT NULL,
+                item_type TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'not_started'
+                    CHECK(status IN ('not_started', 'in_progress', 'completed', 'skipped')),
+                attempt_count INTEGER NOT NULL DEFAULT 0 CHECK(attempt_count >= 0),
+                best_score REAL,
+                latest_score REAL,
+                first_started_at TEXT,
+                completed_at TEXT,
+                last_studied_at TEXT NOT NULL,
+                content_version TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (enrollment_id) REFERENCES course_enrollments(id) ON DELETE CASCADE,
+                UNIQUE(enrollment_id, item_stable_key)
+            )
+            """,
+            "CREATE INDEX IF NOT EXISTS idx_course_enrollments_status ON course_enrollments(status, updated_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_course_item_progress_course ON course_item_progress(course_stable_key, status)",
+            "CREATE INDEX IF NOT EXISTS idx_course_item_progress_lesson ON course_item_progress(enrollment_id, lesson_stable_key)",
+        ]
+        for statement in statements:
+            connection.execute(statement)
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (12)")
+
     def _ensure_column(
         self,
         connection: sqlite3.Connection,

@@ -64,7 +64,7 @@ def _app() -> QApplication:
 def test_schema_8_creates_learning_tables_and_defaults(tmp_path: Path) -> None:
     context = build_app_context(data_dir=tmp_path / "data")
     try:
-        assert context.database.get_schema_version() == 11
+        assert context.database.get_schema_version() == 12
         names = {row[0] for row in context.database.connect().execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
         )}
@@ -96,9 +96,9 @@ def test_v7_migration_creates_backup_and_preserves_existing_data(tmp_path: Path)
     database = DatabaseManager(db_path)
     try:
         database.initialize()
-        assert database.get_schema_version() == 11
+        assert database.get_schema_version() == 12
         assert database.connect().execute("SELECT title FROM articles").fetchone()[0] == "Legacy"
-        backups = list((data_dir / "backups").glob("typing_trainer-v7-before-v11-*.db"))
+        backups = list((data_dir / "backups").glob("typing_trainer-v7-before-v12-*.db"))
         assert len(backups) == 1
         backup = sqlite3.connect(backups[0])
         try:

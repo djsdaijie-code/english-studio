@@ -35,7 +35,7 @@ def test_schema_10_to_11_creates_pronunciation_tables_and_rolls_back(tmp_path: P
     with pytest.raises(RuntimeError): runner.migrate(connection)
     assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 10
     monkeypatch.setattr(runner,"_apply_version_11",original); runner.migrate(connection)
-    assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 11
+    assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 12
     assert connection.execute("SELECT name FROM sqlite_master WHERE name='pronunciation_attempts'").fetchone()
 
 

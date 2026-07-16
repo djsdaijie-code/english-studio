@@ -10,14 +10,15 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 - `services/sentence_*`：拆句、懒生成和集中式计时状态机。
 - `services/translation_*`：provider 抽象、DeepSeek 请求、缓存去重和重试。
 - `services/learning_*`：有效学习时间状态机、档位、等级和成就计算。
-- `database`：标准库 SQLite、事务、v1-v11 迁移和 repository。
+- `database`：标准库 SQLite、事务、v1-v12 迁移和 repository。
+- `courses` 与 `services/course_progress.py`：只读课程加载、stable key 关联、最小 enrollment/Item 状态和动态进度聚合；课程 UI 尚未实现。
 - `services/fsrs_review.py`：FSRS profile、UTC 调度、评分、今日队列和延后处理。
 - `ui`：连续练习、逐句学习、翻译面板、跟读 Beta、设置及本地数据管理入口。
 - `tests`：临时数据库、fake clock、mock provider 和 UI 烟测。
 
 ## 数据库
 
-当前 schema version 为 11。v8 新增 `daily_learning_stats`、`learning_events`、`achievements` 和 `profile_progress`；v9 新增 `fsrs_profiles`、`vocabulary_review_cards` 和 `vocabulary_review_logs`；v10 新增 `dictation_attempts`；v11 新增 `pronunciation_attempts`。迁移使用备份、事务和失败回滚，既有练习记录保持不变。
+当前 schema version 为 12。v8 新增 `daily_learning_stats`、`learning_events`、`achievements` 和 `profile_progress`；v9 新增 `fsrs_profiles`、`vocabulary_review_cards` 和 `vocabulary_review_logs`；v10 新增 `dictation_attempts`；v11 新增 `pronunciation_attempts`；v12 新增只保存 enrollment 与稀疏 Item 状态的 `course_enrollments` 和 `course_item_progress`。迁移使用备份、事务和失败回滚，既有练习记录保持不变。
 
 ## 已完成
 
@@ -48,7 +49,7 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 
 ## 测试状态
 
-2026-07-13，Python 3.14.6：全量 pytest 229 passed。覆盖 v8→v11、事务回滚、FSRS 四级评分、卡片独立性、JSON 重启、旧复习日期兼容、延后/暂停/删除、保持率设置、听写、跟读 Beta 与无 Azure 配置降级；测试数量仍以每次实际 pytest 输出为准。
+2026-07-16，Python 3.14.6：全量 pytest 260 passed。覆盖 schema 11→12、事务回滚、课程 enrollment、stable key 内容升级、动态完成率和下一课计算，以及既有 FSRS、听写、跟读 Beta 与无 Azure 配置降级；测试数量仍以每次实际 pytest 输出为准。
 
 ## 尚未完成
 

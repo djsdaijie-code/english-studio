@@ -6,7 +6,7 @@ English Studio 是面向 Windows 的本地英语学习与打字应用，通过�
 
 - Python `>=3.14,<3.15`，当前验证环境 Python 3.14.6
 - PySide6 6.11.1
-- SQLite（标准库 `sqlite3`），schema version 11
+- SQLite（标准库 `sqlite3`），schema version 12
 - pytest 9.1.1；PyInstaller 6.21.0
 - 当前本地交付版本 `1.0.0`；Windows 安装器和便携版由 `scripts/package.ps1` 构建
 
@@ -78,7 +78,7 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishStudio-isolated"
 
 ## 数据库迁移
 
-迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v10 数据库可顺序升级到 v11。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v11 新增 `pronunciation_attempts`，不改变 WPM 计时或既有练习记录。
+迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v11 数据库可顺序升级到 v12。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v12 新增只保存课程 enrollment 与稀疏 Item 状态的 `course_enrollments`、`course_item_progress`，不复制课程正文，也不改变 WPM 计时或既有练习记录。
 
 ## 已知限制
 
