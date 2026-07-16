@@ -114,6 +114,11 @@ def test_course_page_lists_hierarchy_progress_and_arbitrary_day(tmp_path: Path) 
         page.show_lesson(COURSE_ID, DAY_TWO)
         assert "Day 2" in page.lesson_title_label.text()
         assert "前面的 Day 尚未全部完成" in page.lesson_warning_label.text()
+        assert page.capability_buttons["dictation"].isVisibleTo(page)
+        assert page.capability_buttons["speaking"].isVisibleTo(page)
+        assert not page.capability_buttons["tts"].isVisibleTo(page)
+        assert page.capability_buttons["vocabulary"].isVisibleTo(page)
+        assert page.capability_buttons["review"].isVisibleTo(page)
         page.start_lesson_button.click()
         assert requested == [(COURSE_ID, DAY_TWO, "manual")]
     finally:
@@ -162,8 +167,11 @@ def test_main_window_course_typing_updates_state_without_article_writes(tmp_path
         state = context.course_progress_service.get_item_progress(COURSE_ID, FIRST_ITEM)
         assert state.status == "completed"
         assert window.sentence_practice_view.translation_status.text() == "课程译文"
-        assert not window.sentence_practice_view.text_browser._word_collection_enabled
-        assert not window.sentence_practice_view.speech_controls.isVisibleTo(
+        assert window.sentence_practice_view.text_browser._word_collection_enabled
+        assert window.sentence_practice_view.speech_controls.isVisibleTo(
+            window.sentence_practice_view
+        )
+        assert window.sentence_practice_view.course_words_button.isVisibleTo(
             window.sentence_practice_view
         )
         connection = context.database.connect()
@@ -171,6 +179,47 @@ def test_main_window_course_typing_updates_state_without_article_writes(tmp_path
         assert connection.execute("SELECT COUNT(*) FROM sentence_attempts").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM practice_sessions").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM tts_audio_cache").fetchone()[0] == 0
+    finally:
+        window.current_practice_saved = True
+        window.current_course_session = None
+        window.close()
+        context.database.close()
+
+
+def test_course_capability_ui_reuses_dictation_and_pronunciation_pages(
+    tmp_path: Path,
+) -> None:
+    app = _app()
+    context = _context(tmp_path)
+    window = MainWindow(context)
+    try:
+        window.show()
+        window._start_course_capability(COURSE_ID, DAY_TWO, "dictation")
+        app.processEvents()
+        assert window.stack.currentWidget() is window.dictation_page
+        assert window.dictation_page._course_mode
+        current = window.dictation_page.current
+        assert current is not None
+        window.dictation_page.input.setPlainText(current.text)
+        window.dictation_page._submit()
+        assert context.course_progress_service.get_activity_progress(
+            COURSE_ID,
+            current.ref.item_stable_key,
+            "dictation",
+        ).status == "completed"
+
+        window._leave_dictation()
+        window._start_course_capability(COURSE_ID, DAY_TWO, "speaking")
+        app.processEvents()
+        assert window.stack.currentWidget() is window.pronunciation_page
+        assert window.pronunciation_page.course_item is not None
+        assert window.pronunciation_page.reference_text() == "Save this useful response."
+
+        connection = context.database.connect()
+        assert connection.execute("SELECT COUNT(*) FROM course_capability_attempts").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM dictation_attempts").fetchone()[0] == 0
+        assert connection.execute("SELECT COUNT(*) FROM pronunciation_attempts").fetchone()[0] == 0
+        assert connection.execute("SELECT COUNT(*) FROM articles").fetchone()[0] == 0
     finally:
         window.current_practice_saved = True
         window.current_course_session = None

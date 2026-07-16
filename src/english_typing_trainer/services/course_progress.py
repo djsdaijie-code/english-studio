@@ -13,6 +13,9 @@ from english_typing_trainer.courses.models import (
 from english_typing_trainer.courses.repository import CourseRepository
 from english_typing_trainer.database.course_progress_repository import CourseProgressRepository
 from english_typing_trainer.models.course_progress import (
+    CourseActivityProgress,
+    CourseActivityStatus,
+    CourseActivityType,
     CourseEnrollment,
     CourseItemProgress,
     CourseProgressSummary,
@@ -24,6 +27,9 @@ from english_typing_trainer.models.course_progress import (
 
 ENROLLMENT_STATUSES: frozenset[EnrollmentStatus] = frozenset(
     {"active", "paused", "completed", "archived"}
+)
+COURSE_ACTIVITY_TYPES: frozenset[CourseActivityType] = frozenset(
+    {"typing", "dictation", "speaking", "vocabulary", "review"}
 )
 
 
@@ -113,6 +119,15 @@ class CourseProgressService:
             ),
             now,
         )
+        self._save_activity_state(
+            course,
+            item,
+            "typing",
+            status="in_progress",
+            score=None,
+            increment_attempt=False,
+            now=now,
+        )
         self._record_course_activity(course, enrollment, now, reactivate_completed=True)
         return saved
 
@@ -156,6 +171,15 @@ class CourseProgressService:
             ),
             now,
         )
+        self._save_activity_state(
+            course,
+            item,
+            "typing",
+            status="completed",
+            score=score,
+            increment_attempt=True,
+            now=now,
+        )
         self._record_course_activity(course, enrollment, now)
         return saved
 
@@ -181,6 +205,15 @@ class CourseProgressService:
                 existing=existing,
             ),
             now,
+        )
+        self._save_activity_state(
+            course,
+            item,
+            "typing",
+            status="skipped",
+            score=None,
+            increment_attempt=False,
+            now=now,
         )
         self._record_course_activity(course, enrollment, now)
         return saved
@@ -210,6 +243,145 @@ class CourseProgressService:
             existing=None,
         )
 
+    def start_activity(
+        self,
+        course_id: str,
+        item_stable_key: str,
+        activity_type: CourseActivityType,
+    ) -> CourseActivityProgress:
+        course = self._require_course(course_id)
+        _unit, _lesson, item = self._require_item(course, item_stable_key)
+        enrollment = self._ensure_enrollment(course)
+        now = self._now()
+        saved = self._save_activity_state(
+            course,
+            item,
+            activity_type,
+            status="in_progress",
+            score=None,
+            increment_attempt=False,
+            now=now,
+        )
+        self._record_course_activity(
+            course, enrollment, now, reactivate_completed=True
+        )
+        return saved
+
+    def complete_activity(
+        self,
+        course_id: str,
+        item_stable_key: str,
+        activity_type: CourseActivityType,
+        score: float | None = None,
+    ) -> CourseActivityProgress:
+        course = self._require_course(course_id)
+        _unit, _lesson, item = self._require_item(course, item_stable_key)
+        enrollment = self._ensure_enrollment(course)
+        now = self._now()
+        saved = self._save_activity_state(
+            course,
+            item,
+            activity_type,
+            status="completed",
+            score=score,
+            increment_attempt=True,
+            now=now,
+        )
+        self._record_course_activity(course, enrollment, now)
+        return saved
+
+    def fail_activity(
+        self,
+        course_id: str,
+        item_stable_key: str,
+        activity_type: CourseActivityType,
+        score: float | None = None,
+    ) -> CourseActivityProgress:
+        course = self._require_course(course_id)
+        _unit, _lesson, item = self._require_item(course, item_stable_key)
+        enrollment = self._ensure_enrollment(course)
+        now = self._now()
+        saved = self._save_activity_state(
+            course,
+            item,
+            activity_type,
+            status="failed",
+            score=score,
+            increment_attempt=True,
+            now=now,
+        )
+        self._record_course_activity(course, enrollment, now)
+        return saved
+
+    def skip_activity(
+        self,
+        course_id: str,
+        item_stable_key: str,
+        activity_type: CourseActivityType,
+    ) -> CourseActivityProgress:
+        course = self._require_course(course_id)
+        _unit, _lesson, item = self._require_item(course, item_stable_key)
+        enrollment = self._ensure_enrollment(course)
+        now = self._now()
+        saved = self._save_activity_state(
+            course,
+            item,
+            activity_type,
+            status="skipped",
+            score=None,
+            increment_attempt=False,
+            now=now,
+        )
+        self._record_course_activity(course, enrollment, now)
+        return saved
+
+    def get_activity_progress(
+        self,
+        course_id: str,
+        item_stable_key: str,
+        activity_type: CourseActivityType,
+    ) -> CourseActivityProgress:
+        self._validate_activity_type(activity_type)
+        course = self._require_course(course_id)
+        _unit, _lesson, item = self._require_item(course, item_stable_key)
+        existing = self.progress.get_activity_progress(
+            course.stable_key, item.stable_key, activity_type
+        )
+        if existing is not None:
+            return existing
+        if activity_type == "typing":
+            legacy = self.progress.get_item_progress(course.stable_key, item.stable_key)
+            if legacy is not None and legacy.status != "not_started":
+                status: CourseActivityStatus = (
+                    "completed" if legacy.status == "completed" else legacy.status
+                )
+                return CourseActivityProgress(
+                    course_stable_key=course.stable_key,
+                    item_stable_key=item.stable_key,
+                    activity_type="typing",
+                    status=status,
+                    attempt_count=legacy.attempt_count,
+                    best_score=legacy.best_score,
+                    latest_score=legacy.latest_score,
+                    content_version=legacy.content_version,
+                    completed_at=legacy.completed_at,
+                    last_studied_at=legacy.last_studied_at,
+                    created_at=legacy.created_at,
+                    updated_at=legacy.updated_at,
+                )
+        return self._activity_state(
+            course,
+            item,
+            activity_type,
+            status="not_started",
+            attempt_count=0,
+            best_score=None,
+            latest_score=None,
+            completed_at=None,
+            now=None,
+            existing=None,
+        )
+
     def get_lesson_progress(self, course_id: str, lesson_id: str) -> CourseProgressSummary:
         course = self._require_course(course_id)
         unit, lesson = self._require_lesson(course, lesson_id)
@@ -217,27 +389,27 @@ class CourseProgressService:
             "lesson",
             course,
             lesson.stable_key,
-            self._required_items_for_lesson(unit, lesson),
+            self._required_activities_for_lesson(unit, lesson),
         )
 
     def get_unit_progress(self, course_id: str, unit_id: str) -> CourseProgressSummary:
         course = self._require_course(course_id)
         unit = self._require_unit(course, unit_id)
-        items = (
-            item
+        activities = (
+            activity
             for lesson in unit.lessons
-            for item in self._required_items_for_lesson(unit, lesson)
+            for activity in self._required_activities_for_lesson(unit, lesson)
         )
-        return self._summarize("unit", course, unit.stable_key, items)
+        return self._summarize("unit", course, unit.stable_key, activities)
 
     def get_course_progress(self, course_id: str) -> CourseProgressSummary:
         course = self._require_course(course_id)
-        items = (
-            item
+        activities = (
+            activity
             for _level, unit, lesson in self._ordered_lessons(course)
-            for item in self._required_items_for_lesson(unit, lesson)
+            for activity in self._required_activities_for_lesson(unit, lesson)
         )
-        return self._summarize("course", course, course.stable_key, items)
+        return self._summarize("course", course, course.stable_key, activities)
 
     def get_next_lesson(self, course_id: str) -> CourseLesson | None:
         course = self._require_course(course_id)
@@ -249,11 +421,11 @@ class CourseProgressService:
         enrollment = self.progress.get_enrollment(course.stable_key)
         if enrollment is not None and enrollment.status in {"paused", "archived"}:
             return None
-        states = self._state_by_item(course)
         for _level, unit, lesson in self._ordered_lessons(course):
-            for item in self._required_items_for_lesson(unit, lesson):
-                state = states.get(item.stable_key)
-                if state is None or state.status not in {"completed", "skipped"}:
+            for item, activity_type in self._required_activities_for_lesson(
+                unit, lesson
+            ):
+                if not self._activity_is_settled(course, item, activity_type):
                     return item
         return None
 
@@ -301,13 +473,11 @@ class CourseProgressService:
     ) -> CourseLesson | None:
         if enrollment is not None and enrollment.status in {"paused", "archived"}:
             return None
-        states = self._state_by_item(course)
         for _level, unit, lesson in self._ordered_lessons(course):
-            required = self._required_items_for_lesson(unit, lesson)
+            required = self._required_activities_for_lesson(unit, lesson)
             if any(
-                (state := states.get(item.stable_key)) is None
-                or state.status not in {"completed", "skipped"}
-                for item in required
+                not self._activity_is_settled(course, item, activity_type)
+                for item, activity_type in required
             ):
                 return lesson
         return None
@@ -317,15 +487,17 @@ class CourseProgressService:
         scope: ProgressScope,
         course: Course,
         stable_key: str,
-        items: Iterable[CourseSentence],
+        activities: Iterable[tuple[CourseSentence, CourseActivityType]],
     ) -> CourseProgressSummary:
-        unique_items = {item.stable_key: item for item in items}
-        states = self._state_by_item(course)
-        total = len(unique_items)
+        unique_activities = {
+            (item.stable_key, activity_type): (item, activity_type)
+            for item, activity_type in activities
+        }
+        total = len(unique_activities)
         completed = sum(
             1
-            for item_stable_key in unique_items
-            if (state := states.get(item_stable_key)) is not None and state.status == "completed"
+            for item, activity_type in unique_activities.values()
+            if self._activity_is_completed(course, item, activity_type)
         )
         is_completed = total > 0 and completed == total
         percentage = round((completed / total) * 100, 2) if total else 0.0
@@ -339,30 +511,30 @@ class CourseProgressService:
             is_completed=is_completed,
         )
 
-    def _state_by_item(self, course: Course) -> dict[str, CourseItemProgress]:
-        return {
-            item.item_stable_key: item
-            for item in self.progress.list_item_progress(course.stable_key)
-        }
-
     @staticmethod
-    def _required_items_for_lesson(
+    def _required_activities_for_lesson(
         unit: CourseUnit,
         lesson: CourseLesson,
-    ) -> tuple[CourseSentence, ...]:
+    ) -> tuple[tuple[CourseSentence, CourseActivityType], ...]:
         if unit.status == "deprecated" or lesson.status == "deprecated":
             return ()
-        required_ids = {
-            sentence_id
-            for activity in lesson.activities
-            if activity.required
-            for sentence_id in activity.sentence_ids
-        }
-        return tuple(
-            sentence
+        sentences = {
+            sentence.sentence_id: sentence
             for sentence in unit.sentences
-            if sentence.sentence_id in required_ids and sentence.status != "deprecated"
-        )
+            if sentence.status != "deprecated"
+        }
+        result: list[tuple[CourseSentence, CourseActivityType]] = []
+        for activity in lesson.activities:
+            if not activity.required:
+                continue
+            activity_type = CourseProgressService._progress_activity_type(
+                activity.activity_type
+            )
+            for sentence_id in activity.sentence_ids:
+                sentence = sentences.get(sentence_id)
+                if sentence is not None:
+                    result.append((sentence, activity_type))
+        return tuple(result)
 
     @staticmethod
     def _ordered_lessons(
@@ -416,6 +588,143 @@ class CourseProgressService:
                         return unit, lesson, item
         raise CourseContentNotFoundError(
             f"Learning item not found in course {course.course_id!r}: {item_stable_key!r}"
+        )
+
+    def _save_activity_state(
+        self,
+        course: Course,
+        item: CourseSentence,
+        activity_type: CourseActivityType,
+        *,
+        status: CourseActivityStatus,
+        score: float | None,
+        increment_attempt: bool,
+        now: datetime,
+    ) -> CourseActivityProgress:
+        self._validate_activity_type(activity_type)
+        existing = self.progress.get_activity_progress(
+            course.stable_key, item.stable_key, activity_type
+        )
+        if existing is None and activity_type == "typing":
+            legacy = self.progress.get_item_progress(course.stable_key, item.stable_key)
+            if legacy is not None and legacy.status in {"completed", "skipped"}:
+                existing = self.get_activity_progress(
+                    course.course_id, item.stable_key, activity_type
+                )
+        final_status = (
+            "completed"
+            if existing is not None
+            and existing.status == "completed"
+            and status != "completed"
+            else status
+        )
+        previous_best = existing.best_score if existing else None
+        best_score = previous_best
+        if score is not None:
+            best_score = score if previous_best is None else max(previous_best, score)
+        progress = self._activity_state(
+            course,
+            item,
+            activity_type,
+            status=final_status,
+            attempt_count=(existing.attempt_count if existing else 0)
+            + int(increment_attempt),
+            best_score=best_score,
+            latest_score=(
+                score
+                if score is not None
+                else (existing.latest_score if existing else None)
+            ),
+            completed_at=(
+                existing.completed_at
+                if existing is not None and existing.completed_at is not None
+                else (now if status == "completed" else None)
+            ),
+            now=now,
+            existing=existing,
+        )
+        return self.progress.save_activity_progress(progress, now)
+
+    def _activity_is_completed(
+        self,
+        course: Course,
+        item: CourseSentence,
+        activity_type: CourseActivityType,
+    ) -> bool:
+        state = self.progress.get_activity_progress(
+            course.stable_key, item.stable_key, activity_type
+        )
+        if state is not None:
+            return state.status == "completed"
+        if activity_type == "typing":
+            legacy = self.progress.get_item_progress(course.stable_key, item.stable_key)
+            return legacy is not None and legacy.status == "completed"
+        return False
+
+    def _activity_is_settled(
+        self,
+        course: Course,
+        item: CourseSentence,
+        activity_type: CourseActivityType,
+    ) -> bool:
+        state = self.progress.get_activity_progress(
+            course.stable_key, item.stable_key, activity_type
+        )
+        if state is not None:
+            return state.status in {"completed", "skipped"}
+        if activity_type == "typing":
+            legacy = self.progress.get_item_progress(course.stable_key, item.stable_key)
+            return legacy is not None and legacy.status in {"completed", "skipped"}
+        return False
+
+    @staticmethod
+    def _progress_activity_type(activity_type: str) -> CourseActivityType:
+        direct = {
+            "typing": "typing",
+            "dictation": "dictation",
+            "speaking": "speaking",
+            "vocabulary": "vocabulary",
+            "review": "review",
+            "fsrs": "review",
+            "listening": "review",
+            "reading": "typing",
+            "translation": "typing",
+            "self_test": "typing",
+        }
+        return direct.get(activity_type, "typing")  # type: ignore[return-value]
+
+    @staticmethod
+    def _validate_activity_type(activity_type: CourseActivityType) -> None:
+        if activity_type not in COURSE_ACTIVITY_TYPES:
+            raise ValueError(f"Unsupported course activity type: {activity_type!r}")
+
+    @staticmethod
+    def _activity_state(
+        course: Course,
+        item: CourseSentence,
+        activity_type: CourseActivityType,
+        *,
+        status: CourseActivityStatus,
+        attempt_count: int,
+        best_score: float | None,
+        latest_score: float | None,
+        completed_at: datetime | None,
+        now: datetime | None,
+        existing: CourseActivityProgress | None,
+    ) -> CourseActivityProgress:
+        return CourseActivityProgress(
+            course_stable_key=course.stable_key,
+            item_stable_key=item.stable_key,
+            activity_type=activity_type,
+            status=status,
+            attempt_count=attempt_count,
+            best_score=best_score,
+            latest_score=latest_score,
+            content_version=item.content_version,
+            completed_at=completed_at,
+            last_studied_at=now,
+            created_at=existing.created_at if existing else now,
+            updated_at=now,
         )
 
     @staticmethod

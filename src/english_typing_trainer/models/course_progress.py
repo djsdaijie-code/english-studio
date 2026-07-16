@@ -7,6 +7,10 @@ from typing import Literal
 
 EnrollmentStatus = Literal["active", "paused", "completed", "archived"]
 ItemProgressStatus = Literal["not_started", "in_progress", "completed", "skipped"]
+CourseActivityType = Literal["typing", "dictation", "speaking", "vocabulary", "review"]
+CourseActivityStatus = Literal[
+    "not_started", "in_progress", "completed", "skipped", "failed"
+]
 ProgressScope = Literal["course", "unit", "lesson"]
 
 
@@ -38,6 +42,22 @@ class CourseItemProgress:
     completed_at: datetime | None
     last_studied_at: datetime | None
     content_version: str
+    created_at: datetime | None
+    updated_at: datetime | None
+
+
+@dataclass(frozen=True, slots=True)
+class CourseActivityProgress:
+    course_stable_key: str
+    item_stable_key: str
+    activity_type: CourseActivityType
+    status: CourseActivityStatus
+    attempt_count: int
+    best_score: float | None
+    latest_score: float | None
+    content_version: str
+    completed_at: datetime | None
+    last_studied_at: datetime | None
     created_at: datetime | None
     updated_at: datetime | None
 

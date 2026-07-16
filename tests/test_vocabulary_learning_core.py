@@ -35,7 +35,7 @@ PAYLOAD=[{"word":"communication","phonetic":"/kəˌmjuːnɪˈkeɪʃn/","phonetic
 def test_schema6_new_install_tables_and_settings(tmp_path: Path):
     context=build_app_context(data_dir=tmp_path/"data")
     try:
-        assert context.database.get_schema_version()==12
+        assert context.database.get_schema_version()==13
         names={r[0] for r in context.database.connect().execute("SELECT name FROM sqlite_master WHERE type='table'")}
         assert {"vocabulary_entries","vocabulary_contexts","vocabulary_learning_state","vocabulary_attempts"}<=names
         columns={r[1] for r in context.database.connect().execute("PRAGMA table_info(tts_audio_cache)")}
@@ -52,9 +52,9 @@ def test_v5_to_v6_backup_and_old_vocabulary_migration(tmp_path: Path):
     connection.commit(); connection.close()
     manager=DatabaseManager(db); manager.initialize()
     try:
-        assert manager.get_schema_version()==12
+        assert manager.get_schema_version()==13
         assert manager.connect().execute("SELECT display_word FROM vocabulary_entries WHERE normalized_word='run'").fetchone()[0]=="Run"
-        assert list((db.parent/"backups").glob("typing_trainer-v5-before-v12-*.db"))
+        assert list((db.parent/"backups").glob("typing_trainer-v5-before-v13-*.db"))
     finally: manager.close()
 
 

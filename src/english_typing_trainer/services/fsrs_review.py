@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -8,6 +10,7 @@ from fsrs import Card, Rating, Scheduler
 from english_typing_trainer.database.fsrs_review_repository import FsrsReviewRepository
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.models.fsrs_review import FsrsProfile, ReviewQueue, ReviewQueueItem, VocabularyReviewCard, VocabularyReviewLog
+from english_typing_trainer.models.vocabulary import VocabularyContext
 
 
 RATINGS = {"again": Rating.Again, "hard": Rating.Hard, "good": Rating.Good, "easy": Rating.Easy}
@@ -22,6 +25,12 @@ class FsrsReviewService:
         self.repository = FsrsReviewRepository(database.connect)
         self._now_provider = now_provider or (lambda: datetime.now(timezone.utc))
         self.local_timezone = local_timezone or datetime.now().astimezone().tzinfo or timezone.utc
+        self._context_resolver: Callable[[VocabularyContext], str] | None = None
+
+    def set_context_resolver(
+        self, resolver: Callable[[VocabularyContext], str] | None
+    ) -> None:
+        self._context_resolver = resolver
 
     def now(self) -> datetime:
         value = self._now_provider()
@@ -53,7 +62,7 @@ class FsrsReviewService:
         now = self.now()
         overdue, due, learning = self.repository.count_due(now)
         due_rows = self.repository.list_due(now, max(0, soft_limit))
-        items = [ReviewQueueItem(card, entry, context) for card, entry, context in due_rows]
+        items = [ReviewQueueItem(card, entry, self._resolve_context(context)) for card, entry, context in due_rows]
         if len(items) < soft_limit:
             day_start, day_end = self._utc_day_bounds(now)
             used_new = self.repository.count_reviewed_new_for_day(day_start, day_end)
@@ -109,6 +118,16 @@ class FsrsReviewService:
         with self.database.transaction() as connection:
             return self.repository.create_card(connection, stored, now)
 
+    def ensure_entry_cards(
+        self, entry_id: int, context_id: int | None = None
+    ) -> tuple[VocabularyReviewCard, ...]:
+        return tuple(
+            item.card
+            for item in self._create_initial_cards(
+                entry_id, context_id, None, self.now()
+            )
+        )
+
     def suspend_entry(self, entry_id: int, suspended: bool = True) -> None:
         now = self.now()
         for card_type in ("spelling", "meaning", "listening"):
@@ -125,6 +144,7 @@ class FsrsReviewService:
         if entry is None:
             return created
         context = next((item for item in contexts if item.id == context_id), contexts[0] if contexts else None)
+        context = self._resolve_context(context)
         initial_due = self._legacy_due(legacy_due, now)
         with self.database.transaction() as connection:
             for card_type in ("spelling", "meaning"):
@@ -159,3 +179,14 @@ class FsrsReviewService:
         local = now.astimezone(self.local_timezone)
         start = local.replace(hour=0, minute=0, second=0, microsecond=0)
         return start.astimezone(timezone.utc), (start + timedelta(days=1)).astimezone(timezone.utc)
+
+    def _resolve_context(
+        self, context: VocabularyContext | None
+    ) -> VocabularyContext | None:
+        if (
+            context is None
+            or context.source_type != "built_in_course"
+            or self._context_resolver is None
+        ):
+            return context
+        return replace(context, source_sentence=self._context_resolver(context))

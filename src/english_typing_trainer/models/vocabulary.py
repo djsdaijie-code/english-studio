@@ -93,6 +93,10 @@ class VocabularyContext:
     created_at: datetime | None = None
     updated_at: datetime | None = None
     id: int | None = None
+    source_type: str = "article"
+    course_stable_key: str = ""
+    item_stable_key: str = ""
+    content_version: str = ""
 
 
 @dataclass(slots=True)

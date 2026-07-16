@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from threading import Lock
 
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.database.vocabulary_learning_repository import VocabularyLearningRepository
 from english_typing_trainer.models.vocabulary import VocabularyAttempt, VocabularyContext, VocabularyEntry
+from english_typing_trainer.models.learning_content import LearningContentRef
 from english_typing_trainer.services.dictionary_provider import DictionaryProvider, DictionaryProviderError, DictionaryResult
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider, WordExplanationResult
 from english_typing_trainer.services.word_normalization import WordNormalizationService
@@ -24,20 +26,38 @@ class VocabularyLearningService:
     def __init__(self, database: DatabaseManager, normalization: WordNormalizationService) -> None:
         self.database=database; self.normalization=normalization
         self.repository=VocabularyLearningRepository(database.connect); self._dictionary_inflight=set(); self._ai_inflight=set(); self._lock=Lock()
+        self._context_resolver: Callable[[VocabularyContext], str] | None = None
+
+    def set_context_resolver(
+        self, resolver: Callable[[VocabularyContext], str] | None
+    ) -> None:
+        self._context_resolver = resolver
 
     def collect(self, raw_word: str, *, sentence: str="", article_id: int|None=None,
                 article_sentence_id: int|None=None, start_offset: int=0, end_offset: int|None=None,
-                typing_target_count: int=5) -> CollectionResult:
+                typing_target_count: int=5,
+                content_ref: LearningContentRef | None = None) -> CollectionResult:
         normalized,display=self.normalization.validate_selection(raw_word)
         entry=self.repository.get_by_word(normalized); created=entry is None
         with self.database.transaction() as connection:
             if entry is None:
                 entry=self.repository.create_entry(connection,VocabularyEntry(normalized,display,lemma=normalized))
             assert entry.id is not None
-            context,context_created=self.repository.add_context(connection,VocabularyContext(entry.id,display,sentence,
-                article_id,article_sentence_id,start_offset,end_offset if end_offset is not None else start_offset+len(display)))
+            context,context_created=self.repository.add_context(connection,VocabularyContext(
+                entry.id,
+                display,
+                "" if content_ref is not None else sentence,
+                None if content_ref is not None else article_id,
+                None if content_ref is not None else article_sentence_id,
+                start_offset,
+                end_offset if end_offset is not None else start_offset+len(display),
+                source_type=(content_ref.source_type if content_ref is not None else "article"),
+                course_stable_key=(content_ref.course_stable_key if content_ref is not None else ""),
+                item_stable_key=(content_ref.item_stable_key if content_ref is not None else ""),
+                content_version=(content_ref.content_version if content_ref is not None else ""),
+            ))
             self.repository.ensure_state(connection,entry.id,typing_target_count)
-        return CollectionResult(entry,context,created,context_created)
+        return CollectionResult(entry,self._resolve_context(context),created,context_created)
 
     def enrich_dictionary(self, entry_id: int, provider: DictionaryProvider, *, force: bool=False) -> VocabularyEntry:
         entry=self.repository.get_entry(entry_id)
@@ -88,6 +108,7 @@ class VocabularyLearningService:
     def build_explanation_request(self, context_id: int) -> tuple[dict[str, object], VocabularyContext]:
         context=self.repository.get_context(context_id)
         if not context: raise ValueError("未找到来源语境。")
+        context=self._resolve_context(context)
         entry=self.repository.get_entry(context.vocabulary_entry_id)
         if not entry: raise ValueError("未找到单词。")
         definitions=[]
@@ -100,7 +121,9 @@ class VocabularyLearningService:
 
     def apply_explanation_result(self, context_id: int, result: WordExplanationResult) -> VocabularyContext:
         with self.database.transaction() as connection: self.repository.update_explanation(connection,context_id,result)
-        return self.repository.get_context(context_id)  # type: ignore[return-value]
+        context=self.repository.get_context(context_id)
+        if context is None: raise ValueError("未找到来源语境。")
+        return self._resolve_context(context)
 
     def mark_explanation_failed(self, context_id: int) -> None:
         with self.database.transaction() as connection: self.repository.mark_ai_failed(connection,context_id)
@@ -108,6 +131,7 @@ class VocabularyLearningService:
     def explain_context(self, context_id: int, provider: DeepSeekWordExplanationProvider, *, force: bool=False) -> VocabularyContext:
         context=self.repository.get_context(context_id)
         if not context: raise ValueError("未找到来源语境。")
+        context=self._resolve_context(context)
         if context.is_manual or (context.ai_status=="ready" and not force): return context
         entry=self.repository.get_entry(context.vocabulary_entry_id)
         assert entry is not None
@@ -125,7 +149,8 @@ class VocabularyLearningService:
             result=provider.explain(word=context.source_word,lemma=entry.lemma or entry.normalized_word,
                 sentence=context.source_sentence,dictionary_summary=definitions)
             with self.database.transaction() as connection: self.repository.update_explanation(connection,context_id,result)
-            return self.repository.get_context(context_id)  # type: ignore[return-value]
+            saved=self.repository.get_context(context_id)
+            return self._resolve_context(saved) if saved is not None else context
         except Exception:
             with self.database.transaction() as connection: self.repository.mark_ai_failed(connection,context_id)
             raise
@@ -133,7 +158,15 @@ class VocabularyLearningService:
             with self._lock: self._ai_inflight.discard(key)
 
     def list_entries(self, *, search: str="", status: str="all"): return self.repository.list_entries(search=search,status=status)
-    def detail(self, entry_id: int): return self.repository.get_entry(entry_id),self.repository.list_contexts(entry_id),self.repository.get_state(entry_id)
+    def detail(self, entry_id: int):
+        contexts=[self._resolve_context(context) for context in self.repository.list_contexts(entry_id)]
+        return self.repository.get_entry(entry_id),contexts,self.repository.get_state(entry_id)
+
+    def _resolve_context(self, context: VocabularyContext) -> VocabularyContext:
+        if context.source_type != "built_in_course" or self._context_resolver is None:
+            return context
+        sentence = self._context_resolver(context)
+        return replace(context, source_sentence=sentence)
 
     def record_attempt(self, attempt: VocabularyAttempt) -> int:
         state=self.repository.get_state(attempt.vocabulary_entry_id)

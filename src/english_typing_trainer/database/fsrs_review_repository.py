@@ -82,7 +82,8 @@ class FsrsReviewRepository:
                       e.primary_part_of_speech,e.dictionary_status,e.dictionary_payload_json,e.dictionary_fetched_at,e.created_at entry_created_at,e.updated_at entry_updated_at,
                       x.id context_id,x.vocabulary_entry_id context_entry_id,x.source_word,x.source_sentence,x.article_id,x.article_sentence_id,
                       x.start_offset,x.end_offset,x.contextual_part_of_speech,x.contextual_meaning_zh,x.explanation_zh,x.common_collocation,
-                      x.example_en,x.example_zh,x.ai_status,x.ai_prompt_version,x.ai_generated_at,x.is_manual,x.created_at context_created_at,x.updated_at context_updated_at
+                      x.example_en,x.example_zh,x.ai_status,x.ai_prompt_version,x.ai_generated_at,x.is_manual,x.created_at context_created_at,x.updated_at context_updated_at,
+                      x.source_type,x.course_stable_key,x.item_stable_key,x.content_version context_content_version
                FROM vocabulary_review_cards c JOIN vocabulary_entries e ON e.id=c.vocabulary_entry_id
                LEFT JOIN vocabulary_contexts x ON x.id=c.vocabulary_context_id
                LEFT JOIN vocabulary_learning_state s ON s.vocabulary_entry_id=e.id
@@ -107,7 +108,8 @@ class FsrsReviewRepository:
         rows = self._connection_provider().execute(
             """SELECT e.*, s.next_review_at legacy_due, c.id context_id,c.source_word,c.source_sentence,c.article_id,c.article_sentence_id,
                       c.start_offset,c.end_offset,c.contextual_part_of_speech,c.contextual_meaning_zh,c.explanation_zh,c.common_collocation,
-                      c.example_en,c.example_zh,c.ai_status,c.ai_prompt_version,c.ai_generated_at,c.is_manual,c.created_at context_created_at,c.updated_at context_updated_at
+                      c.example_en,c.example_zh,c.ai_status,c.ai_prompt_version,c.ai_generated_at,c.is_manual,c.created_at context_created_at,c.updated_at context_updated_at,
+                      c.source_type,c.course_stable_key,c.item_stable_key,c.content_version context_content_version
                FROM vocabulary_entries e JOIN vocabulary_learning_state s ON s.vocabulary_entry_id=e.id
                LEFT JOIN vocabulary_contexts c ON c.id=(SELECT id FROM vocabulary_contexts WHERE vocabulary_entry_id=e.id ORDER BY created_at DESC,id DESC LIMIT 1)
                WHERE s.status!='mastered' AND NOT EXISTS (SELECT 1 FROM vocabulary_review_cards r WHERE r.vocabulary_entry_id=e.id)
@@ -148,4 +150,6 @@ class FsrsReviewRepository:
         return VocabularyContext(entry_id, row["source_word"], row["source_sentence"] or "",
             row["article_id"], row["article_sentence_id"], row["start_offset"], row["end_offset"], row["contextual_part_of_speech"] or "",
             row["contextual_meaning_zh"] or "", row["explanation_zh"] or "", row["common_collocation"] or "", row["example_en"] or "", row["example_zh"] or "",
-            row["ai_status"], row["ai_prompt_version"], _utc(row["ai_generated_at"]), bool(row["is_manual"]), id=context_id)
+            row["ai_status"], row["ai_prompt_version"], _utc(row["ai_generated_at"]), bool(row["is_manual"]), id=context_id,
+            source_type=row["source_type"] or "article", course_stable_key=row["course_stable_key"] or "",
+            item_stable_key=row["item_stable_key"] or "", content_version=row["context_content_version"] or "")

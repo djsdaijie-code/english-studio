@@ -29,6 +29,10 @@ class SentencePracticeView(QWidget):
     speech_sentence_changed = Signal(str)
     word_collection_requested = Signal(str, int, int)
     learning_activity = Signal(str)
+    course_dictation_requested = Signal()
+    course_pronunciation_requested = Signal()
+    course_words_requested = Signal()
+    course_review_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -40,6 +44,7 @@ class SentencePracticeView(QWidget):
         self._emitted_attempts = 0
         self._course_mode = False
         self._course_translations: tuple[str, ...] = ()
+        self._course_activity_types: tuple[tuple[str, ...], ...] = ()
         self._timer = QTimer(self)
         self._timer.setInterval(250)
         self._timer.timeout.connect(self._tick)
@@ -70,6 +75,28 @@ class SentencePracticeView(QWidget):
         self.active_value = self._stat(row, "有效输入")
         row.addStretch(1); layout.addWidget(stats)
         self.state_label = QLabel("输入第一个字符后开始计时"); self.state_label.setProperty("role", "subtitle"); layout.addWidget(self.state_label)
+
+        self.course_actions = QWidget()
+        course_actions_layout = QHBoxLayout(self.course_actions)
+        course_actions_layout.setContentsMargins(0, 0, 0, 0)
+        self.course_dictation_button = QPushButton("听写")
+        self.course_dictation_button.clicked.connect(self.course_dictation_requested.emit)
+        self.course_speaking_button = QPushButton("跟读")
+        self.course_speaking_button.clicked.connect(self.course_pronunciation_requested.emit)
+        self.course_words_button = QPushButton("查看单词")
+        self.course_words_button.clicked.connect(self.course_words_requested.emit)
+        self.course_review_button = QPushButton("加入课程复习")
+        self.course_review_button.clicked.connect(self.course_review_requested.emit)
+        for button in (
+            self.course_dictation_button,
+            self.course_speaking_button,
+            self.course_words_button,
+            self.course_review_button,
+        ):
+            course_actions_layout.addWidget(button)
+        course_actions_layout.addStretch(1)
+        self.course_actions.hide()
+        layout.addWidget(self.course_actions)
 
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.main_splitter.setChildrenCollapsible(False); self.main_splitter.setHandleWidth(10)
@@ -131,6 +158,8 @@ class SentencePracticeView(QWidget):
     def start_practice(self, material: PracticeMaterial, sentences: list[ArticleSentence], settings: AppSettings) -> None:
         self._course_mode = False
         self._course_translations = ()
+        self._course_activity_types = ()
+        self.course_actions.hide()
         self.translate_article_button.setVisible(True)
         self.speech_controls.setVisible(True)
         self.text_browser.set_word_collection_enabled(True)
@@ -141,13 +170,16 @@ class SentencePracticeView(QWidget):
         material: PracticeMaterial,
         sentences: list[ArticleSentence],
         translations: tuple[str, ...],
+        activity_types: tuple[tuple[str, ...], ...],
         settings: AppSettings,
     ) -> None:
         self._course_mode = True
         self._course_translations = translations
+        self._course_activity_types = activity_types
         self.translate_article_button.setVisible(False)
-        self.speech_controls.setVisible(False)
-        self.text_browser.set_word_collection_enabled(False)
+        self.speech_controls.setVisible(True)
+        self.text_browser.set_word_collection_enabled(True)
+        self.course_actions.show()
         self._start_session(material, sentences, settings)
 
     def _start_session(self, material: PracticeMaterial, sentences: list[ArticleSentence], settings: AppSettings) -> None:
@@ -231,6 +263,16 @@ class SentencePracticeView(QWidget):
         self.sentence_label.setText(f"第 {self.learning.current_index + 1} / {len(self.sentences)} 句")
         self.translation_source.setText("" if self._course_mode else sentence.normalized_text); self.translation_status.setText("完成当前句后显示课程译文" if self._course_mode else "完成当前句后显示翻译")
         self.translation_text.setText("翻译尚未显示"); self.expressions_label.setText("暂无"); self._set_translation_actions(False); self._refresh()
+        if self._course_mode:
+            activity_types = (
+                self._course_activity_types[self.learning.current_index]
+                if self.learning.current_index < len(self._course_activity_types)
+                else ()
+            )
+            self.course_dictation_button.setVisible("dictation" in activity_types)
+            self.course_speaking_button.setVisible("speaking" in activity_types)
+            self.course_words_button.setVisible(True)
+            self.course_review_button.setVisible("review" in activity_types)
         self.speech_sentence_changed.emit(sentence.normalized_text)
 
     def _request_translation(self, retry: bool) -> None:

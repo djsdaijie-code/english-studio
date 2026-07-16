@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QLabel, QPushButto
 
 from english_typing_trainer.models.dictation import DictationAttempt
 from english_typing_trainer.models.fsrs_review import ReviewQueueItem
+from english_typing_trainer.models.learning_content import CourseCapabilityItem
 from english_typing_trainer.services.dictation_service import DictationService
 from english_typing_trainer.ui.practice_view import PracticeInputEdit
 
@@ -18,18 +19,22 @@ class DictationPage(QWidget):
     rating_requested = Signal(int, str)
     attempt_completed = Signal(object)
     learning_activity = Signal(str, object)
+    course_audio_requested = Signal(object, float)
+    course_attempt_completed = Signal(object, object)
+    course_rating_requested = Signal(object, str)
 
     def __init__(self, service: DictationService, parent=None) -> None:
         super().__init__(parent)
-        self.service = service; self.items: list[ReviewQueueItem] = []; self.index = 0
+        self.service = service; self.items: list[ReviewQueueItem] = []; self.course_items: list[CourseCapabilityItem] = []; self.index = 0
+        self._course_mode = False
         self.replay_count = 0; self._started = 0.0; self._submitted = False
         self._build()
 
     def _build(self) -> None:
         root=QVBoxLayout(self); root.setContentsMargins(32,24,32,24); root.setSpacing(16)
-        top=QHBoxLayout(); back=QPushButton("返回单词本"); back.setProperty("variant","ghost"); back.clicked.connect(self.back_requested.emit)
+        top=QHBoxLayout(); self.back_button=QPushButton("返回单词本"); self.back_button.setProperty("variant","ghost"); self.back_button.clicked.connect(self.back_requested.emit)
         self.title=QLabel("听写练习"); self.title.setProperty("role","page-title"); self.position=QLabel("0 / 0"); self.position.setProperty("role","subtitle")
-        top.addWidget(back); top.addWidget(self.title,1); top.addWidget(self.position); root.addLayout(top)
+        top.addWidget(self.back_button); top.addWidget(self.title,1); top.addWidget(self.position); root.addLayout(top)
         card=QFrame(); card.setObjectName("Card"); layout=QVBoxLayout(card); layout.setContentsMargins(36,32,36,32); layout.setSpacing(16)
         controls=QHBoxLayout(); self.kind=QComboBox(); self.kind.addItem("单词听写","word"); self.kind.addItem("句子听写","sentence")
         self.mode=QComboBox(); self.mode.addItem("严格模式","strict"); self.mode.addItem("学习模式（忽略句首大小写和句末标点）","learning")
@@ -47,14 +52,23 @@ class DictationPage(QWidget):
         self.kind.currentIndexChanged.connect(self._load_current); self.mode.currentIndexChanged.connect(self._load_current)
 
     @property
-    def current(self): return self.items[self.index] if 0 <= self.index < len(self.items) else None
+    def current(self):
+        items = self.course_items if self._course_mode else self.items
+        return items[self.index] if 0 <= self.index < len(items) else None
 
     def load_queue(self, items: list[ReviewQueueItem]) -> None:
-        self.items=list(items); self.index=0; self._load_current()
+        self._course_mode=False; self.course_items=[]; self.items=list(items); self.index=0
+        self.back_button.setText("返回单词本"); self.kind.setEnabled(True); self._load_current()
+
+    def load_course_items(self, items: list[CourseCapabilityItem]) -> None:
+        self._course_mode=True; self.items=[]; self.course_items=list(items); self.index=0
+        self.back_button.setText("返回 Day"); self.kind.setCurrentIndex(self.kind.findData("sentence")); self.kind.setEnabled(False)
+        self.mode.setCurrentIndex(self.mode.findData("learning")); self._load_current()
 
     def _expected(self) -> str:
         item=self.current
         if item is None:return ""
+        if self._course_mode:return item.text
         return item.target_word if self.kind.currentData()=="word" else (item.context.source_sentence if item.context else item.target_word)
 
     def _load_current(self) -> None:
@@ -63,20 +77,27 @@ class DictationPage(QWidget):
         item=self.current
         if item is None:
             self.position.setText("已完成"); self.prompt.setText("本轮听写已结束"); self.context.setText(""); self.input.setEnabled(False); self.submit.setEnabled(False); self.play.setEnabled(False); return
-        self.position.setText(f"第 {self.index+1} / {len(self.items)} 项"); self.prompt.setText("播放后输入你听到的内容"); self.context.setText("单词严格保留大小写、连字符和撇号。句子可选择学习模式。")
+        total=len(self.course_items) if self._course_mode else len(self.items)
+        self.position.setText(f"第 {self.index+1} / {total} 项"); self.prompt.setText("播放后输入你听到的内容"); self.context.setText("课程句子不会保存到普通听写历史。" if self._course_mode else "单词严格保留大小写、连字符和撇号。句子可选择学习模式。")
         is_word=self.kind.currentData()=="word"; self.mode.setEnabled(not is_word); self.input.setEnabled(True); self.submit.setEnabled(True); self.play.setEnabled(True); QTimer.singleShot(0,self._restore_focus)
 
     def _play(self) -> None:
         if self.current is None:return
-        self.replay_count+=1; self.learning_activity.emit("audio_started",self.current.entry.id); self.audio_requested.emit(self._expected(),float(self.speed.currentData())); self._restore_focus()
+        self.replay_count+=1
+        if self._course_mode:
+            self.learning_activity.emit("course_audio_started",self.current.ref.item_stable_key)
+            self.course_audio_requested.emit(self.current,float(self.speed.currentData()))
+        else:
+            self.learning_activity.emit("audio_started",self.current.entry.id); self.audio_requested.emit(self._expected(),float(self.speed.currentData()))
+        self._restore_focus()
 
     def _key(self,event) -> None:
         if not self.input.isEnabled():return
         if event.key()==Qt.Key.Key_Backspace:
-            cursor=self.input.textCursor(); cursor.movePosition(QTextCursor.MoveOperation.End); cursor.deletePreviousChar(); self.input.setTextCursor(cursor); self.learning_activity.emit("typing_activity",self.current.entry.id if self.current else None); return
+            cursor=self.input.textCursor(); cursor.movePosition(QTextCursor.MoveOperation.End); cursor.deletePreviousChar(); self.input.setTextCursor(cursor); self.learning_activity.emit("typing_activity",self.current.ref.item_stable_key if self._course_mode and self.current else self.current.entry.id if self.current else None); return
         text=event.text()
         if text and len(text)==1:
-            self._started=self._started or monotonic(); cursor=self.input.textCursor(); cursor.movePosition(QTextCursor.MoveOperation.End); cursor.insertText(text); self.input.setTextCursor(cursor); self.learning_activity.emit("typing_activity",self.current.entry.id if self.current else None)
+            self._started=self._started or monotonic(); cursor=self.input.textCursor(); cursor.movePosition(QTextCursor.MoveOperation.End); cursor.insertText(text); self.input.setTextCursor(cursor); self.learning_activity.emit("typing_activity",self.current.ref.item_stable_key if self._course_mode and self.current else self.current.entry.id if self.current else None)
         if event.key() in {Qt.Key.Key_Return,Qt.Key.Key_Enter} and self.kind.currentData()=="sentence": self._submit()
 
     def _submit(self) -> None:
@@ -84,15 +105,24 @@ class DictationPage(QWidget):
         if item is None or self._submitted:return
         expected=self._expected(); actual=self.input.toPlainText(); kind=str(self.kind.currentData()); mode=str(self.mode.currentData()) if kind=="sentence" else "strict"; comparison=self.service.compare(expected,actual,dictation_type=kind,mode=mode)
         duration=int(max(0.0,monotonic()-self._started)*1000) if self._started else 0
-        attempt=DictationAttempt(kind,mode,expected,actual,f"{comparison.normalized_expected} => {comparison.normalized_actual}",comparison.error_count,comparison.omitted_count,comparison.inserted_count,self.replay_count,float(self.speed.currentData()),duration,vocabulary_entry_id=item.entry.id,vocabulary_context_id=item.context.id if item.context else None)
-        self.attempt_completed.emit(attempt); self._submitted=True; self.input.setEnabled(False); self.submit.setEnabled(False)
+        if self._course_mode:
+            score=round(max(0.0,1.0-(comparison.error_count/max(1,len(comparison.normalized_expected))))*100,2)
+            self.course_attempt_completed.emit(item,{"score":score,"error_count":comparison.error_count,"omitted_count":comparison.omitted_count,"inserted_count":comparison.inserted_count,"replay_count":self.replay_count,"duration_ms":duration})
+        else:
+            attempt=DictationAttempt(kind,mode,expected,actual,f"{comparison.normalized_expected} => {comparison.normalized_actual}",comparison.error_count,comparison.omitted_count,comparison.inserted_count,self.replay_count,float(self.speed.currentData()),duration,vocabulary_entry_id=item.entry.id,vocabulary_context_id=item.context.id if item.context else None)
+            self.attempt_completed.emit(attempt)
+        self._submitted=True; self.input.setEnabled(False); self.submit.setEnabled(False)
         self.feedback.setText("听写正确，请选择熟悉程度。" if comparison.correct else f"标准答案：{expected}\n错误 {comparison.error_count}，遗漏 {comparison.omitted_count}，多余 {comparison.inserted_count}")
         for button in self.rating_buttons:button.show()
 
     def _rate(self,rating:str)->None:
         item=self.current
         if item is None:return
-        self.rating_requested.emit(item.entry.id or 0,rating); self.learning_activity.emit("self_rated",item.entry.id); self.index+=1; self._load_current()
+        if self._course_mode:
+            self.course_rating_requested.emit(item.ref,rating); self.learning_activity.emit("course_self_rated",item.ref.item_stable_key)
+        else:
+            self.rating_requested.emit(item.entry.id or 0,rating); self.learning_activity.emit("self_rated",item.entry.id)
+        self.index+=1; self._load_current()
 
     def _restore_focus(self)->None:
         if self.input.isEnabled():

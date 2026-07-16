@@ -85,7 +85,7 @@ def _create_schema_11(connection: sqlite3.Connection) -> MigrationRunner:
     return runner
 
 
-def test_schema_12_initializes_two_minimal_course_state_tables(tmp_path: Path) -> None:
+def test_schema_13_preserves_two_minimal_course_state_tables(tmp_path: Path) -> None:
     database = DatabaseManager(tmp_path / "fresh.db")
     database.initialize()
     try:
@@ -96,7 +96,7 @@ def test_schema_12_initializes_two_minimal_course_state_tables(tmp_path: Path) -
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             ).fetchall()
         }
-        assert database.get_schema_version() == 12
+        assert database.get_schema_version() == 13
         assert {"course_enrollments", "course_item_progress"} <= tables
         assert "course_progress" not in tables
         assert "course_lesson_progress" not in tables
@@ -115,7 +115,7 @@ def test_schema_11_upgrade_preserves_data_and_is_idempotent(tmp_path: Path) -> N
     MigrationRunner().migrate(connection)
     MigrationRunner().migrate(connection)
 
-    assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 12
+    assert connection.execute("SELECT version FROM schema_version").fetchone()[0] == 13
     assert connection.execute(
         "SELECT value FROM settings WHERE key = 'pronunciation_provider'"
     ).fetchone()[0] == "legacy-value"

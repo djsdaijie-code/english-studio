@@ -2,6 +2,8 @@
 
 Phase 4 在只读 `CourseRepository` 和 schema 12 `CourseProgressService` 之上提供第一版课程浏览与 Sentence Item 打字流程。课程 JSON 仍是正文和层级的唯一来源；UI 只读取领域对象，SQLite 只保存 enrollment、稀疏 Item 状态和不含正文的学习事件。
 
+本文保留 Phase 4 的基础 UI 设计记录。Phase 5 已接入课程朗读、听写、跟读、词汇和 FSRS；当前能力边界与 schema 13 设计见 `docs/course-capabilities.md`。
+
 ## 页面与入口
 
 主窗口侧栏的“课程”进入 `CoursePage`。页面内部保留浏览位置，并提供三层视图：

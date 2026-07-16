@@ -55,12 +55,27 @@ class VocabularyLearningRepository:
         )
 
     def add_context(self, connection: sqlite3.Connection, context: VocabularyContext) -> tuple[VocabularyContext, bool]:
-        existing = connection.execute(
-            """SELECT * FROM vocabulary_contexts WHERE vocabulary_entry_id=? AND article_id IS ?
-               AND article_sentence_id IS ? AND start_offset=? AND end_offset=?""",
-            (context.vocabulary_entry_id, context.article_id, context.article_sentence_id,
-             context.start_offset, context.end_offset),
-        ).fetchone()
+        if context.source_type == "built_in_course":
+            existing = connection.execute(
+                """SELECT * FROM vocabulary_contexts
+                   WHERE vocabulary_entry_id=? AND source_type='built_in_course'
+                     AND course_stable_key=? AND item_stable_key=?
+                     AND start_offset=? AND end_offset=?""",
+                (
+                    context.vocabulary_entry_id,
+                    context.course_stable_key,
+                    context.item_stable_key,
+                    context.start_offset,
+                    context.end_offset,
+                ),
+            ).fetchone()
+        else:
+            existing = connection.execute(
+                """SELECT * FROM vocabulary_contexts WHERE vocabulary_entry_id=? AND article_id IS ?
+                   AND article_sentence_id IS ? AND start_offset=? AND end_offset=?""",
+                (context.vocabulary_entry_id, context.article_id, context.article_sentence_id,
+                 context.start_offset, context.end_offset),
+            ).fetchone()
         if existing:
             return self._context(existing), False
         stamp = now_iso()
@@ -69,13 +84,16 @@ class VocabularyLearningRepository:
                vocabulary_entry_id, article_id, article_sentence_id, source_word, source_sentence,
                start_offset, end_offset, contextual_part_of_speech, contextual_meaning_zh,
                explanation_zh, common_collocation, example_en, example_zh, ai_status,
-               ai_prompt_version, ai_generated_at, is_manual, created_at, updated_at
-               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               ai_prompt_version, ai_generated_at, is_manual, created_at, updated_at,
+               source_type, course_stable_key, item_stable_key, content_version
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (context.vocabulary_entry_id, context.article_id, context.article_sentence_id,
              context.source_word, context.source_sentence, context.start_offset, context.end_offset,
              context.contextual_part_of_speech, context.contextual_meaning_zh, context.explanation_zh,
              context.common_collocation, context.example_en, context.example_zh, context.ai_status,
-             context.ai_prompt_version, None, int(context.is_manual), stamp, stamp),
+             context.ai_prompt_version, None, int(context.is_manual), stamp, stamp,
+             context.source_type, context.course_stable_key, context.item_stable_key,
+             context.content_version),
         )
         context.id = int(cursor.lastrowid)
         return context, True
@@ -181,7 +199,9 @@ class VocabularyLearningRepository:
             contextual_meaning_zh=row["contextual_meaning_zh"], explanation_zh=row["explanation_zh"],
             common_collocation=row["common_collocation"], example_en=row["example_en"], example_zh=row["example_zh"],
             ai_status=row["ai_status"], ai_prompt_version=row["ai_prompt_version"], ai_generated_at=self._dt(row["ai_generated_at"]),
-            is_manual=bool(row["is_manual"]), created_at=self._dt(row["created_at"]), updated_at=self._dt(row["updated_at"]))
+            is_manual=bool(row["is_manual"]), created_at=self._dt(row["created_at"]), updated_at=self._dt(row["updated_at"]),
+            source_type=row["source_type"], course_stable_key=row["course_stable_key"],
+            item_stable_key=row["item_stable_key"], content_version=row["content_version"])
 
     def _state(self, row) -> VocabularyLearningState:
         return VocabularyLearningState(vocabulary_entry_id=row["vocabulary_entry_id"], status=row["status"],

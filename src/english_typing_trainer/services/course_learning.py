@@ -41,6 +41,7 @@ class CourseLearningSession:
     lesson_title: str
     typing_sentences: tuple[ArticleSentence, ...]
     chinese_translations: tuple[str, ...]
+    activity_types_by_item: tuple[tuple[str, ...], ...]
     section_text: str
     _started_item_keys: set[str] = field(default_factory=set, repr=False)
 
@@ -134,6 +135,10 @@ class CourseLearningService:
             lesson_title=lesson.title,
             typing_sentences=typing_sentences,
             chinese_translations=tuple(sentence.chinese for sentence in selected),
+            activity_types_by_item=tuple(
+                self._activity_types(lesson, sentence.sentence_id)
+                for sentence in selected
+            ),
             section_text=section_text,
         )
 
@@ -187,6 +192,26 @@ class CourseLearningService:
             )
             offset = end
         return tuple(adapted), "".join(sentence.english for sentence in content)
+
+    @staticmethod
+    def _activity_types(
+        lesson: CourseLesson, sentence_id: str
+    ) -> tuple[str, ...]:
+        result: list[str] = []
+        mapping = {
+            "fsrs": "review",
+            "listening": "review",
+            "reading": "typing",
+            "translation": "typing",
+            "self_test": "typing",
+        }
+        for activity in lesson.activities:
+            if sentence_id not in activity.sentence_ids:
+                continue
+            value = mapping.get(activity.activity_type, activity.activity_type)
+            if value not in result:
+                result.append(value)
+        return tuple(result)
 
 
 __all__ = [

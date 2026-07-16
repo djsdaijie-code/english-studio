@@ -28,6 +28,7 @@ _ITEM_STATUS_TEXT = {
     "in_progress": "学习中",
     "completed": "已完成",
     "skipped": "暂时跳过",
+    "failed": "失败，可重试",
 }
 _ENROLLMENT_STATUS_TEXT = {
     "active": "学习中",
@@ -42,9 +43,12 @@ _LESSON_TYPE_TEXT = {
 }
 _ACTIVITY_TYPE_TEXT = {
     "typing": "打字",
-    "listening": "听力（后续接入）",
-    "speaking": "跟读（后续接入）",
-    "dictation": "听写（后续接入）",
+    "listening": "朗读",
+    "speaking": "跟读",
+    "dictation": "听写",
+    "vocabulary": "词汇",
+    "fsrs": "课程复习",
+    "review": "课程复习",
 }
 
 
@@ -52,6 +56,7 @@ class CoursePage(QWidget):
     """Course list, hierarchy and lesson confirmation in one navigable page."""
 
     lesson_start_requested = Signal(str, str, str)
+    capability_requested = Signal(str, str, str)
 
     def __init__(
         self,
@@ -196,6 +201,26 @@ class CoursePage(QWidget):
         top.addStretch(1)
         top.addWidget(self.start_lesson_button)
         layout.addLayout(top)
+
+        self.capability_row = QWidget()
+        capability_layout = QHBoxLayout(self.capability_row)
+        capability_layout.setContentsMargins(0, 0, 0, 0)
+        self.capability_buttons: dict[str, QPushButton] = {}
+        for label, capability in (
+            ("朗读", "tts"),
+            ("听写", "dictation"),
+            ("跟读", "speaking"),
+            ("查看与收藏单词", "vocabulary"),
+            ("加入课程复习", "review"),
+        ):
+            button = QPushButton(label)
+            button.clicked.connect(
+                lambda _checked=False, value=capability: self._emit_capability(value)
+            )
+            capability_layout.addWidget(button)
+            self.capability_buttons[capability] = button
+        capability_layout.addStretch(1)
+        layout.addWidget(self.capability_row)
 
         self.lesson_title_label = QLabel("")
         self.lesson_title_label.setProperty("role", "section-title")
@@ -362,8 +387,7 @@ class CoursePage(QWidget):
             if sentence is None:
                 continue
             try:
-                status = self.progress.get_item_progress(course_id, sentence.stable_key).status
-                status_text = _ITEM_STATUS_TEXT[status]
+                status_text = self._sentence_activity_status(course, lesson, sentence.sentence_id, sentence.stable_key)
             except Exception as exc:
                 self._log_progress_error(course, lesson, exc, sentence.stable_key)
                 status_text = "状态不可用"
@@ -384,6 +408,7 @@ class CoursePage(QWidget):
         self.start_lesson_button.setEnabled(has_content)
         if not referenced_ids:
             self.lesson_error_label.setText("本 Day 还没有可学习的句子。")
+        self._configure_capability_buttons(course, lesson, referenced_ids)
         self.lesson_warning_label.setText(self._prerequisite_warning(course, lesson))
         self.view_stack.setCurrentWidget(self.lesson_view)
 
@@ -537,6 +562,86 @@ class CoursePage(QWidget):
                 str(mode),
             )
 
+    def _emit_capability(self, capability: str) -> None:
+        if self.current_course_id and self.current_lesson_id:
+            self.capability_requested.emit(
+                self.current_course_id, self.current_lesson_id, capability
+            )
+
+    def _configure_capability_buttons(
+        self,
+        course: Course,
+        lesson: CourseLesson,
+        referenced_ids: tuple[str, ...],
+    ) -> None:
+        configured = {activity.activity_type for activity in lesson.activities}
+        found = self._find_lesson(course, lesson.lesson_id)
+        unit = found[0] if found else None
+        sentences = (
+            {item.sentence_id: item for item in unit.sentences}
+            if unit is not None
+            else {}
+        )
+        referenced_sentences = [
+            sentences[sentence_id]
+            for sentence_id in referenced_ids
+            if sentence_id in sentences
+        ]
+        visible = {
+            "tts": "listening" in configured,
+            "dictation": "dictation" in configured,
+            "speaking": "speaking" in configured,
+            "vocabulary": any(item.core_words for item in referenced_sentences),
+            "review": any("fsrs" in item.skill_tags for item in referenced_sentences),
+        }
+        base_labels = {
+            "tts": "朗读",
+            "dictation": "听写",
+            "speaking": "跟读",
+            "vocabulary": "查看与收藏单词",
+            "review": "加入课程复习",
+        }
+        for capability, button in self.capability_buttons.items():
+            button.setText(base_labels[capability])
+            button.setVisible(visible[capability])
+            button.setEnabled(bool(referenced_ids))
+        progress_type = {
+            "tts": "review",
+            "dictation": "dictation",
+            "speaking": "speaking",
+            "vocabulary": "vocabulary",
+            "review": "review",
+        }
+        if unit is None:
+            return
+        for capability, activity_type in progress_type.items():
+            button = self.capability_buttons[capability]
+            if not visible[capability]:
+                continue
+            configured_ids = {
+                sentence_id
+                for activity in lesson.activities
+                if self._progress_activity_type(activity.activity_type) == activity_type
+                for sentence_id in activity.sentence_ids
+            }
+            target_ids = configured_ids or set(referenced_ids)
+            try:
+                states = [
+                    self.progress.get_activity_progress(
+                        course.course_id,
+                        sentences[sentence_id].stable_key,
+                        activity_type,  # type: ignore[arg-type]
+                    ).status
+                    for sentence_id in target_ids
+                    if sentence_id in sentences
+                ]
+            except Exception as exc:
+                self._log_progress_error(course, lesson, exc)
+                button.setText(button.text().split(" · ")[0] + " · 状态不可用")
+                continue
+            if states and all(state == "completed" for state in states):
+                button.setText(button.text().split(" · ")[0] + " · 已完成")
+
     def _lesson_status(self, course: Course, lesson: CourseLesson) -> str:
         try:
             summary = self.progress.get_lesson_progress(course.course_id, lesson.lesson_id)
@@ -544,17 +649,18 @@ class CoursePage(QWidget):
                 return "已完成"
             found = self._find_lesson(course, lesson.lesson_id)
             unit = found[0] if found else None
-            required_ids = {
-                sentence_id
+            sentence_by_id = {sentence.sentence_id: sentence for sentence in unit.sentences} if unit is not None else {}
+            states = [
+                self.progress.get_activity_progress(
+                    course.course_id,
+                    sentence_by_id[sentence_id].stable_key,
+                    self._progress_activity_type(activity.activity_type),
+                ).status
                 for activity in lesson.activities
                 if activity.required
                 for sentence_id in activity.sentence_ids
-            }
-            states = [
-                self.progress.get_item_progress(course.course_id, sentence.stable_key).status
-                for sentence in unit.sentences
-                if unit is not None and sentence.sentence_id in required_ids
-            ] if unit is not None else []
+                if sentence_id in sentence_by_id
+            ]
             if summary.completed_required_items or "in_progress" in states:
                 return f"学习中 · {summary.completion_percentage:.0f}%"
             if "skipped" in states:
@@ -563,6 +669,35 @@ class CoursePage(QWidget):
         except Exception as exc:
             self._log_progress_error(course, lesson, exc)
             return "状态不可用"
+
+    def _sentence_activity_status(
+        self,
+        course: Course,
+        lesson: CourseLesson,
+        sentence_id: str,
+        item_stable_key: str,
+    ) -> str:
+        labels: list[str] = []
+        for activity in lesson.activities:
+            if sentence_id not in activity.sentence_ids:
+                continue
+            activity_type = self._progress_activity_type(activity.activity_type)
+            state = self.progress.get_activity_progress(
+                course.course_id, item_stable_key, activity_type
+            ).status
+            label = _ACTIVITY_TYPE_TEXT.get(activity.activity_type, activity.activity_type)
+            labels.append(f"{label} {_ITEM_STATUS_TEXT.get(state, state)}")
+        return " · ".join(labels) or "未开始"
+
+    @staticmethod
+    def _progress_activity_type(activity_type: str):
+        return {
+            "fsrs": "review",
+            "listening": "review",
+            "reading": "typing",
+            "translation": "typing",
+            "self_test": "typing",
+        }.get(activity_type, activity_type)
 
     def _unit_status(self, course: Course, unit: CourseUnit) -> str:
         try:

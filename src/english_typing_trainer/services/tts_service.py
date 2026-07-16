@@ -10,6 +10,7 @@ from threading import Event, Lock
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.database.tts_repository import TTSAudioCacheRepository
 from english_typing_trainer.models.tts import AudioCacheStats, CachedAudio, TTSRequest
+from english_typing_trainer.models.learning_content import LearningContentRef
 from english_typing_trainer.services.tts_provider import TTSProvider, TTSProviderError
 
 
@@ -34,8 +35,34 @@ class TTSService:
         }
         return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
+    def course_cache_key(
+        self, content_ref: LearningContentRef, request: TTSRequest
+    ) -> str:
+        payload = {
+            "source_type": content_ref.source_type,
+            "item_stable_key": content_ref.item_stable_key,
+            "content_version": content_ref.content_version,
+            "provider": request.provider,
+            "model": request.model,
+            "voice_id": request.voice_id,
+            "speed": request.speed,
+            "volume": request.volume,
+            "pitch": request.pitch,
+            "format": request.audio_format,
+        }
+        return hashlib.sha256(
+            json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+
     def get_cached(self, request: TTSRequest) -> CachedAudio | None:
-        key = self.cache_key(request)
+        return self._get_cached_by_key(self.cache_key(request))
+
+    def get_cached_course(
+        self, content_ref: LearningContentRef, request: TTSRequest
+    ) -> CachedAudio | None:
+        return self._get_cached_by_key(self.course_cache_key(content_ref, request))
+
+    def _get_cached_by_key(self, key: str) -> CachedAudio | None:
         with self._database.independent_connection() as connection:
             row = self._repository.get(connection, key)
         if row is None:
@@ -49,10 +76,42 @@ class TTSService:
         return CachedAudio(key, path, row["audio_format"], row["size_bytes"], row["duration_ms"])
 
     def get_or_generate(self, provider: TTSProvider, request: TTSRequest, *, cancel_event: Event | None = None) -> CachedAudio:
-        cached = self.get_cached(request)
+        return self._get_or_generate(
+            provider,
+            request,
+            key=self.cache_key(request),
+            course_content=False,
+            cancel_event=cancel_event,
+        )
+
+    def get_or_generate_course(
+        self,
+        provider: TTSProvider,
+        request: TTSRequest,
+        content_ref: LearningContentRef,
+        *,
+        cancel_event: Event | None = None,
+    ) -> CachedAudio:
+        return self._get_or_generate(
+            provider,
+            request,
+            key=self.course_cache_key(content_ref, request),
+            course_content=True,
+            cancel_event=cancel_event,
+        )
+
+    def _get_or_generate(
+        self,
+        provider: TTSProvider,
+        request: TTSRequest,
+        *,
+        key: str,
+        course_content: bool,
+        cancel_event: Event | None,
+    ) -> CachedAudio:
+        cached = self._get_cached_by_key(key)
         if cached:
             return cached
-        key = self.cache_key(request)
         with self._lock:
             event = self._inflight.get(key)
             owner = event is None
@@ -63,7 +122,7 @@ class TTSService:
             while not event.wait(0.05):
                 if cancel_event and cancel_event.is_set():
                     raise TTSProviderError("cancelled", "语音生成已取消。")
-            cached = self.get_cached(request)
+            cached = self._get_cached_by_key(key)
             if cached:
                 return cached
             raise TTSProviderError("generation_failed", "语音生成未能完成。")
@@ -80,9 +139,19 @@ class TTSService:
                 raise TTSProviderError("save_failed", "音频缓存保存失败。") from exc
             text_hash = hashlib.sha256(self.normalize_text(request.text).encode("utf-8")).hexdigest()
             with self._database.independent_transaction() as connection:
-                self._repository.complete(
-                    connection, cache_key=key, request=request, text_hash=text_hash,
-                    file_path=file_name, duration_ms=result.duration_ms, size_bytes=destination.stat().st_size,
+                complete = (
+                    self._repository.complete_course
+                    if course_content
+                    else self._repository.complete
+                )
+                complete(
+                    connection,
+                    cache_key=key,
+                    request=request,
+                    text_hash=text_hash,
+                    file_path=file_name,
+                    duration_ms=result.duration_ms,
+                    size_bytes=destination.stat().st_size,
                 )
             return CachedAudio(key, destination, result.audio_format, destination.stat().st_size, result.duration_ms)
         finally:

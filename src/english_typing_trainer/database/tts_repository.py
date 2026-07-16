@@ -28,6 +28,49 @@ class TTSAudioCacheRepository:
              duration_ms, size_bytes, _now()),
         )
 
+    def complete_course(
+        self,
+        connection: sqlite3.Connection,
+        *,
+        cache_key: str,
+        request,
+        text_hash: str,
+        file_path: str,
+        duration_ms: int | None,
+        size_bytes: int,
+    ) -> None:
+        connection.execute(
+            """
+            INSERT INTO tts_audio_cache(
+                cache_key, provider, model, voice_id, speed, volume, pitch,
+                text_hash, text_preview, file_path, audio_format, duration_ms,
+                size_bytes, created_at, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?, ?, 'completed')
+            ON CONFLICT(cache_key) DO UPDATE SET
+                file_path=excluded.file_path,
+                duration_ms=excluded.duration_ms,
+                size_bytes=excluded.size_bytes,
+                text_preview='',
+                status='completed',
+                error_message=''
+            """,
+            (
+                cache_key,
+                request.provider,
+                request.model,
+                request.voice_id,
+                request.speed,
+                request.volume,
+                request.pitch,
+                text_hash,
+                file_path,
+                request.audio_format,
+                duration_ms,
+                size_bytes,
+                _now(),
+            ),
+        )
+
     def complete_external(self, connection: sqlite3.Connection, *, cache_key: str, source_url_hash: str,
                           text_preview: str, file_path: str, audio_format: str, size_bytes: int) -> None:
         connection.execute(

@@ -6,6 +6,9 @@ from typing import cast
 
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.models.course_progress import (
+    CourseActivityProgress,
+    CourseActivityStatus,
+    CourseActivityType,
     CourseEnrollment,
     CourseItemProgress,
     EnrollmentStatus,
@@ -233,6 +236,104 @@ class CourseProgressRepository:
         assert row is not None
         return self._map_item_progress(row)
 
+    def get_activity_progress(
+        self,
+        course_stable_key: str,
+        item_stable_key: str,
+        activity_type: CourseActivityType,
+    ) -> CourseActivityProgress | None:
+        row = self.database.connect().execute(
+            """
+            SELECT p.*, e.course_stable_key
+            FROM course_activity_progress p
+            JOIN course_enrollments e ON e.id = p.enrollment_id
+            WHERE e.course_stable_key = ?
+              AND p.item_stable_key = ?
+              AND p.activity_type = ?
+            """,
+            (course_stable_key, item_stable_key, activity_type),
+        ).fetchone()
+        return self._map_activity_progress(row) if row is not None else None
+
+    def list_activity_progress(
+        self, course_stable_key: str
+    ) -> tuple[CourseActivityProgress, ...]:
+        rows = self.database.connect().execute(
+            """
+            SELECT p.*, e.course_stable_key
+            FROM course_activity_progress p
+            JOIN course_enrollments e ON e.id = p.enrollment_id
+            WHERE e.course_stable_key = ?
+            ORDER BY p.id
+            """,
+            (course_stable_key,),
+        ).fetchall()
+        return tuple(self._map_activity_progress(row) for row in rows)
+
+    def save_activity_progress(
+        self, progress: CourseActivityProgress, now: datetime
+    ) -> CourseActivityProgress:
+        stamp = self._serialize_datetime(now)
+        created_at = self._serialize_datetime(progress.created_at or now)
+        with self.database.transaction() as connection:
+            enrollment = connection.execute(
+                "SELECT id FROM course_enrollments WHERE course_stable_key = ?",
+                (progress.course_stable_key,),
+            ).fetchone()
+            if enrollment is None:
+                raise RuntimeError(
+                    f"Missing enrollment for {progress.course_stable_key!r}"
+                )
+            enrollment_id = int(enrollment["id"])
+            connection.execute(
+                """
+                INSERT INTO course_activity_progress(
+                    enrollment_id, item_stable_key, activity_type, status,
+                    attempt_count, best_score, latest_score, content_version,
+                    completed_at, last_studied_at, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(enrollment_id, item_stable_key, activity_type) DO UPDATE SET
+                    status = excluded.status,
+                    attempt_count = excluded.attempt_count,
+                    best_score = excluded.best_score,
+                    latest_score = excluded.latest_score,
+                    content_version = excluded.content_version,
+                    completed_at = COALESCE(
+                        course_activity_progress.completed_at,
+                        excluded.completed_at
+                    ),
+                    last_studied_at = excluded.last_studied_at,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    enrollment_id,
+                    progress.item_stable_key,
+                    progress.activity_type,
+                    progress.status,
+                    progress.attempt_count,
+                    progress.best_score,
+                    progress.latest_score,
+                    progress.content_version,
+                    self._serialize_optional_datetime(progress.completed_at),
+                    self._serialize_optional_datetime(progress.last_studied_at),
+                    created_at,
+                    stamp,
+                ),
+            )
+            row = connection.execute(
+                """
+                SELECT p.*, e.course_stable_key
+                FROM course_activity_progress p
+                JOIN course_enrollments e ON e.id = p.enrollment_id
+                WHERE p.enrollment_id = ?
+                  AND p.item_stable_key = ?
+                  AND p.activity_type = ?
+                """,
+                (enrollment_id, progress.item_stable_key, progress.activity_type),
+            ).fetchone()
+        assert row is not None
+        return self._map_activity_progress(row)
+
     @classmethod
     def _map_enrollment(cls, row: sqlite3.Row) -> CourseEnrollment:
         return CourseEnrollment(
@@ -263,6 +364,29 @@ class CourseProgressRepository:
             completed_at=cls._parse_optional_datetime(row["completed_at"]),
             last_studied_at=cls._parse_optional_datetime(row["last_studied_at"]),
             content_version=str(row["content_version"]),
+            created_at=cls._parse_datetime(row["created_at"]),
+            updated_at=cls._parse_datetime(row["updated_at"]),
+        )
+
+    @classmethod
+    def _map_activity_progress(cls, row: sqlite3.Row) -> CourseActivityProgress:
+        return CourseActivityProgress(
+            course_stable_key=str(row["course_stable_key"]),
+            item_stable_key=str(row["item_stable_key"]),
+            activity_type=cast(CourseActivityType, str(row["activity_type"])),
+            status=cast(CourseActivityStatus, str(row["status"])),
+            attempt_count=int(row["attempt_count"]),
+            best_score=(
+                float(row["best_score"]) if row["best_score"] is not None else None
+            ),
+            latest_score=(
+                float(row["latest_score"])
+                if row["latest_score"] is not None
+                else None
+            ),
+            content_version=str(row["content_version"]),
+            completed_at=cls._parse_optional_datetime(row["completed_at"]),
+            last_studied_at=cls._parse_optional_datetime(row["last_studied_at"]),
             created_at=cls._parse_datetime(row["created_at"]),
             updated_at=cls._parse_datetime(row["updated_at"]),
         )

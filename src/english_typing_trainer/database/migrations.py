@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 
-LATEST_SCHEMA_VERSION = 12
+LATEST_SCHEMA_VERSION = 13
 
 
 class MigrationRunner:
@@ -55,6 +55,9 @@ class MigrationRunner:
                 current_version = 11
             if current_version < 12:
                 self._apply_version_12(connection)
+                current_version = 12
+            if current_version < 13:
+                self._apply_version_13(connection)
             connection.execute("RELEASE SAVEPOINT migrate_schema")
         except Exception:
             connection.execute("ROLLBACK TO SAVEPOINT migrate_schema")
@@ -848,6 +851,135 @@ class MigrationRunner:
             connection.execute(statement)
         connection.execute("DELETE FROM schema_version")
         connection.execute("INSERT INTO schema_version(version) VALUES (12)")
+
+    def _apply_version_13(self, connection: sqlite3.Connection) -> None:
+        """Add stable, body-free persistence for built-in course capabilities."""
+        for column_name, definition in (
+            ("source_type", "TEXT NOT NULL DEFAULT 'article'"),
+            ("course_stable_key", "TEXT NOT NULL DEFAULT ''"),
+            ("item_stable_key", "TEXT NOT NULL DEFAULT ''"),
+            ("content_version", "TEXT NOT NULL DEFAULT ''"),
+        ):
+            self._ensure_column(
+                connection,
+                table_name="vocabulary_contexts",
+                column_name=column_name,
+                definition=definition,
+            )
+
+        statements = [
+            """
+            CREATE TABLE IF NOT EXISTS course_activity_progress (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                enrollment_id INTEGER NOT NULL,
+                item_stable_key TEXT NOT NULL,
+                activity_type TEXT NOT NULL
+                    CHECK(activity_type IN ('typing','dictation','speaking','vocabulary','review')),
+                status TEXT NOT NULL DEFAULT 'not_started'
+                    CHECK(status IN ('not_started','in_progress','completed','skipped','failed')),
+                attempt_count INTEGER NOT NULL DEFAULT 0 CHECK(attempt_count >= 0),
+                best_score REAL,
+                latest_score REAL,
+                content_version TEXT NOT NULL,
+                completed_at TEXT,
+                last_studied_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (enrollment_id) REFERENCES course_enrollments(id) ON DELETE CASCADE,
+                UNIQUE(enrollment_id, item_stable_key, activity_type)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS course_capability_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                enrollment_id INTEGER NOT NULL,
+                item_stable_key TEXT NOT NULL,
+                capability_type TEXT NOT NULL
+                    CHECK(capability_type IN ('dictation','speaking')),
+                status TEXT NOT NULL
+                    CHECK(status IN ('completed','failed','cancelled','not_configured')),
+                score REAL,
+                accuracy_score REAL,
+                fluency_score REAL,
+                completeness_score REAL,
+                prosody_score REAL,
+                error_count INTEGER NOT NULL DEFAULT 0 CHECK(error_count >= 0),
+                omitted_count INTEGER NOT NULL DEFAULT 0 CHECK(omitted_count >= 0),
+                inserted_count INTEGER NOT NULL DEFAULT 0 CHECK(inserted_count >= 0),
+                replay_count INTEGER NOT NULL DEFAULT 0 CHECK(replay_count >= 0),
+                duration_ms INTEGER NOT NULL DEFAULT 0 CHECK(duration_ms >= 0),
+                provider TEXT NOT NULL DEFAULT '',
+                content_version TEXT NOT NULL,
+                attempted_at TEXT NOT NULL,
+                FOREIGN KEY (enrollment_id) REFERENCES course_enrollments(id) ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS course_review_cards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                enrollment_id INTEGER NOT NULL,
+                item_stable_key TEXT NOT NULL,
+                card_type TEXT NOT NULL
+                    CHECK(card_type IN ('sentence_listening','sentence_review')),
+                fsrs_card_json TEXT NOT NULL,
+                due_at_utc TEXT NOT NULL,
+                last_reviewed_at_utc TEXT,
+                state TEXT NOT NULL DEFAULT 'learning',
+                is_suspended INTEGER NOT NULL DEFAULT 0,
+                content_version TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (enrollment_id) REFERENCES course_enrollments(id) ON DELETE CASCADE,
+                UNIQUE(enrollment_id, item_stable_key, card_type)
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS course_review_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                course_review_card_id INTEGER NOT NULL,
+                rating TEXT NOT NULL CHECK(rating IN ('again','hard','good','easy')),
+                review_log_json TEXT NOT NULL,
+                previous_card_json TEXT NOT NULL,
+                reviewed_at_utc TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (course_review_card_id) REFERENCES course_review_cards(id) ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS idx_course_activity_status
+            ON course_activity_progress(enrollment_id, activity_type, status)
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS idx_course_attempt_item
+            ON course_capability_attempts(
+                enrollment_id, item_stable_key, capability_type, attempted_at DESC
+            )
+            """,
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_vocab_context_course_unique
+            ON vocabulary_contexts(
+                vocabulary_entry_id, course_stable_key, item_stable_key,
+                start_offset, end_offset
+            )
+            WHERE source_type = 'built_in_course'
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS idx_vocab_context_course_item
+            ON vocabulary_contexts(source_type, course_stable_key, item_stable_key)
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS idx_course_review_due
+            ON course_review_cards(is_suspended, due_at_utc)
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS idx_course_review_logs_card
+            ON course_review_logs(course_review_card_id, reviewed_at_utc DESC)
+            """,
+        ]
+        for statement in statements:
+            connection.execute(statement)
+        connection.execute("DELETE FROM schema_version")
+        connection.execute("INSERT INTO schema_version(version) VALUES (13)")
 
     def _ensure_column(
         self,

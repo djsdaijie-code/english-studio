@@ -24,4 +24,4 @@ def test_foundations_sample_stays_small_and_spans_two_days() -> None:
 
 
 def test_course_progress_round_upgrades_database_schema_once() -> None:
-    assert LATEST_SCHEMA_VERSION == 12
+    assert LATEST_SCHEMA_VERSION == 13

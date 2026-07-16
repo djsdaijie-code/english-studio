@@ -24,6 +24,7 @@ from english_typing_trainer.services.dictionary_audio import DictionaryAudioServ
 from english_typing_trainer.services.article_word_index import ArticleWordIndexService
 from english_typing_trainer.database.learning_repository import LearningRepository
 from english_typing_trainer.database.course_progress_repository import CourseProgressRepository
+from english_typing_trainer.database.course_capability_repository import CourseCapabilityRepository
 from english_typing_trainer.services.learning_progress import LearningProgressService
 from english_typing_trainer.services.learning_time import LearningTimeTracker
 from english_typing_trainer.services.fsrs_review import FsrsReviewService
@@ -34,6 +35,7 @@ from english_typing_trainer.services.data_management import DataManagementServic
 from english_typing_trainer.courses.repository import CourseRepository
 from english_typing_trainer.services.course_progress import CourseProgressService
 from english_typing_trainer.services.course_learning import CourseLearningService
+from english_typing_trainer.services.course_capabilities import CourseCapabilityService
 
 
 @dataclass(slots=True)
@@ -71,6 +73,8 @@ class AppContext:
     course_progress_repository: CourseProgressRepository
     course_progress_service: CourseProgressService
     course_learning_service: CourseLearningService
+    course_capability_repository: CourseCapabilityRepository
+    course_capability_service: CourseCapabilityService
 
 
 def build_app_context(
@@ -114,6 +118,19 @@ def build_app_context(
     course_progress_repository = CourseProgressRepository(database)
     course_progress_service = CourseProgressService(course_repository, course_progress_repository)
     course_learning_service = CourseLearningService(course_repository, course_progress_service)
+    course_capability_repository = CourseCapabilityRepository(database)
+    course_capability_service = CourseCapabilityService(
+        course_repository,
+        course_progress_service,
+        course_capability_repository,
+        vocabulary_learning_service,
+        article_word_index_service,
+        fsrs_review_service,
+    )
+    vocabulary_learning_service.set_context_resolver(
+        course_capability_service.resolve_context
+    )
+    fsrs_review_service.set_context_resolver(course_capability_service.resolve_context)
     if credential_store is None:
         credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
             WindowsCredentialStore("English Studio/DeepSeek API", "DeepSeek API"), WindowsCredentialStore()
@@ -165,4 +182,6 @@ def build_app_context(
         course_progress_repository=course_progress_repository,
         course_progress_service=course_progress_service,
         course_learning_service=course_learning_service,
+        course_capability_repository=course_capability_repository,
+        course_capability_service=course_capability_service,
     )

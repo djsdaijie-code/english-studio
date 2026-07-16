@@ -69,11 +69,17 @@ from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
 from english_typing_trainer.ui.dictation_page import DictationPage
 from english_typing_trainer.ui.pronunciation_page import PronunciationPage
 from english_typing_trainer.ui.course_page import CoursePage
+from english_typing_trainer.ui.course_vocabulary_dialog import CourseVocabularyDialog
 from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
 from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
 from english_typing_trainer.models.vocabulary import VocabularyAttempt
 from english_typing_trainer.models.pronunciation import PronunciationRequest
+from english_typing_trainer.models.pronunciation import PronunciationResult
+from english_typing_trainer.models.learning_content import (
+    CourseCapabilityItem,
+    LearningContentRef,
+)
 from english_typing_trainer.services.pronunciation_provider import AzurePronunciationAssessmentProvider
 from english_typing_trainer.services.course_learning import CourseLearningSession
 
@@ -244,6 +250,8 @@ class MainWindow(QMainWindow):
         self.articles: list[Article] = []
         self.current_material: PracticeMaterial | None = None
         self.current_course_session: CourseLearningSession | None = None
+        self.current_course_capability_item: CourseCapabilityItem | None = None
+        self.current_course_return: tuple[str, str] | None = None
         self.current_practice_saved = True
         self.preview_special_material: PracticeMaterial | None = None
         self._logger = logging.getLogger(__name__)
@@ -278,6 +286,8 @@ class MainWindow(QMainWindow):
         self._tts_workers: set[TTSWorker] = set()
         self._active_speech_control = None
         self._active_speech_text = ""
+        self._active_speech_ref: LearningContentRef | None = None
+        self._active_course_activity_ref: LearningContentRef | None = None
         self.audio_playback = AudioPlaybackService(self)
         self.audio_playback.state_changed.connect(self._speech_playback_state_changed)
         self.audio_playback.playback_failed.connect(self._speech_playback_failed)
@@ -307,6 +317,7 @@ class MainWindow(QMainWindow):
             self.context.course_progress_service,
         )
         self.course_page.lesson_start_requested.connect(self._start_course_lesson)
+        self.course_page.capability_requested.connect(self._start_course_capability)
         self.special_practice_page = SpecialPracticePage()
         self.special_practice_page.generate_requested.connect(self._generate_special_preview)
         self.special_practice_page.start_preview_requested.connect(self._start_preview_special_practice)
@@ -330,7 +341,7 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.dictation_requested.connect(self._start_dictation)
         self.current_vocabulary_article_id = None
         self.word_learning_page = WordLearningPage()
-        self.word_learning_page.back_requested.connect(self._show_vocabulary)
+        self.word_learning_page.back_requested.connect(self._leave_word_learning)
         self.word_learning_page.attempt_completed.connect(self._record_vocabulary_attempt)
         self.word_learning_page.play_word_requested.connect(self._play_word_from_learning)
         self.word_learning_page.play_sentence_requested.connect(lambda text:self._request_speech(text,self.settings.tts_speed,self.practice_view.speech_controls) if text else None)
@@ -345,11 +356,14 @@ class MainWindow(QMainWindow):
         self.fsrs_review_page.learning_activity.connect(self._track_fsrs_learning_activity)
         self.fsrs_review_page.dictation_requested.connect(self._start_dictation)
         self.dictation_page = DictationPage(self.context.dictation_service)
-        self.dictation_page.back_requested.connect(self._show_vocabulary)
+        self.dictation_page.back_requested.connect(self._leave_dictation)
         self.dictation_page.audio_requested.connect(self._play_dictation_audio)
         self.dictation_page.attempt_completed.connect(self._save_dictation_attempt)
         self.dictation_page.rating_requested.connect(self._rate_dictation_card)
         self.dictation_page.learning_activity.connect(self._track_dictation_learning_activity)
+        self.dictation_page.course_audio_requested.connect(self._play_course_dictation_audio)
+        self.dictation_page.course_attempt_completed.connect(self._save_course_dictation_attempt)
+        self.dictation_page.course_rating_requested.connect(self._rate_course_dictation_card)
         self.pronunciation_page = PronunciationPage()
         self.pronunciation_page.back_requested.connect(self._leave_pronunciation)
         self.pronunciation_page.standard_audio_requested.connect(self._play_pronunciation_reference)
@@ -358,6 +372,10 @@ class MainWindow(QMainWindow):
         self.pronunciation_page.cancel_requested.connect(self._cancel_pronunciation_recording)
         self.pronunciation_page.playback_requested.connect(self._play_pronunciation_recording)
         self.pronunciation_page.assess_requested.connect(self._assess_pronunciation)
+        self.sentence_practice_view.course_dictation_requested.connect(self._start_current_course_dictation)
+        self.sentence_practice_view.course_pronunciation_requested.connect(self._start_current_course_pronunciation)
+        self.sentence_practice_view.course_words_requested.connect(self._show_current_course_words)
+        self.sentence_practice_view.course_review_requested.connect(self._add_current_course_review)
         self.context.recording_service.state_changed.connect(self._pronunciation_recording_state)
         self.context.recording_service.failed.connect(lambda message: self.pronunciation_page.status.setText(message))
         self._vocabulary_workers: set[VocabularyTask] = set()
@@ -636,6 +654,13 @@ class MainWindow(QMainWindow):
 
     def _track_dictation_learning_activity(self, event_type: str, vocabulary_id: object) -> None:
         item = self.dictation_page.current
+        if getattr(self.dictation_page, "_course_mode", False):
+            update = self.context.learning_time_tracker.activity(
+                f"course_dictation_{event_type}"
+            )
+            self._handle_learning_update(update)
+            self._refresh_daily_learning()
+            return
         article_id = item.context.article_id if item and item.context else None
         update = self.context.learning_time_tracker.activity(event_type, related_article_id=article_id, related_vocabulary_id=int(vocabulary_id) if vocabulary_id else None)
         self._handle_learning_update(update)
@@ -700,6 +725,19 @@ class MainWindow(QMainWindow):
         self._switch_page(2)
         self._refresh_vocabulary_page()
 
+    def _leave_word_learning(self) -> None:
+        if self.current_course_session is not None:
+            self.stack.setCurrentWidget(self.sentence_practice_view)
+            self.sidebar.hide()
+            return
+        if self.current_course_return is not None:
+            course_id, lesson_id = self.current_course_return
+            self.current_course_return = None
+            self._show_courses()
+            self.course_page.show_lesson(course_id, lesson_id)
+            return
+        self._show_vocabulary()
+
     def _start_fsrs_review(self) -> None:
         queue = self.context.fsrs_review_service.build_today_queue(
             new_limit=self.settings.fsrs_new_cards_per_day,
@@ -741,10 +779,26 @@ class MainWindow(QMainWindow):
 
     def _leave_pronunciation(self) -> None:
         self._cancel_pronunciation_recording()
+        if self.pronunciation_page.course_item is not None:
+            self.pronunciation_page.course_item = None
+            self.current_course_capability_item = None
+            if self.current_course_session is not None:
+                self.stack.setCurrentWidget(self.sentence_practice_view)
+                self.sidebar.hide()
+                return
+            if self.current_course_return is not None:
+                course_id, lesson_id = self.current_course_return
+                self.current_course_return = None
+                self._show_courses()
+                self.course_page.show_lesson(course_id, lesson_id)
+                return
         self._show_vocabulary()
 
     def _play_pronunciation_reference(self, text: str, speed: float) -> None:
         item = self.pronunciation_page
+        if item.course_item is not None:
+            self._request_course_speech(text, speed, item.course_item.ref)
+            return
         if item.target_type.currentData() == "word" and item.entry is not None:
             self._play_word_from_learning(item.entry, item.context, focus_widget=self.pronunciation_page)
         else:
@@ -781,18 +835,29 @@ class MainWindow(QMainWindow):
         request = PronunciationRequest(page.reference_text(), self.settings.pronunciation_locale, path)
         entry_id = page.entry.id if page.entry else None
         context_id = page.context.id if page.context else None
+        course_item = page.course_item
         if not key or not self.settings.pronunciation_region:
-            attempt = self.context.pronunciation_assessment_service.assess(
-                request, provider, target_type=target_type, entry_id=entry_id, context_id=context_id,
-                keep_audio=self.settings.pronunciation_keep_recordings,
-            )
-            self._pronunciation_assessed(attempt, None)
+            if course_item is not None:
+                result = provider.assess(request)
+                self._course_pronunciation_result_ready(
+                    result, None, request, course_item
+                )
+            else:
+                attempt = self.context.pronunciation_assessment_service.assess(
+                    request, provider, target_type=target_type, entry_id=entry_id, context_id=context_id,
+                    keep_audio=self.settings.pronunciation_keep_recordings,
+                )
+                self._pronunciation_assessed(attempt, None)
             return
         page.status.setText("正在准备评分请求……")
         task = VocabularyTask(lambda: provider.assess(request))
         self._vocabulary_workers.add(task)
-        task.signals.completed.connect(lambda result, worker=task, req=request, target=target_type, entry=entry_id, context=context_id: self._pronunciation_result_ready(result, worker, req, target, entry, context))
-        task.signals.failed.connect(lambda error, worker=task: self._pronunciation_assessment_failed(str(error), worker))
+        if course_item is not None:
+            task.signals.completed.connect(lambda result, worker=task, req=request, item=course_item: self._course_pronunciation_result_ready(result, worker, req, item))
+            task.signals.failed.connect(lambda error, worker=task, req=request, item=course_item: self._course_pronunciation_failed(str(error), worker, req, item))
+        else:
+            task.signals.completed.connect(lambda result, worker=task, req=request, target=target_type, entry=entry_id, context=context_id: self._pronunciation_result_ready(result, worker, req, target, entry, context))
+            task.signals.failed.connect(lambda error, worker=task: self._pronunciation_assessment_failed(str(error), worker))
         self._thread_pool.start(task)
 
     def _pronunciation_assessed(self, attempt, worker) -> None:
@@ -809,12 +874,94 @@ class MainWindow(QMainWindow):
         )
         self._pronunciation_assessed(attempt, worker)
 
+    def _course_pronunciation_result_ready(
+        self, result, worker, request, item: CourseCapabilityItem
+    ) -> None:
+        if worker is not None:
+            self._vocabulary_workers.discard(worker)
+        try:
+            self.context.course_capability_service.record_speaking(item.ref, result)
+            self.pronunciation_page.show_result(result)
+            if self.current_course_return:
+                self.course_page.show_lesson(*self.current_course_return)
+        except Exception as exc:
+            self._logger.error(
+                "course speaking save failed item_stable_key=%s reason=%s",
+                item.ref.item_stable_key,
+                exc,
+            )
+            self.pronunciation_page.status.setText(f"评分结果暂时无法保存：{exc}")
+        finally:
+            if not self.settings.pronunciation_keep_recordings:
+                request.audio_path.unlink(missing_ok=True)
+                self.pronunciation_page.audio_path = None
+
+    def _course_pronunciation_failed(
+        self, message: str, worker, request, item: CourseCapabilityItem
+    ) -> None:
+        result = PronunciationResult(
+            status="failed",
+            provider="azure",
+            error_code="request_failed",
+            message=message,
+        )
+        self._course_pronunciation_result_ready(result, worker, request, item)
+
     def _pronunciation_assessment_failed(self, message: str, worker) -> None:
         self._vocabulary_workers.discard(worker)
         self.pronunciation_page.status.setText(f"评分失败：{message}")
 
     def _save_dictation_attempt(self, attempt) -> None:
         self.context.dictation_service.save(attempt)
+
+    def _save_course_dictation_attempt(self, item, payload) -> None:
+        try:
+            self.context.course_capability_service.record_dictation(
+                item.ref,
+                score=payload.get("score"),
+                error_count=int(payload.get("error_count", 0)),
+                omitted_count=int(payload.get("omitted_count", 0)),
+                inserted_count=int(payload.get("inserted_count", 0)),
+                replay_count=int(payload.get("replay_count", 0)),
+                duration_ms=int(payload.get("duration_ms", 0)),
+            )
+            if self.current_course_return:
+                self.course_page.show_lesson(*self.current_course_return)
+        except Exception as exc:
+            self._logger.error(
+                "course dictation save failed item_stable_key=%s reason=%s",
+                item.ref.item_stable_key,
+                exc,
+            )
+            self.dictation_page.feedback.setText(f"课程听写结果暂时无法保存：{exc}")
+
+    def _rate_course_dictation_card(self, content_ref, rating: str) -> None:
+        try:
+            self.context.course_capability_service.rate_existing_sentence_review(
+                content_ref,
+                rating,
+            )
+        except Exception as exc:
+            self._logger.error(
+                "course dictation rating failed item_stable_key=%s reason=%s",
+                content_ref.item_stable_key,
+                exc,
+            )
+
+    def _leave_dictation(self) -> None:
+        self.audio_playback.stop()
+        self.current_course_capability_item = None
+        if self.current_course_session is not None:
+            self.stack.setCurrentWidget(self.sentence_practice_view)
+            self.sidebar.hide()
+            return
+        if self.current_course_return is not None:
+            course_id, lesson_id = self.current_course_return
+            self.current_course_return = None
+            self._show_courses()
+            self.course_page.show_lesson(course_id, lesson_id)
+            return
+        self._show_vocabulary()
 
     def _rate_dictation_card(self, entry_id: int, rating: str) -> None:
         card = self.context.fsrs_review_service.ensure_listening_card(entry_id)
@@ -1080,6 +1227,8 @@ class MainWindow(QMainWindow):
 
     def _start_course_lesson(self, course_id: str, lesson_id: str, session_mode: str) -> None:
         self._persist_current_practice()
+        self.current_course_capability_item = None
+        self.current_course_return = (course_id, lesson_id)
         try:
             if self.context.course_progress_service.get_enrollment(course_id) is None:
                 self.context.course_progress_service.enroll(course_id)
@@ -1124,6 +1273,7 @@ class MainWindow(QMainWindow):
             self.current_material,
             list(course_session.typing_sentences),
             course_session.chinese_translations,
+            course_session.activity_types_by_item,
             self.settings,
         )
         self.stack.setCurrentWidget(self.sentence_practice_view)
@@ -1133,19 +1283,230 @@ class MainWindow(QMainWindow):
             button.style().unpolish(button)
             button.style().polish(button)
 
+    def _start_course_capability(
+        self, course_id: str, lesson_id: str, capability: str
+    ) -> None:
+        try:
+            items = self.context.course_capability_service.lesson_items(
+                course_id,
+                lesson_id,
+                capability if capability in {"dictation", "speaking"} else None,
+            )
+            if not items:
+                raise ValueError("本 Day 没有可用的课程句子。")
+            self.current_course_return = (course_id, lesson_id)
+            if capability == "tts":
+                listening = self.context.course_capability_service.lesson_items(
+                    course_id, lesson_id, "review"
+                )
+                item = (listening or items)[0]
+                self._request_course_speech(
+                    item.text,
+                    self.settings.tts_speed,
+                    item.ref,
+                    mark_listening=True,
+                )
+                return
+            if capability == "dictation":
+                self._open_course_dictation(items)
+                return
+            if capability == "speaking":
+                self._open_course_pronunciation(items[0])
+                return
+            if capability == "vocabulary":
+                words = self.context.course_capability_service.lesson_words(
+                    course_id, lesson_id
+                )
+                self._open_course_vocabulary(words)
+                return
+            if capability == "review":
+                for item in items:
+                    self.context.course_capability_service.ensure_sentence_review(
+                        item.ref, "sentence_listening"
+                    )
+                self._open_course_dictation(items)
+                return
+            raise ValueError(f"不支持的课程能力：{capability}")
+        except Exception as exc:
+            self._logger.error(
+                "course capability start failed course_id=%s lesson_id=%s capability=%s reason=%s",
+                course_id,
+                lesson_id,
+                capability,
+                exc,
+            )
+            QMessageBox.warning(self, "课程能力不可用", str(exc))
+
+    def _current_course_capability_item(self) -> CourseCapabilityItem | None:
+        session = self.current_course_session
+        if session is None:
+            return self.current_course_capability_item
+        if self.sentence_practice_view.learning is not None:
+            session.sync_index(self.sentence_practice_view.learning.current_index)
+        stable_key = session.current_item_stable_key
+        if stable_key is None:
+            return None
+        try:
+            return self.context.course_capability_service.item(
+                session.course_id, stable_key
+            )
+        except Exception as exc:
+            self._handle_course_state_error("课程内容已刷新", stable_key, exc)
+            return None
+
+    def _start_current_course_dictation(self) -> None:
+        item = self._current_course_capability_item()
+        if item is not None:
+            self.current_course_return = (
+                self.current_course_session.course_id,
+                self.current_course_session.lesson_id,
+            ) if self.current_course_session else self.current_course_return
+            self._open_course_dictation((item,))
+
+    def _start_current_course_pronunciation(self) -> None:
+        item = self._current_course_capability_item()
+        if item is not None:
+            self.current_course_return = (
+                self.current_course_session.course_id,
+                self.current_course_session.lesson_id,
+            ) if self.current_course_session else self.current_course_return
+            self._open_course_pronunciation(item)
+
+    def _show_current_course_words(self) -> None:
+        item = self._current_course_capability_item()
+        if item is not None:
+            words = tuple(
+                (item, occurrence)
+                for occurrence in self.context.course_capability_service.extract_words(
+                    item.ref
+                )
+            )
+            self._open_course_vocabulary(words)
+
+    def _add_current_course_review(self) -> None:
+        item = self._current_course_capability_item()
+        if item is None:
+            return
+        try:
+            self.context.course_capability_service.ensure_sentence_review(item.ref)
+            QMessageBox.information(self, "课程复习", "该句已加入课程 FSRS 复习。")
+        except Exception as exc:
+            QMessageBox.warning(self, "无法加入复习", str(exc))
+
+    def _open_course_dictation(
+        self, items: tuple[CourseCapabilityItem, ...]
+    ) -> None:
+        self.current_course_capability_item = items[0] if items else None
+        self.dictation_page.load_course_items(list(items))
+        self.stack.setCurrentWidget(self.dictation_page)
+        self.sidebar.hide()
+
+    def _open_course_pronunciation(self, item: CourseCapabilityItem) -> None:
+        self.current_course_capability_item = item
+        self.pronunciation_page.load_course_target(item)
+        self.stack.setCurrentWidget(self.pronunciation_page)
+        self.sidebar.hide()
+
+    def _open_course_vocabulary(self, words) -> None:
+        dialog = CourseVocabularyDialog(tuple(words), self)
+        if not dialog.exec() or dialog.selected is None:
+            return
+        item, occurrence = dialog.selected
+        try:
+            result = self.context.course_capability_service.collect_word(
+                item.ref,
+                occurrence.source_word,
+                start_offset=occurrence.start_offset,
+                end_offset=occurrence.end_offset,
+                typing_target_count=self.settings.vocabulary_typing_count,
+            )
+            if dialog.action == "review" and result.entry.id is not None:
+                self.context.course_capability_service.ensure_vocabulary_review(
+                    item.ref, result.entry.id, result.context.id
+                )
+            self._refresh_vocabulary_page()
+            if result.entry.id is not None:
+                self._start_vocabulary_enrichment(result.entry.id, result.context.id)
+                self._open_word_learning(result.entry.id)
+        except Exception as exc:
+            QMessageBox.warning(self, "课程词汇不可用", str(exc))
+
     def _active_practice_view(self):
         return self.sentence_practice_view if self.stack.currentWidget() is self.sentence_practice_view else self.practice_view
 
     def _request_speech(self, text: str, speed: float, controls=None) -> None:
-        if self.current_course_session is not None:
-            return
+        content_ref = None
+        mark_listening = False
+        if (
+            self.current_course_session is not None
+            and self.stack.currentWidget() is self.sentence_practice_view
+        ):
+            item = self._current_course_capability_item()
+            content_ref = item.ref if item is not None else None
+            mark_listening = bool(
+                item is not None and "review" in item.activity_types
+            )
+        self._request_speech_internal(
+            text,
+            speed,
+            controls,
+            content_ref,
+            mark_listening=mark_listening,
+        )
+
+    def _request_course_speech(
+        self,
+        text: str,
+        speed: float,
+        content_ref: LearningContentRef,
+        controls=None,
+        *,
+        mark_listening: bool = False,
+    ) -> None:
+        self._request_speech_internal(
+            text,
+            speed,
+            controls,
+            content_ref,
+            mark_listening=mark_listening,
+        )
+
+    def _request_speech_internal(
+        self,
+        text: str,
+        speed: float,
+        controls,
+        content_ref: LearningContentRef | None,
+        *,
+        mark_listening: bool = False,
+    ) -> None:
         request = TTSRequest(
             text=text, content_type="sentence", model=self.settings.tts_model,
             voice_id=self.settings.tts_voice_id, speed=speed,
         )
         self._active_speech_control = controls
         self._active_speech_text = text
-        cached = self.context.tts_service.get_cached(request)
+        self._active_speech_ref = content_ref
+        self._active_course_activity_ref = (
+            content_ref if mark_listening else None
+        )
+        if self._active_course_activity_ref is not None:
+            try:
+                self.context.course_capability_service.start_listening(
+                    self._active_course_activity_ref
+                )
+            except Exception as exc:
+                self._logger.error(
+                    "course listening start failed item_stable_key=%s reason=%s",
+                    self._active_course_activity_ref.item_stable_key,
+                    exc,
+                )
+                self._active_course_activity_ref = None
+        cached = (
+            self.context.tts_service.get_cached_course(content_ref, request)
+            if content_ref is not None
+            else self.context.tts_service.get_cached(request)
+        )
         if cached:
             self.context.tts_service.mark_played(cached.cache_key)
             self.audio_playback.toggle(cached.file_path)
@@ -1158,25 +1519,41 @@ class MainWindow(QMainWindow):
                 controls.set_state("error", str(exc))
             return
         if controls: controls.set_state("loading", "生成中")
-        worker = TTSWorker(self.context.tts_service, provider, request)
+        worker = TTSWorker(
+            self.context.tts_service, provider, request, content_ref=content_ref
+        )
         self._tts_workers.add(worker)
-        worker.signals.completed.connect(lambda item, audio, w=worker: self._speech_generated(item, audio, w))
-        worker.signals.failed.connect(lambda item, error, w=worker: self._speech_generation_failed(item, error, w))
+        worker.signals.completed.connect(lambda item, audio, w=worker, ref=content_ref: self._speech_generated(item, audio, w, ref))
+        worker.signals.failed.connect(lambda item, error, w=worker, ref=content_ref: self._speech_generation_failed(item, error, w, ref))
         self._thread_pool.start(worker)
 
-    def _speech_generated(self, request, audio, worker) -> None:
+    def _speech_generated(self, request, audio, worker, content_ref=None) -> None:
         self._tts_workers.discard(worker)
-        if request.text != self._active_speech_text:
+        if request.text != self._active_speech_text or content_ref != self._active_speech_ref:
             return
         self.context.tts_service.mark_played(audio.cache_key)
         self.audio_playback.toggle(audio.file_path)
         if self.audio_playback.is_playing() and self._active_speech_control:
             self._active_speech_control.set_state("playing")
 
-    def _speech_generation_failed(self, request, error, worker) -> None:
+    def _speech_generation_failed(self, request, error, worker, content_ref=None) -> None:
         self._tts_workers.discard(worker)
-        if request.text == self._active_speech_text and self._active_speech_control:
+        if request.text == self._active_speech_text and content_ref == self._active_speech_ref and self._active_speech_control:
             self._active_speech_control.set_state("error", str(error))
+        if (
+            request.text == self._active_speech_text
+            and content_ref == self._active_course_activity_ref
+            and content_ref is not None
+        ):
+            self._active_course_activity_ref = None
+            try:
+                self.context.course_capability_service.fail_listening(content_ref)
+            except Exception as exc:
+                self._logger.error(
+                    "course listening generation failure save failed item_stable_key=%s reason=%s",
+                    content_ref.item_stable_key,
+                    exc,
+                )
 
     def _speech_sentence_changed(self, text: str) -> None:
         if text != self._active_speech_text:
@@ -1188,12 +1565,36 @@ class MainWindow(QMainWindow):
     def _speech_playback_state_changed(self, state: str) -> None:
         if self._active_speech_control:
             self._active_speech_control.set_state(state)
+        if state == "playing" and self._active_course_activity_ref is not None:
+            content_ref = self._active_course_activity_ref
+            self._active_course_activity_ref = None
+            try:
+                self.context.course_capability_service.complete_listening(content_ref)
+                if self.current_course_return:
+                    self.course_page.show_lesson(*self.current_course_return)
+            except Exception as exc:
+                self._logger.error(
+                    "course listening completion failed item_stable_key=%s reason=%s",
+                    content_ref.item_stable_key,
+                    exc,
+                )
         if state in {"stopped","finished"} and self.stack.currentWidget() in {self.practice_view,self.sentence_practice_view,self.word_learning_page}:
             self._track_learning_activity("audio_finished")
 
     def _speech_playback_failed(self, message: str) -> None:
         if self._active_speech_control:
             self._active_speech_control.set_state("error", message or "音频播放失败。")
+        if self._active_course_activity_ref is not None:
+            content_ref = self._active_course_activity_ref
+            self._active_course_activity_ref = None
+            try:
+                self.context.course_capability_service.fail_listening(content_ref)
+            except Exception as exc:
+                self._logger.error(
+                    "course listening failure save failed item_stable_key=%s reason=%s",
+                    content_ref.item_stable_key,
+                    exc,
+                )
 
     def _active_snapshot(self):
         view = self._active_practice_view()
@@ -1620,6 +2021,7 @@ class MainWindow(QMainWindow):
             course_id = self.current_course_session.course_id
             lesson_id = self.current_course_session.lesson_id
             self.current_course_session = None
+            self.current_course_return = None
             self.current_material = None
             self._show_courses()
             self.course_page.show_lesson(course_id, lesson_id)
@@ -1936,8 +2338,26 @@ class MainWindow(QMainWindow):
 
     def _collect_selected_word(self, text: str, start: int, end: int) -> None:
         if self.current_course_session is not None:
-            QMessageBox.information(self, "课程词汇", "课程词汇与单词本的映射将在后续阶段接入。")
-            self._active_practice_view()._restore_focus()
+            item = self._current_course_capability_item()
+            if item is None:
+                return
+            try:
+                result = self.context.course_capability_service.collect_word(
+                    item.ref,
+                    text,
+                    start_offset=start,
+                    end_offset=end,
+                    typing_target_count=self.settings.vocabulary_typing_count,
+                )
+                QMessageBox.information(self, "课程词汇", "已收藏该课程语境中的单词。")
+                self._refresh_vocabulary_page()
+                if result.entry.id and self.settings.vocabulary_auto_enrich:
+                    self._start_vocabulary_enrichment(
+                        result.entry.id, result.context.id
+                    )
+            except Exception as exc:
+                QMessageBox.warning(self, "课程词汇不可用", str(exc))
+            self.sentence_practice_view._restore_focus()
             return
         view=self._active_practice_view(); sentence=""; article_sentence_id=None; local_start=start
         if view is self.sentence_practice_view and view.current_sentence:
@@ -2098,6 +2518,12 @@ class MainWindow(QMainWindow):
             self._play_word_from_learning(item.entry, item.context, focus_widget=self.dictation_page.input, speed=speed)
             return
         self._request_speech(text, speed)
+
+    def _play_course_dictation_audio(
+        self, item: CourseCapabilityItem, speed: float
+    ) -> None:
+        self.current_course_capability_item = item
+        self._request_course_speech(item.text, speed, item.ref)
 
     def _play_word_from_learning(self,entry,context,focus_widget=None,speed=None):
         from english_typing_trainer.services.dictionary_provider import parse_dictionary_payload
