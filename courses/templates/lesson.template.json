@@ -1,0 +1,17 @@
+{
+  "lesson_id": "replace-lesson-id",
+  "stable_key": "replace-lesson-stable-key",
+  "unit_id": "replace-unit-id",
+  "day": 1,
+  "order": 1,
+  "title": "替换为每日课程标题",
+  "lesson_type": "new_content",
+  "description": "",
+  "learning_goals": [],
+  "new_sentence_ids": [],
+  "review_sentence_ids": [],
+  "activities": [],
+  "assessment": null,
+  "content_version": "0.1.0",
+  "status": "draft"
+}

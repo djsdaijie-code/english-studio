@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-studio.app/schemas/lesson.schema.json",
+  "title": "English Studio course day lesson",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lesson_id",
+    "stable_key",
+    "unit_id",
+    "day",
+    "order",
+    "title",
+    "lesson_type",
+    "description",
+    "learning_goals",
+    "new_sentence_ids",
+    "review_sentence_ids",
+    "activities",
+    "assessment",
+    "content_version",
+    "status"
+  ],
+  "properties": {
+    "lesson_id": { "$ref": "#/$defs/id" },
+    "stable_key": { "$ref": "#/$defs/id" },
+    "unit_id": { "$ref": "#/$defs/id" },
+    "day": { "type": "integer", "minimum": 1 },
+    "order": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "lesson_type": {
+      "type": "string",
+      "enum": ["new_content", "mixed_practice", "scenario", "dictation", "speaking", "review", "assessment", "reading"]
+    },
+    "description": { "type": "string" },
+    "learning_goals": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "new_sentence_ids": { "$ref": "#/$defs/sentenceIds" },
+    "review_sentence_ids": { "$ref": "#/$defs/sentenceIds" },
+    "activities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/activity" }
+    },
+    "assessment": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/assessment" }
+      ]
+    },
+    "content_version": { "$ref": "#/$defs/semver" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "published", "deprecated"]
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "sentenceIds": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/id" },
+      "uniqueItems": true
+    },
+    "activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activity_type", "sentence_ids", "required"],
+      "properties": {
+        "activity_type": {
+          "type": "string",
+          "enum": ["typing", "listening", "dictation", "speaking", "reading", "fsrs", "translation", "self_test"]
+        },
+        "sentence_ids": { "$ref": "#/$defs/sentenceIds" },
+        "required": { "type": "boolean" }
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assessment_type", "sentence_ids", "passing_score"],
+      "properties": {
+        "assessment_type": {
+          "type": "string",
+          "enum": ["typing", "dictation", "speaking", "mixed"]
+        },
+        "sentence_ids": { "$ref": "#/$defs/sentenceIds" },
+        "passing_score": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    }
+  }
+}

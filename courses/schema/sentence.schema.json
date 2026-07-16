@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-studio.app/schemas/sentence.schema.json",
+  "title": "English Studio course sentence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sentence_id",
+    "stable_key",
+    "unit_id",
+    "lesson_id",
+    "day",
+    "order",
+    "english",
+    "chinese",
+    "scene",
+    "difficulty",
+    "core_words",
+    "core_patterns",
+    "common_mistakes",
+    "alternative_expressions",
+    "skill_tags",
+    "source_type",
+    "audio_hint",
+    "review_group",
+    "content_version",
+    "status"
+  ],
+  "properties": {
+    "sentence_id": { "$ref": "#/$defs/id" },
+    "stable_key": { "$ref": "#/$defs/id" },
+    "unit_id": { "$ref": "#/$defs/id" },
+    "lesson_id": { "$ref": "#/$defs/id" },
+    "day": { "type": "integer", "minimum": 1 },
+    "order": { "type": "integer", "minimum": 1 },
+    "english": { "type": "string", "minLength": 1 },
+    "chinese": { "type": "string", "minLength": 1 },
+    "scene": { "type": "string", "minLength": 1 },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "elementary", "intermediate", "upper_intermediate", "advanced"]
+    },
+    "core_words": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "core_patterns": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "common_mistakes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/mistake" }
+    },
+    "alternative_expressions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/alternative" }
+    },
+    "skill_tags": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["typing", "listening", "dictation", "speaking", "reading", "fsrs", "translation"]
+      }
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["original", "licensed", "public_domain"]
+    },
+    "audio_hint": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/audioHint" }
+      ]
+    },
+    "review_group": { "type": "string" },
+    "content_version": { "$ref": "#/$defs/semver" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "published", "deprecated"]
+    },
+    "replacement_stable_keys": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/id" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "mistake": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["incorrect", "explanation_zh"],
+      "properties": {
+        "incorrect": { "type": "string", "minLength": 1 },
+        "explanation_zh": { "type": "string", "minLength": 1 }
+      }
+    },
+    "alternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["english", "chinese"],
+      "properties": {
+        "english": { "type": "string", "minLength": 1 },
+        "chinese": { "type": "string", "minLength": 1 }
+      }
+    },
+    "audioHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stress_words": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "pause_after": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "note_zh": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "specification_version": "1.0",
+  "course_id": "ai-large-models",
+  "stable_key": "ai-large-models-course",
+  "version": "0.1.0",
+  "content_version": "0.1.0",
+  "title": "AI 与大模型英语",
+  "subtitle": "用简单英语完成真实 AI 任务",
+  "description": "面向英语基础较弱的用户，学习 AI 软件操作、提示词、文件处理、错误排查、API、Agent 与自动化场景中的高频英语。",
+  "language": "en",
+  "target_level": "mixed",
+  "topics": ["AI 软件使用", "提示词", "文件处理", "API", "Agent", "自动化"],
+  "estimated_days": 56,
+  "estimated_sentences": 192,
+  "prerequisites": ["能够识别基础英文单词和简单句"],
+  "learning_goals": [
+    "看懂常见 AI 软件界面和设置",
+    "用简单英语向 AI 发出明确指令并修改输出",
+    "理解文件处理、API、Agent 和自动化的基础术语",
+    "在真实 AI 工作流中完成阅读、打字、听写和跟读练习"
+  ],
+  "default_learning_plan": {
+    "new_sentences_per_day": 6,
+    "unit_days": 7,
+    "review_day": 7,
+    "dictation_day": 6,
+    "assessment_day": 7
+  },
+  "levels": [
+    {
+      "level_id": "ai-l1",
+      "stable_key": "ai-large-models-level-basic-use",
+      "order": 1,
+      "title": "Level 1：基础使用",
+      "description": "识别界面动作、模型选择和基础设置。",
+      "difficulty": "beginner",
+      "learning_goals": ["完成常见界面操作", "理解模型选择和基础设置"],
+      "units": [
+        {
+          "unit_id": "ai-l1-u01",
+          "stable_key": "ai-large-models-unit-interface-foundations",
+          "order": 1,
+          "title": "AI 基础界面与操作",
+          "status": "draft",
+          "content_path": "units/unit-01-foundations.json"
+        },
+        {
+          "unit_id": "ai-l1-u02",
+          "stable_key": "ai-large-models-unit-model-settings",
+          "order": 2,
+          "title": "模型选择与基础设置",
+          "status": "planned",
+          "content_path": null
+        }
+      ]
+    },
+    {
+      "level_id": "ai-l2",
+      "stable_key": "ai-large-models-level-instructions",
+      "order": 2,
+      "title": "Level 2：向 AI 下达指令",
+      "description": "用高频动词提出任务并控制输出。",
+      "difficulty": "elementary",
+      "learning_goals": ["提出清楚的基础任务", "控制长度、语气和格式"],
+      "units": [
+        {
+          "unit_id": "ai-l2-u03",
+          "stable_key": "ai-large-models-unit-basic-instructions",
+          "order": 3,
+          "title": "提问与基础指令",
+          "status": "planned",
+          "content_path": null
+        },
+        {
+          "unit_id": "ai-l2-u04",
+          "stable_key": "ai-large-models-unit-output-control",
+          "order": 4,
+          "title": "提示词与输出控制",
+          "status": "planned",
+          "content_path": null
+        }
+      ]
+    },
+    {
+      "level_id": "ai-l3",
+      "stable_key": "ai-large-models-level-content-errors",
+      "order": 3,
+      "title": "Level 3：内容处理与错误",
+      "description": "处理文件、图片、长文本和常见失败。",
+      "difficulty": "intermediate",
+      "learning_goals": ["根据文件和图片完成任务", "理解错误并请求修正"],
+      "units": [
+        {
+          "unit_id": "ai-l3-u05",
+          "stable_key": "ai-large-models-unit-files-images",
+          "order": 5,
+          "title": "文件、图片和长文本",
+          "status": "planned",
+          "content_path": null
+        },
+        {
+          "unit_id": "ai-l3-u06",
+          "stable_key": "ai-large-models-unit-errors-recovery",
+          "order": 6,
+          "title": "错误、失败和修正",
+          "status": "planned",
+          "content_path": null
+        }
+      ]
+    },
+    {
+      "level_id": "ai-l4",
+      "stable_key": "ai-large-models-level-api",
+      "order": 4,
+      "title": "Level 4：AI 技术使用",
+      "description": "理解 API 与模型调用的基础英语。",
+      "difficulty": "upper_intermediate",
+      "learning_goals": ["阅读基础 API 说明", "描述请求、响应、认证和限制"],
+      "units": [
+        {
+          "unit_id": "ai-l4-u07",
+          "stable_key": "ai-large-models-unit-api-model-basics",
+          "order": 7,
+          "title": "API 与模型基础",
+          "status": "planned",
+          "content_path": null
+        }
+      ]
+    },
+    {
+      "level_id": "ai-l5",
+      "stable_key": "ai-large-models-level-agents-automation",
+      "order": 5,
+      "title": "Level 5：Agent 与自动化",
+      "description": "理解工具调用、权限和自动化工作流。",
+      "difficulty": "advanced",
+      "learning_goals": ["描述 Agent 的任务和工具", "理解触发器、条件、权限和监控"],
+      "units": [
+        {
+          "unit_id": "ai-l5-u08",
+          "stable_key": "ai-large-models-unit-agent-workflows",
+          "order": 8,
+          "title": "AI Agent、工具和工作流",
+          "status": "planned",
+          "content_path": null
+        }
+      ]
+    }
+  ],
+  "status": "draft",
+  "built_in": true,
+  "read_only": true
+}

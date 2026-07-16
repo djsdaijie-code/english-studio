@@ -1,0 +1,22 @@
+{
+  "sentence_id": "replace-sentence-id",
+  "stable_key": "replace-sentence-stable-key",
+  "unit_id": "replace-unit-id",
+  "lesson_id": "replace-lesson-id",
+  "day": 1,
+  "order": 1,
+  "english": "Replace with an English sentence.",
+  "chinese": "替换为自然、准确的中文翻译。",
+  "scene": "替换为真实使用场景",
+  "difficulty": "beginner",
+  "core_words": [],
+  "core_patterns": [],
+  "common_mistakes": [],
+  "alternative_expressions": [],
+  "skill_tags": ["typing"],
+  "source_type": "original",
+  "audio_hint": null,
+  "review_group": "",
+  "content_version": "0.1.0",
+  "status": "draft"
+}

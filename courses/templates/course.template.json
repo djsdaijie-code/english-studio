@@ -1,0 +1,48 @@
+{
+  "specification_version": "1.0",
+  "course_id": "replace-course-id",
+  "stable_key": "replace-course-stable-key",
+  "version": "0.1.0",
+  "content_version": "0.1.0",
+  "title": "替换为课程标题",
+  "subtitle": "",
+  "description": "替换为课程说明",
+  "language": "en",
+  "target_level": "mixed",
+  "topics": [],
+  "estimated_days": 1,
+  "estimated_sentences": 1,
+  "prerequisites": [],
+  "learning_goals": [],
+  "default_learning_plan": {
+    "new_sentences_per_day": 6,
+    "unit_days": 7,
+    "review_day": 7,
+    "dictation_day": 6,
+    "assessment_day": 7
+  },
+  "levels": [
+    {
+      "level_id": "replace-level-id",
+      "stable_key": "replace-level-stable-key",
+      "order": 1,
+      "title": "替换为 Level 标题",
+      "description": "",
+      "difficulty": "beginner",
+      "learning_goals": [],
+      "units": [
+        {
+          "unit_id": "replace-unit-id",
+          "stable_key": "replace-unit-stable-key",
+          "order": 1,
+          "title": "替换为 Unit 标题",
+          "status": "planned",
+          "content_path": null
+        }
+      ]
+    }
+  ],
+  "status": "draft",
+  "built_in": true,
+  "read_only": true
+}

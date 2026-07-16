@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-studio.app/schemas/course.schema.json",
+  "title": "English Studio built-in course",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specification_version",
+    "course_id",
+    "stable_key",
+    "version",
+    "content_version",
+    "title",
+    "subtitle",
+    "description",
+    "language",
+    "target_level",
+    "topics",
+    "estimated_days",
+    "estimated_sentences",
+    "prerequisites",
+    "learning_goals",
+    "default_learning_plan",
+    "levels",
+    "status",
+    "built_in",
+    "read_only"
+  ],
+  "properties": {
+    "specification_version": { "const": "1.0" },
+    "course_id": { "$ref": "#/$defs/id" },
+    "stable_key": { "$ref": "#/$defs/id" },
+    "version": { "$ref": "#/$defs/semver" },
+    "content_version": { "$ref": "#/$defs/semver" },
+    "title": { "type": "string", "minLength": 1 },
+    "subtitle": { "type": "string" },
+    "description": { "type": "string", "minLength": 1 },
+    "language": { "const": "en" },
+    "target_level": {
+      "type": "string",
+      "enum": ["beginner", "elementary", "intermediate", "upper_intermediate", "advanced", "mixed"]
+    },
+    "topics": { "$ref": "#/$defs/nonEmptyStrings" },
+    "estimated_days": { "type": "integer", "minimum": 1 },
+    "estimated_sentences": { "type": "integer", "minimum": 1 },
+    "prerequisites": { "$ref": "#/$defs/nonEmptyStrings" },
+    "learning_goals": { "$ref": "#/$defs/nonEmptyStrings" },
+    "default_learning_plan": { "$ref": "#/$defs/learningPlan" },
+    "levels": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/level" }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "published", "deprecated"]
+    },
+    "built_in": { "type": "boolean" },
+    "read_only": { "type": "boolean" }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "nonEmptyStrings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "learningPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["new_sentences_per_day", "unit_days", "review_day", "dictation_day", "assessment_day"],
+      "properties": {
+        "new_sentences_per_day": { "type": "integer", "minimum": 0 },
+        "unit_days": { "type": "integer", "minimum": 1 },
+        "review_day": { "type": "integer", "minimum": 1 },
+        "dictation_day": { "type": "integer", "minimum": 1 },
+        "assessment_day": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "level": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level_id", "stable_key", "order", "title", "description", "difficulty", "learning_goals", "units"],
+      "properties": {
+        "level_id": { "$ref": "#/$defs/id" },
+        "stable_key": { "$ref": "#/$defs/id" },
+        "order": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "difficulty": {
+          "type": "string",
+          "enum": ["beginner", "elementary", "intermediate", "upper_intermediate", "advanced"]
+        },
+        "learning_goals": { "$ref": "#/$defs/nonEmptyStrings" },
+        "units": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/unitEntry" }
+        }
+      }
+    },
+    "unitEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit_id", "stable_key", "order", "title", "status", "content_path"],
+      "properties": {
+        "unit_id": { "$ref": "#/$defs/id" },
+        "stable_key": { "$ref": "#/$defs/id" },
+        "order": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["planned", "draft", "reviewed", "published", "deprecated"]
+        },
+        "content_path": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^units/[a-z0-9][a-z0-9-]*\\.json$" }
+          ]
+        }
+      }
+    }
+  }
+}

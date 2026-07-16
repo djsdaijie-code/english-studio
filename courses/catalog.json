@@ -1,0 +1,15 @@
+{
+  "catalog_version": "1.0.0",
+  "courses": [
+    {
+      "course_id": "ai-large-models",
+      "title": "AI 与大模型英语",
+      "path": "ai-large-models/course.json",
+      "version": "0.1.0",
+      "content_status": "draft",
+      "default_order": 1,
+      "built_in": true,
+      "read_only": true
+    }
+  ]
+}

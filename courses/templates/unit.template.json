@@ -1,0 +1,20 @@
+{
+  "specification_version": "1.0",
+  "content_version": "0.1.0",
+  "unit_id": "replace-unit-id",
+  "stable_key": "replace-unit-stable-key",
+  "course_id": "replace-course-id",
+  "level_id": "replace-level-id",
+  "order": 1,
+  "title": "替换为 Unit 标题",
+  "description": "",
+  "difficulty": "beginner",
+  "estimated_days": 1,
+  "learning_goals": [],
+  "core_vocabulary": [],
+  "core_patterns": [],
+  "learning_plan_override": null,
+  "lessons": [],
+  "sentences": [],
+  "status": "draft"
+}

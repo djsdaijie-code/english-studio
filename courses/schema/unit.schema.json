@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://english-studio.app/schemas/unit.schema.json",
+  "title": "English Studio course unit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specification_version",
+    "content_version",
+    "unit_id",
+    "stable_key",
+    "course_id",
+    "level_id",
+    "order",
+    "title",
+    "description",
+    "difficulty",
+    "estimated_days",
+    "learning_goals",
+    "core_vocabulary",
+    "core_patterns",
+    "learning_plan_override",
+    "lessons",
+    "sentences",
+    "status"
+  ],
+  "properties": {
+    "specification_version": { "const": "1.0" },
+    "content_version": { "$ref": "#/$defs/semver" },
+    "unit_id": { "$ref": "#/$defs/id" },
+    "stable_key": { "$ref": "#/$defs/id" },
+    "course_id": { "$ref": "#/$defs/id" },
+    "level_id": { "$ref": "#/$defs/id" },
+    "order": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "elementary", "intermediate", "upper_intermediate", "advanced"]
+    },
+    "estimated_days": { "type": "integer", "minimum": 1 },
+    "learning_goals": { "$ref": "#/$defs/nonEmptyStrings" },
+    "core_vocabulary": { "$ref": "#/$defs/nonEmptyStrings" },
+    "core_patterns": { "$ref": "#/$defs/nonEmptyStrings" },
+    "learning_plan_override": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/learningPlanOverride" }
+      ]
+    },
+    "lessons": {
+      "type": "array",
+      "items": { "$ref": "lesson.schema.json" }
+    },
+    "sentences": {
+      "type": "array",
+      "items": { "$ref": "sentence.schema.json" }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "published", "deprecated"]
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "nonEmptyStrings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "learningPlanOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "new_sentences_per_day": { "type": "integer", "minimum": 0 },
+        "unit_days": { "type": "integer", "minimum": 1 },
+        "review_day": { "type": "integer", "minimum": 1 },
+        "dictation_day": { "type": "integer", "minimum": 1 },
+        "assessment_day": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
