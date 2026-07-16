@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -53,6 +53,55 @@ _ACTIVITY_TYPE_TEXT = {
 }
 
 
+class CourseListCard(QFrame):
+    """Presentation-only card that keeps course-list text easy to scan."""
+
+    def __init__(self, title: str, description: str, statistics: str) -> None:
+        super().__init__()
+        self.setObjectName("CourseListCard")
+        self.setProperty("selected", False)
+        self.setMinimumHeight(128)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 16, 0)
+        layout.setSpacing(14)
+
+        self.selection_bar = QFrame()
+        self.selection_bar.setObjectName("CourseListSelectionBar")
+        self.selection_bar.setFixedWidth(4)
+        layout.addWidget(self.selection_bar)
+
+        content = QVBoxLayout()
+        content.setContentsMargins(0, 16, 0, 16)
+        content.setSpacing(7)
+        self.title_label = QLabel(title)
+        self.title_label.setProperty("role", "course-card-title")
+        self.title_label.setWordWrap(False)
+        self.description_label = QLabel(description)
+        self.description_label.setProperty("role", "course-card-description")
+        self.description_label.setWordWrap(True)
+        self.description_label.setMaximumHeight(42)
+        self.description_label.setToolTip(description)
+        self.statistics_label = QLabel(statistics)
+        self.statistics_label.setProperty("role", "course-card-statistics")
+        self.statistics_label.setWordWrap(False)
+        self.statistics_label.setToolTip(statistics)
+        content.addWidget(self.title_label)
+        content.addWidget(self.description_label)
+        content.addWidget(self.statistics_label)
+        layout.addLayout(content, stretch=1)
+
+    def set_selected(self, selected: bool) -> None:
+        if self.property("selected") == selected:
+            return
+        self.setProperty("selected", selected)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.selection_bar.style().unpolish(self.selection_bar)
+        self.selection_bar.style().polish(self.selection_bar)
+        self.update()
+
+
 class CoursePage(QWidget):
     """Course list, hierarchy and lesson confirmation in one navigable page."""
 
@@ -87,7 +136,13 @@ class CoursePage(QWidget):
         self.view_stack.addWidget(self.lesson_view)
         root.addWidget(self.view_stack)
 
-    def _page_shell(self, title: str, subtitle: str) -> tuple[QWidget, QVBoxLayout]:
+    def _page_shell(
+        self,
+        title: str,
+        subtitle: str,
+        *,
+        subtitle_role: str = "subtitle",
+    ) -> tuple[QWidget, QVBoxLayout]:
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(32, 28, 32, 28)
@@ -95,14 +150,18 @@ class CoursePage(QWidget):
         title_label = QLabel(title)
         title_label.setProperty("role", "page-title")
         subtitle_label = QLabel(subtitle)
-        subtitle_label.setProperty("role", "subtitle")
+        subtitle_label.setProperty("role", subtitle_role)
         subtitle_label.setWordWrap(True)
         layout.addWidget(title_label)
         layout.addWidget(subtitle_label)
         return page, layout
 
     def _build_list_view(self) -> QWidget:
-        page, layout = self._page_shell("内置课程", "按推荐顺序学习，也可以自由打开任意 Day。")
+        page, layout = self._page_shell(
+            "内置课程",
+            "按推荐顺序学习，也可以自由打开任意 Day。",
+            subtitle_role="course-page-subtitle",
+        )
         actions = QHBoxLayout()
         self.reload_button = QPushButton("重新加载")
         self.reload_button.clicked.connect(lambda: self.reload(force=True))
@@ -132,7 +191,9 @@ class CoursePage(QWidget):
         layout.addWidget(self.failure_label)
 
         self.course_list = QListWidget()
-        self.course_list.setAlternatingRowColors(True)
+        self.course_list.setObjectName("CourseList")
+        self.course_list.setAlternatingRowColors(False)
+        self.course_list.setSpacing(8)
         self.course_list.itemSelectionChanged.connect(self._course_selection_changed)
         self.course_list.itemDoubleClicked.connect(lambda _item: self._open_selected_course())
         layout.addWidget(self.course_list, stretch=1)
@@ -295,7 +356,9 @@ class CoursePage(QWidget):
         for course in catalog.courses:
             item = QListWidgetItem(self._course_list_text(course))
             item.setData(Qt.ItemDataRole.UserRole, course.course_id)
+            item.setSizeHint(QSize(0, 128))
             self.course_list.addItem(item)
+            self.course_list.setItemWidget(item, self._course_card(course))
             if course.course_id == selected_id:
                 self.course_list.setCurrentItem(item)
         if self.course_list.count() and self.course_list.currentRow() < 0:
@@ -480,8 +543,32 @@ class CoursePage(QWidget):
             f"{len(course.levels)} 个 Level · {units} 个 Unit · 预计 {course.estimated_days} 天 · {status} · 完成 {progress}"
         )
 
+    def _course_card(self, course: Course) -> CourseListCard:
+        units = sum(len(level.units) for level in course.levels)
+        try:
+            enrollment = self.progress.get_enrollment(course.course_id)
+            summary = self.progress.get_course_progress(course.course_id)
+            status = _ENROLLMENT_STATUS_TEXT[enrollment.status] if enrollment else "未开始"
+            progress = f"完成 {summary.completion_percentage:.0f}%"
+        except Exception as exc:
+            self._log_progress_error(course, None, exc)
+            status, progress = "状态不可用", "完成 --"
+        statistics = (
+            f"{len(course.levels)} 个 Level · {units} 个 Unit · 预计 {course.estimated_days} 天"
+            f" · {status} · {progress}"
+        )
+        return CourseListCard(course.title, course.description, statistics)
+
+    def _sync_course_card_selection(self, selected_item: QListWidgetItem | None) -> None:
+        for index in range(self.course_list.count()):
+            item = self.course_list.item(index)
+            card = self.course_list.itemWidget(item)
+            if isinstance(card, CourseListCard):
+                card.set_selected(item is selected_item)
+
     def _course_selection_changed(self) -> None:
         item = self.course_list.currentItem()
+        self._sync_course_card_selection(item)
         enabled = item is not None
         self.open_course_button.setEnabled(enabled)
         self.quick_start_button.setEnabled(enabled)

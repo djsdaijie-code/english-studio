@@ -50,6 +50,60 @@ QLabel[role="subtitle"], QLabel[role="muted"] {
     color: #6b7280;
 }
 
+QLabel[role="course-page-subtitle"] {
+    color: #7b8494;
+    font-size: 13px;
+}
+
+QListWidget#CourseList {
+    padding: 6px;
+    background: transparent;
+    border: none;
+}
+
+QListWidget#CourseList::item {
+    background: transparent;
+    border: none;
+}
+
+QFrame#CourseListCard {
+    background: #ffffff;
+    border: 1px solid #e5eaf1;
+    border-radius: 12px;
+}
+
+QFrame#CourseListCard[selected="true"] {
+    background: #f4f8ff;
+    border-color: #b9cdf1;
+}
+
+QFrame#CourseListSelectionBar {
+    background: transparent;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+QFrame#CourseListCard[selected="true"] QFrame#CourseListSelectionBar {
+    background: #4b78b8;
+}
+
+QLabel[role="course-card-title"] {
+    color: #111827;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+QLabel[role="course-card-description"] {
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+QLabel[role="course-card-statistics"] {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
 QLabel[role="metric-title"] {
     color: #6b7280;
     font-size: 13px;

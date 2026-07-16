@@ -14,7 +14,7 @@ from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.courses.repository import CourseRepository
 from english_typing_trainer.services.course_learning import CourseLearningService
 from english_typing_trainer.services.credential_store import MemoryCredentialStore
-from english_typing_trainer.ui.course_page import CoursePage
+from english_typing_trainer.ui.course_page import CourseListCard, CoursePage
 from english_typing_trainer.ui.main_window import MainWindow
 from english_typing_trainer.ui.result_dialog import ResultDialog
 
@@ -104,6 +104,12 @@ def test_course_page_lists_hierarchy_progress_and_arbitrary_day(tmp_path: Path) 
         assert page.course_list.count() == 1
         assert "5 个 Level" in page.course_list.item(0).text()
         assert "8 个 Unit" in page.course_list.item(0).text()
+        card = page.course_list.itemWidget(page.course_list.item(0))
+        assert isinstance(card, CourseListCard)
+        assert card.property("selected") is True
+        assert card.title_label.text() == "AI 与大模型英语"
+        assert card.description_label.property("role") == "course-card-description"
+        assert "5 个 Level · 8 个 Unit" in card.statistics_label.text()
         page.show_course(COURSE_ID)
         assert page.hierarchy_tree.topLevelItemCount() == 5
         unit_count = sum(
