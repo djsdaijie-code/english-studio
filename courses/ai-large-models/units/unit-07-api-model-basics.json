@@ -1,0 +1,1515 @@
+{
+  "specification_version": "1.0",
+  "content_version": "1.0.0",
+  "unit_id": "ai-l4-u07",
+  "stable_key": "ai-large-models-unit-api-model-basics",
+  "course_id": "ai-large-models",
+  "level_id": "ai-l4",
+  "order": 7,
+  "title": "API 与模型基础",
+  "description": "看懂 API 请求、响应、认证、参数、token、速率限制和 system message 等基础英语，不要求编写完整程序。",
+  "difficulty": "upper_intermediate",
+  "estimated_days": 7,
+  "learning_goals": [
+    "理解 API 请求与响应中的核心术语",
+    "安全描述密钥、认证和权限",
+    "阅读参数、token、状态码和速率限制说明"
+  ],
+  "core_vocabulary": [
+    "API key",
+    "request",
+    "response",
+    "endpoint",
+    "parameter",
+    "authentication",
+    "token",
+    "rate limit",
+    "JSON",
+    "system message",
+    "model name",
+    "status code",
+    "environment variable"
+  ],
+  "core_patterns": [
+    "Send + input + in + request part.",
+    "The response contains + output.",
+    "Set the + parameter + before + action.",
+    "If + error, + check/fix."
+  ],
+  "learning_plan_override": null,
+  "lessons": [
+    {
+      "lesson_id": "ai-l4-u07-d01",
+      "stable_key": "ai-large-models-lesson-api-request-response",
+      "unit_id": "ai-l4-u07",
+      "day": 1,
+      "order": 1,
+      "title": "endpoint、请求与响应",
+      "lesson_type": "new_content",
+      "description": "理解 endpoint、request body、response body、model name、JSON 和 status code。",
+      "learning_goals": [
+        "识别请求与响应结构",
+        "描述模型名、JSON 和状态码"
+      ],
+      "new_sentence_ids": [
+        "ai-s0133",
+        "ai-s0134",
+        "ai-s0135",
+        "ai-s0136",
+        "ai-s0137",
+        "ai-s0138"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0134",
+            "ai-s0135",
+            "ai-s0136",
+            "ai-s0137",
+            "ai-s0138"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0134",
+            "ai-s0137",
+            "ai-s0138"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0135",
+            "ai-s0136",
+            "ai-s0138"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l4-u07-d02",
+      "stable_key": "ai-large-models-lesson-api-authentication-security",
+      "unit_id": "ai-l4-u07",
+      "day": 2,
+      "order": 2,
+      "title": "认证、密钥与权限",
+      "lesson_type": "new_content",
+      "description": "安全保存 API key，并理解认证失败和最小权限。",
+      "learning_goals": [
+        "描述 API key 的安全使用方式",
+        "理解 authentication 与 permission"
+      ],
+      "new_sentence_ids": [
+        "ai-s0139",
+        "ai-s0140",
+        "ai-s0141",
+        "ai-s0142",
+        "ai-s0143",
+        "ai-s0144"
+      ],
+      "review_sentence_ids": [
+        "ai-s0133",
+        "ai-s0134",
+        "ai-s0138"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0139",
+            "ai-s0140",
+            "ai-s0141",
+            "ai-s0142",
+            "ai-s0143",
+            "ai-s0144"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0139",
+            "ai-s0141",
+            "ai-s0143"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0140",
+            "ai-s0142",
+            "ai-s0144"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l4-u07-d03",
+      "stable_key": "ai-large-models-lesson-api-parameters-tokens",
+      "unit_id": "ai-l4-u07",
+      "day": 3,
+      "order": 3,
+      "title": "参数、上下文与 token",
+      "lesson_type": "new_content",
+      "description": "理解 temperature、token usage、输入、输出和上下文限制。",
+      "learning_goals": [
+        "阅读参数和 token 使用说明",
+        "在上下文受限时调整输入"
+      ],
+      "new_sentence_ids": [
+        "ai-s0145",
+        "ai-s0146",
+        "ai-s0147",
+        "ai-s0148",
+        "ai-s0149"
+      ],
+      "review_sentence_ids": [
+        "ai-s0134",
+        "ai-s0136",
+        "ai-s0137"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0145",
+            "ai-s0146",
+            "ai-s0147",
+            "ai-s0148",
+            "ai-s0149"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0145",
+            "ai-s0146",
+            "ai-s0148"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0147",
+            "ai-s0149"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l4-u07-d04",
+      "stable_key": "ai-large-models-lesson-api-limits-and-system-messages",
+      "unit_id": "ai-l4-u07",
+      "day": 4,
+      "order": 4,
+      "title": "速率限制与 system message",
+      "lesson_type": "new_content",
+      "description": "处理 rate limit 和状态码错误，记录安全日志并理解 system message。",
+      "learning_goals": [
+        "为 API 错误选择合理动作",
+        "理解 system message 的基本作用"
+      ],
+      "new_sentence_ids": [
+        "ai-s0150",
+        "ai-s0151",
+        "ai-s0152",
+        "ai-s0153",
+        "ai-s0154"
+      ],
+      "review_sentence_ids": [
+        "ai-s0138",
+        "ai-s0142",
+        "ai-s0143"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0150",
+            "ai-s0151",
+            "ai-s0152",
+            "ai-s0153",
+            "ai-s0154"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0150",
+            "ai-s0151",
+            "ai-s0154"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0152",
+            "ai-s0153",
+            "ai-s0154"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l4-u07-d05",
+      "stable_key": "ai-large-models-lesson-api-call-scenario",
+      "unit_id": "ai-l4-u07",
+      "day": 5,
+      "order": 5,
+      "title": "综合场景：阅读一次 API 调用",
+      "lesson_type": "scenario",
+      "description": "按认证、endpoint、输入、模型、响应和错误检查顺序复用本单元表达。",
+      "learning_goals": [
+        "理解一次 API 调用的完整语言流程",
+        "识别安全和错误处理要点"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0133",
+        "ai-s0134",
+        "ai-s0135",
+        "ai-s0136",
+        "ai-s0137",
+        "ai-s0138",
+        "ai-s0139",
+        "ai-s0141",
+        "ai-s0143",
+        "ai-s0145",
+        "ai-s0146",
+        "ai-s0150",
+        "ai-s0151",
+        "ai-s0153",
+        "ai-s0154"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0134",
+            "ai-s0136",
+            "ai-s0137",
+            "ai-s0139",
+            "ai-s0141",
+            "ai-s0150",
+            "ai-s0151"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0134",
+            "ai-s0135",
+            "ai-s0136",
+            "ai-s0137",
+            "ai-s0138",
+            "ai-s0139",
+            "ai-s0141",
+            "ai-s0143",
+            "ai-s0145",
+            "ai-s0146",
+            "ai-s0150",
+            "ai-s0151",
+            "ai-s0153",
+            "ai-s0154"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0135",
+            "ai-s0141",
+            "ai-s0150",
+            "ai-s0154"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l4-u07-d06",
+      "stable_key": "ai-large-models-lesson-api-dictation-speaking",
+      "unit_id": "ai-l4-u07",
+      "day": 6,
+      "order": 6,
+      "title": "听写与跟读",
+      "lesson_type": "dictation",
+      "description": "听写 API 术语，跟读安全要求和错误处理句。",
+      "learning_goals": [
+        "听辨 request、response、parameter 和 token",
+        "朗读认证、限制和条件说明"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0133",
+        "ai-s0134",
+        "ai-s0135",
+        "ai-s0137",
+        "ai-s0139",
+        "ai-s0141",
+        "ai-s0145",
+        "ai-s0146",
+        "ai-s0150",
+        "ai-s0154"
+      ],
+      "activities": [
+        {
+          "activity_type": "dictation",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0134",
+            "ai-s0135",
+            "ai-s0137",
+            "ai-s0139",
+            "ai-s0141"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0145",
+            "ai-s0146",
+            "ai-s0150",
+            "ai-s0154"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0134",
+            "ai-s0135",
+            "ai-s0137",
+            "ai-s0139",
+            "ai-s0141",
+            "ai-s0145",
+            "ai-s0146",
+            "ai-s0150",
+            "ai-s0154"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l4-u07-d07",
+      "stable_key": "ai-large-models-lesson-api-review-assessment",
+      "unit_id": "ai-l4-u07",
+      "day": 7,
+      "order": 7,
+      "title": "复习与自测",
+      "lesson_type": "assessment",
+      "description": "复习 API 身份、数据结构、参数、认证和错误处理。",
+      "learning_goals": [
+        "根据中文提示写出 API 基础句",
+        "理解请求、响应和安全术语"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0133",
+        "ai-s0134",
+        "ai-s0135",
+        "ai-s0136",
+        "ai-s0137",
+        "ai-s0138",
+        "ai-s0139",
+        "ai-s0140",
+        "ai-s0141",
+        "ai-s0142",
+        "ai-s0143",
+        "ai-s0144",
+        "ai-s0145",
+        "ai-s0146",
+        "ai-s0147",
+        "ai-s0148",
+        "ai-s0149",
+        "ai-s0150",
+        "ai-s0151",
+        "ai-s0152",
+        "ai-s0153",
+        "ai-s0154"
+      ],
+      "activities": [
+        {
+          "activity_type": "self_test",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0134",
+            "ai-s0137",
+            "ai-s0139",
+            "ai-s0141",
+            "ai-s0146",
+            "ai-s0150",
+            "ai-s0154"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0135",
+            "ai-s0140",
+            "ai-s0148",
+            "ai-s0153"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "ai-s0133",
+            "ai-s0134",
+            "ai-s0135",
+            "ai-s0136",
+            "ai-s0137",
+            "ai-s0138",
+            "ai-s0139",
+            "ai-s0140",
+            "ai-s0141",
+            "ai-s0142",
+            "ai-s0143",
+            "ai-s0144",
+            "ai-s0145",
+            "ai-s0146",
+            "ai-s0147",
+            "ai-s0148",
+            "ai-s0149",
+            "ai-s0150",
+            "ai-s0151",
+            "ai-s0152",
+            "ai-s0153",
+            "ai-s0154"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": {
+        "assessment_type": "mixed",
+        "sentence_ids": [
+          "ai-s0133",
+          "ai-s0134",
+          "ai-s0137",
+          "ai-s0139",
+          "ai-s0141",
+          "ai-s0146",
+          "ai-s0150",
+          "ai-s0154"
+        ],
+        "passing_score": 60
+      },
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "sentences": [
+    {
+      "sentence_id": "ai-s0133",
+      "stable_key": "ai-large-models-sentence-0133",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d01",
+      "day": 1,
+      "order": 1,
+      "english": "An API endpoint is the address where an application sends requests.",
+      "chinese": "API endpoint 是应用程序发送请求的地址。",
+      "scene": "阅读接口文档中的 endpoint 定义",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "API",
+        "endpoint",
+        "address",
+        "application",
+        "request"
+      ],
+      "core_patterns": [
+        "A + noun + is the place where + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "An application sends requests to an API endpoint.",
+          "chinese": "应用程序向 API endpoint 发送请求。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "API",
+          "endpoint"
+        ],
+        "note_zh": "API 按字母逐个读；endpoint 的重音在前半部分。"
+      },
+      "review_group": "u07-request-response",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0134",
+      "stable_key": "ai-large-models-sentence-0134",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d01",
+      "day": 1,
+      "order": 2,
+      "english": "Send the input data as JSON in the request body.",
+      "chinese": "在请求正文中以 JSON 发送输入数据。",
+      "scene": "阅读 API 请求数据位置说明",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "send",
+        "input",
+        "data",
+        "JSON",
+        "request body"
+      ],
+      "core_patterns": [
+        "Send + object + in + request part."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Send the input data on the request body.",
+          "explanation_zh": "表示数据位于正文内部时使用 in。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-request-response",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0135",
+      "stable_key": "ai-large-models-sentence-0135",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d01",
+      "day": 1,
+      "order": 3,
+      "english": "The response body contains the generated output after a successful request.",
+      "chinese": "请求成功后，响应正文包含生成的输出。",
+      "scene": "从 API 响应中定位模型输出",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "response body",
+        "contain",
+        "generated",
+        "output"
+      ],
+      "core_patterns": [
+        "The response contains + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Read the generated output from the response body.",
+          "chinese": "从响应正文中读取生成的输出。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-request-response",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0136",
+      "stable_key": "ai-large-models-sentence-0136",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d01",
+      "day": 1,
+      "order": 4,
+      "english": "Set the correct model name before sending each request to the endpoint.",
+      "chinese": "向 endpoint 发送每个请求前设置正确的模型名称。",
+      "scene": "调用模型前检查请求中的模型标识",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "set",
+        "correct",
+        "model name",
+        "before",
+        "request"
+      ],
+      "core_patterns": [
+        "Set + object + before + verb-ing."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Check the model name before sending the request.",
+          "chinese": "发送请求前检查模型名称。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-request-response",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0137",
+      "stable_key": "ai-large-models-sentence-0137",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d01",
+      "day": 1,
+      "order": 5,
+      "english": "Use valid JSON when sending structured data in the request body.",
+      "chinese": "在请求正文中发送结构化数据时使用有效的 JSON。",
+      "scene": "按接口要求构造结构化输入",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "valid",
+        "JSON",
+        "structured",
+        "request data"
+      ],
+      "core_patterns": [
+        "Use + format + when + verb-ing."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Use a valid JSON for request data.",
+          "explanation_zh": "JSON 表示数据格式时通常不加不定冠词 a。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "JSON"
+        ],
+        "note_zh": "JSON 常读作 jay-sawn。"
+      },
+      "review_group": "u07-request-response",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0138",
+      "stable_key": "ai-large-models-sentence-0138",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d01",
+      "day": 1,
+      "order": 6,
+      "english": "Check the status code before reading or processing the response body.",
+      "chinese": "读取或处理响应正文前检查状态码。",
+      "scene": "先判断请求结果，再处理响应正文",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "check",
+        "status code",
+        "before",
+        "response"
+      ],
+      "core_patterns": [
+        "Verb + object + before + verb-ing."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-request-response",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0139",
+      "stable_key": "ai-large-models-sentence-0139",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d02",
+      "day": 2,
+      "order": 1,
+      "english": "Store the API key in a secure environment variable outside the source code.",
+      "chinese": "把 API key 存储在源代码之外的安全环境变量中。",
+      "scene": "配置应用认证信息而不写入代码",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "store",
+        "API key",
+        "secure",
+        "environment variable"
+      ],
+      "core_patterns": [
+        "Store + secret + in + secure place."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Keep the API key in an environment variable.",
+          "chinese": "把 API key 保存在环境变量中。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "API key",
+          "environment variable"
+        ],
+        "note_zh": "API 按字母逐个读。"
+      },
+      "review_group": "u07-authentication",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0140",
+      "stable_key": "ai-large-models-sentence-0140",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d02",
+      "day": 2,
+      "order": 2,
+      "english": "Never put a real API key directly in shared source code.",
+      "chinese": "绝不要把真实 API key 直接写入共享源代码。",
+      "scene": "防止凭据随代码泄露",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "never",
+        "real",
+        "API key",
+        "source code"
+      ],
+      "core_patterns": [
+        "Never + verb + secret + in + place."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Do not hard-code a real API key.",
+          "chinese": "不要硬编码真实 API key。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "API key"
+        ],
+        "note_zh": "API 按字母逐个读。"
+      },
+      "review_group": "u07-authentication",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0141",
+      "stable_key": "ai-large-models-sentence-0141",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d02",
+      "day": 2,
+      "order": 3,
+      "english": "The request requires valid authentication before the server can process it.",
+      "chinese": "服务器处理请求前，需要完成有效认证。",
+      "scene": "阅读受保护 endpoint 的访问要求",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "request",
+        "require",
+        "valid",
+        "authentication"
+      ],
+      "core_patterns": [
+        "Noun + requires + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Valid authentication is required for the request.",
+          "chinese": "该请求要求有效认证。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-authentication",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0142",
+      "stable_key": "ai-large-models-sentence-0142",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d02",
+      "day": 2,
+      "order": 4,
+      "english": "Remove every secret key before sharing an application log with others.",
+      "chinese": "与他人分享应用日志前移除所有密钥。",
+      "scene": "发送诊断信息前清理凭据",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "remove",
+        "key",
+        "before",
+        "share",
+        "log"
+      ],
+      "core_patterns": [
+        "Verb + secret + before + verb-ing."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Remove the key before share a log.",
+          "explanation_zh": "before 后接动作时使用动名词 sharing。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Redact the key before sharing the log.",
+          "chinese": "分享日志前遮盖密钥。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-authentication",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0143",
+      "stable_key": "ai-large-models-sentence-0143",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d02",
+      "day": 2,
+      "order": 5,
+      "english": "Check the API key and assigned permissions if authentication fails.",
+      "chinese": "如果认证失败，检查 API key 和已分配权限。",
+      "scene": "定位认证失败的常见配置原因",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "check",
+        "API key",
+        "permission",
+        "authentication",
+        "fails"
+      ],
+      "core_patterns": [
+        "Instruction + if + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "API key",
+          "authentication"
+        ],
+        "note_zh": "API 按字母逐个读。"
+      },
+      "review_group": "u07-authentication",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0144",
+      "stable_key": "ai-large-models-sentence-0144",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d02",
+      "day": 2,
+      "order": 6,
+      "english": "Give each application only the permissions it needs for its assigned task.",
+      "chinese": "只授予每个应用完成指定任务所需的权限。",
+      "scene": "按最小权限原则配置 API 客户端",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "give",
+        "application",
+        "only",
+        "permission",
+        "need"
+      ],
+      "core_patterns": [
+        "Give + subject + only + object + relative clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Grant only the permissions the application needs.",
+          "chinese": "只授予应用所需的权限。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-authentication",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0145",
+      "stable_key": "ai-large-models-sentence-0145",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d03",
+      "day": 3,
+      "order": 1,
+      "english": "Set the temperature parameter only when the API supports it.",
+      "chinese": "只有 API 支持时才设置 temperature 参数。",
+      "scene": "阅读可选生成参数的兼容说明",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "set",
+        "temperature",
+        "parameter",
+        "API",
+        "support"
+      ],
+      "core_patterns": [
+        "Verb + object + only when + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "temperature",
+          "API"
+        ],
+        "note_zh": "temperature 的中间音节较弱；API 按字母逐个读。"
+      },
+      "review_group": "u07-parameters",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0146",
+      "stable_key": "ai-large-models-sentence-0146",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d03",
+      "day": 3,
+      "order": 2,
+      "english": "The total token count includes both the request input and generated output.",
+      "chinese": "token 总数同时包括请求输入和生成输出。",
+      "scene": "理解总 token usage 的组成",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "token count",
+        "include",
+        "both",
+        "input",
+        "output"
+      ],
+      "core_patterns": [
+        "Noun + includes both A and B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Both input and output contribute to token usage.",
+          "chinese": "输入和输出都会计入 token usage。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "token",
+          "input",
+          "output"
+        ],
+        "note_zh": "input 和 output 的重音都在第一个音节。"
+      },
+      "review_group": "u07-parameters",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0147",
+      "stable_key": "ai-large-models-sentence-0147",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d03",
+      "day": 3,
+      "order": 3,
+      "english": "A longer generated response usually uses more output tokens than a short one.",
+      "chinese": "较长的生成响应通常比短响应使用更多输出 token。",
+      "scene": "估计回答长度对 token usage 的影响",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "longer",
+        "response",
+        "usually",
+        "output token"
+      ],
+      "core_patterns": [
+        "A + comparative noun + usually + verb + comparative object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-parameters",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0148",
+      "stable_key": "ai-large-models-sentence-0148",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d03",
+      "day": 3,
+      "order": 4,
+      "english": "Reduce or summarize the input when the context limit is reached.",
+      "chinese": "达到上下文限制时减少或总结输入。",
+      "scene": "请求超过上下文容量时缩短输入",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "reduce",
+        "input",
+        "context limit",
+        "reached"
+      ],
+      "core_patterns": [
+        "Instruction + when + passive clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Shorten the input if it exceeds the context limit.",
+          "chinese": "如果输入超过上下文限制，请将其缩短。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-parameters",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0149",
+      "stable_key": "ai-large-models-sentence-0149",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d03",
+      "day": 3,
+      "order": 5,
+      "english": "Read the current API documentation before adding any optional parameter to a request.",
+      "chinese": "向请求添加任何可选参数前阅读当前 API 文档。",
+      "scene": "避免使用接口不支持的参数",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "read",
+        "API",
+        "documentation",
+        "before",
+        "parameter"
+      ],
+      "core_patterns": [
+        "Verb + object + before + verb-ing."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "API",
+          "documentation"
+        ],
+        "note_zh": "API 按字母逐个读。"
+      },
+      "review_group": "u07-parameters",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0150",
+      "stable_key": "ai-large-models-sentence-0150",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d04",
+      "day": 4,
+      "order": 1,
+      "english": "We reached the rate limit, so wait briefly before retrying the request.",
+      "chinese": "我们达到了速率限制，因此请稍等后再重试请求。",
+      "scene": "请求过于频繁时延迟下一次调用",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "reach",
+        "rate limit",
+        "wait",
+        "retry"
+      ],
+      "core_patterns": [
+        "Clause, so + instruction."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "We reached the rate limit, so retry now.",
+          "explanation_zh": "达到速率限制后应先等待，立即重试可能继续失败。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Wait before retrying after a rate limit error.",
+          "chinese": "出现速率限制错误后，等待再重试。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-limits",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0151",
+      "stable_key": "ai-large-models-sentence-0151",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d04",
+      "day": 4,
+      "order": 2,
+      "english": "Check the response body when the status code shows an error.",
+      "chinese": "状态码显示错误时检查响应正文。",
+      "scene": "从错误响应中读取进一步说明",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "check",
+        "response body",
+        "status code",
+        "error"
+      ],
+      "core_patterns": [
+        "Instruction + when + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-limits",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0152",
+      "stable_key": "ai-large-models-sentence-0152",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d04",
+      "day": 4,
+      "order": 3,
+      "english": "After a client error, fix the request before sending it again.",
+      "chinese": "出现客户端错误后，先修正请求再重新发送。",
+      "scene": "输入或认证问题导致错误时先修复请求",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "fix",
+        "request",
+        "before",
+        "retry",
+        "client error"
+      ],
+      "core_patterns": [
+        "Verb A before verb-ing B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Correct the request before sending it again.",
+          "chinese": "重新发送前先修正请求。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-limits",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0153",
+      "stable_key": "ai-large-models-sentence-0153",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d04",
+      "day": 4,
+      "order": 4,
+      "english": "Log the request ID, but never log the API key.",
+      "chinese": "记录 request ID，但绝不要记录 API key。",
+      "scene": "保留可诊断标识同时保护凭据",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "log",
+        "request ID",
+        "never",
+        "API key"
+      ],
+      "core_patterns": [
+        "Verb A, but never verb B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Record the request ID without recording the API key.",
+          "chinese": "记录 request ID，但不要记录 API key。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "request ID",
+          "API key"
+        ],
+        "note_zh": "ID 和 API 都按字母逐个读。"
+      },
+      "review_group": "u07-limits",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0154",
+      "stable_key": "ai-large-models-sentence-0154",
+      "unit_id": "ai-l4-u07",
+      "lesson_id": "ai-l4-u07-d04",
+      "day": 4,
+      "order": 5,
+      "english": "A system message can define the assistant's general behavior across the conversation.",
+      "chinese": "system message 可以定义助手在整个对话中的一般行为。",
+      "scene": "阅读模型请求中的高层行为说明",
+      "difficulty": "upper_intermediate",
+      "core_words": [
+        "system message",
+        "define",
+        "assistant",
+        "general",
+        "behavior"
+      ],
+      "core_patterns": [
+        "A + noun + can define + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Use a system message to set general behavior.",
+          "chinese": "使用 system message 设置一般行为。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u07-limits",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "status": "reviewed"
+}

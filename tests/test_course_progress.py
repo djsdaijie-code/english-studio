@@ -156,8 +156,8 @@ def test_enrollment_is_sparse_idempotent_and_records_content_versions(tmp_path: 
 
         assert first.course_stable_key == "ai-large-models-course"
         assert first.status == second.status == "active"
-        assert first.course_version == second.course_version == "0.1.0"
-        assert first.content_version == second.content_version == "0.1.0"
+        assert first.course_version == second.course_version == "1.0.0"
+        assert first.content_version == second.content_version == "1.0.0"
         assert second.current_lesson_stable_key == "ai-large-models-lesson-interface-actions-one"
         connection = database.connect()
         assert connection.execute("SELECT COUNT(*) FROM course_enrollments").fetchone()[0] == 1
@@ -227,7 +227,7 @@ def test_item_start_complete_skip_scores_and_timestamps(tmp_path: Path) -> None:
         assert skipped.status == "skipped"
         assert skipped.attempt_count == 0
         assert skipped.first_started_at is None
-        assert service.get_course_progress(COURSE_ID).completion_percentage == pytest.approx(8.33)
+        assert service.get_course_progress(COURSE_ID).completion_percentage == pytest.approx(0.39)
     finally:
         database.close()
 
@@ -258,9 +258,9 @@ def test_lesson_unit_and_course_progress_are_derived_from_required_items(tmp_pat
         course = service.get_course_progress(COURSE_ID)
         assert (lesson.completed_required_items, lesson.total_required_items) == (6, 6)
         assert lesson.is_completed and lesson.completion_percentage == 100.0
-        assert (unit.completed_required_items, unit.total_required_items) == (6, 12)
-        assert unit.completion_percentage == 50.0
-        assert course.completion_percentage == 50.0
+        assert (unit.completed_required_items, unit.total_required_items) == (6, 32)
+        assert unit.completion_percentage == 18.75
+        assert course.completion_percentage == 2.34
 
         connection = database.connect()
         assert connection.execute("SELECT COUNT(*) FROM course_item_progress").fetchone()[0] == 6
@@ -285,30 +285,36 @@ def test_optional_deprecated_new_and_reordered_items_use_current_json(
     database, service = _service(tmp_path / "state", courses_root=courses_root)
     try:
         service.complete_item(COURSE_ID, FIRST_ITEM)
-        assert service.get_course_progress(COURSE_ID).total_required_items == 12
+        assert service.get_course_progress(COURSE_ID).total_required_items == 256
 
         unit_path = _unit_path(courses_root)
         unit = _read_json(unit_path)
         first, second = unit["sentences"][0], unit["sentences"][1]
         first["order"], second["order"] = second["order"], first["order"]
-        new_item = dict(unit["sentences"][-1])
+        new_item = dict(
+            next(
+                sentence
+                for sentence in unit["sentences"]
+                if sentence["sentence_id"] == "ai-s0012"
+            )
+        )
         new_item.update(
             {
-                "sentence_id": "ai-s0013",
-                "stable_key": "ai-large-models-sentence-0013",
+                "sentence_id": "ai-s0177",
+                "stable_key": "ai-large-models-sentence-0177",
                 "order": 7,
                 "english": "Use a new stable key when the meaning changes.",
-                "chinese": "语义变化时使用新的稳定键。",
-                "content_version": "0.2.0",
+                "chinese": "含义变化时使用新的稳定标识。",
+                "content_version": "1.1.0",
             }
         )
         unit["sentences"].append(new_item)
-        unit["lessons"][1]["new_sentence_ids"].append("ai-s0013")
-        unit["lessons"][1]["activities"][0]["sentence_ids"].append("ai-s0013")
+        unit["lessons"][1]["new_sentence_ids"].append("ai-s0177")
+        unit["lessons"][1]["activities"][0]["sentence_ids"].append("ai-s0177")
         _write_json(unit_path, unit)
         course_document = _read_json(_course_path(courses_root))
-        course_document["content_version"] = "0.2.0"
-        course_document["estimated_sentences"] = 13
+        course_document["content_version"] = "1.1.0"
+        course_document["estimated_sentences"] = 177
         _write_json(_course_path(courses_root), course_document)
 
         upgraded = CourseProgressService(
@@ -317,9 +323,9 @@ def test_optional_deprecated_new_and_reordered_items_use_current_json(
         )
         current = upgraded.get_course_progress(COURSE_ID)
         historical = upgraded.get_item_progress(COURSE_ID, FIRST_ITEM)
-        assert current.total_required_items == 13
+        assert current.total_required_items == 257
         assert current.completed_required_items == 1
-        assert current.completion_percentage == pytest.approx(7.69)
+        assert current.completion_percentage == pytest.approx(0.39)
         assert historical.status == "completed"
         assert database.connect().execute(
             "SELECT COUNT(*) FROM course_item_progress WHERE item_stable_key = ?",
@@ -334,12 +340,12 @@ def test_optional_deprecated_new_and_reordered_items_use_current_json(
             CourseProgressRepository(database),
         )
         current = deprecated.get_course_progress(COURSE_ID)
-        assert current.total_required_items == 12
+        assert current.total_required_items == 256
         assert current.completed_required_items == 0
         assert deprecated.get_item_progress(COURSE_ID, FIRST_ITEM).status == "completed"
 
-        deprecated.start_item(COURSE_ID, "ai-large-models-sentence-0013")
-        assert deprecated.get_enrollment(COURSE_ID).content_version == "0.2.0"  # type: ignore[union-attr]
+        deprecated.start_item(COURSE_ID, "ai-large-models-sentence-0177")
+        assert deprecated.get_enrollment(COURSE_ID).content_version == "1.1.0"  # type: ignore[union-attr]
     finally:
         database.close()
 
@@ -355,7 +361,7 @@ def test_optional_items_and_empty_lessons_have_explicit_behavior(
 
     database, service = _service(tmp_path / "optional", courses_root=courses_root)
     try:
-        assert service.get_course_progress(COURSE_ID).total_required_items == 11
+        assert service.get_course_progress(COURSE_ID).total_required_items == 255
     finally:
         database.close()
 
@@ -374,7 +380,7 @@ def test_optional_items_and_empty_lessons_have_explicit_behavior(
         empty_database.close()
 
 
-def test_next_lesson_and_item_for_new_partial_skipped_complete_and_paused_users(
+def test_next_lesson_and_item_for_new_partial_skipped_and_paused_users(
     tmp_path: Path,
 ) -> None:
     database, service = _service(tmp_path)
@@ -401,9 +407,9 @@ def test_next_lesson_and_item_for_new_partial_skipped_complete_and_paused_users(
 
         for number in range(2, 13):
             service.complete_item(COURSE_ID, f"ai-large-models-sentence-{number:04d}")
-        assert service.get_course_progress(COURSE_ID).is_completed
-        assert service.get_next_lesson(COURSE_ID) is None
-        assert service.get_next_required_item(COURSE_ID) is None
-        assert service.get_enrollment(COURSE_ID).status == "completed"  # type: ignore[union-attr]
+        assert not service.get_course_progress(COURSE_ID).is_completed
+        assert service.get_next_lesson(COURSE_ID).lesson_id == "ai-l1-u01-d03"  # type: ignore[union-attr]
+        assert service.get_next_required_item(COURSE_ID).stable_key.endswith("0013")  # type: ignore[union-attr]
+        assert service.get_enrollment(COURSE_ID).status == "active"  # type: ignore[union-attr]
     finally:
         database.close()

@@ -1,0 +1,1489 @@
+{
+  "specification_version": "1.0",
+  "content_version": "1.0.0",
+  "unit_id": "ai-l3-u06",
+  "stable_key": "ai-large-models-unit-errors-recovery",
+  "course_id": "ai-large-models",
+  "level_id": "ai-l3",
+  "order": 6,
+  "title": "错误、失败和修正",
+  "description": "区分输入、内容、网络、权限和服务限制问题，使用错误信息与日志定位原因，并安全重试、修复或回滚。",
+  "difficulty": "intermediate",
+  "estimated_days": 7,
+  "learning_goals": [
+    "识别不同类型的失败原因",
+    "从错误信息和日志中寻找线索",
+    "在保留正常结果的前提下修复、重试或回滚"
+  ],
+  "core_vocabulary": [
+    "failed",
+    "invalid",
+    "unsupported",
+    "missing",
+    "incomplete",
+    "timeout",
+    "connection",
+    "permission",
+    "rate limit",
+    "log",
+    "retry",
+    "fix",
+    "roll back"
+  ],
+  "core_patterns": [
+    "The request failed because + clause.",
+    "If + condition, + instruction.",
+    "Verb + object, then + instruction."
+  ],
+  "learning_plan_override": null,
+  "lessons": [
+    {
+      "lesson_id": "ai-l3-u06-d01",
+      "stable_key": "ai-large-models-lesson-input-and-content-errors",
+      "unit_id": "ai-l3-u06",
+      "day": 1,
+      "order": 1,
+      "title": "输入与内容错误",
+      "lesson_type": "new_content",
+      "description": "识别无效输入、不支持格式、信息缺失和回答不完整。",
+      "learning_goals": [
+        "描述输入与格式问题",
+        "指出回答中的缺失和错误"
+      ],
+      "new_sentence_ids": [
+        "ai-s0111",
+        "ai-s0112",
+        "ai-s0113",
+        "ai-s0114",
+        "ai-s0115",
+        "ai-s0116"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0111",
+            "ai-s0112",
+            "ai-s0113",
+            "ai-s0114",
+            "ai-s0115",
+            "ai-s0116"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0111",
+            "ai-s0112",
+            "ai-s0113",
+            "ai-s0116"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0112",
+            "ai-s0114",
+            "ai-s0115"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u06-d02",
+      "stable_key": "ai-large-models-lesson-network-permission-limits",
+      "unit_id": "ai-l3-u06",
+      "day": 2,
+      "order": 2,
+      "title": "网络、权限与服务限制",
+      "lesson_type": "new_content",
+      "description": "区分连接、超时、权限、rate limit、文件大小和格式限制。",
+      "learning_goals": [
+        "识别网络与服务限制",
+        "为不同错误选择合理下一步"
+      ],
+      "new_sentence_ids": [
+        "ai-s0117",
+        "ai-s0118",
+        "ai-s0119",
+        "ai-s0120",
+        "ai-s0121",
+        "ai-s0122"
+      ],
+      "review_sentence_ids": [
+        "ai-s0111",
+        "ai-s0113",
+        "ai-s0114"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0117",
+            "ai-s0118",
+            "ai-s0119",
+            "ai-s0120",
+            "ai-s0121",
+            "ai-s0122"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0117",
+            "ai-s0118",
+            "ai-s0120",
+            "ai-s0122"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0119",
+            "ai-s0120",
+            "ai-s0121"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u06-d03",
+      "stable_key": "ai-large-models-lesson-errors-and-logs",
+      "unit_id": "ai-l3-u06",
+      "day": 3,
+      "order": 3,
+      "title": "错误信息与日志",
+      "lesson_type": "new_content",
+      "description": "检查错误原因、输入格式、日志和 request ID。",
+      "learning_goals": [
+        "从错误信息与日志定位问题",
+        "记录必要诊断信息且不泄露隐私"
+      ],
+      "new_sentence_ids": [
+        "ai-s0123",
+        "ai-s0124",
+        "ai-s0125",
+        "ai-s0126",
+        "ai-s0127"
+      ],
+      "review_sentence_ids": [
+        "ai-s0111",
+        "ai-s0118",
+        "ai-s0119"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0123",
+            "ai-s0124",
+            "ai-s0125",
+            "ai-s0126",
+            "ai-s0127"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0123",
+            "ai-s0125",
+            "ai-s0126"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0124",
+            "ai-s0127"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u06-d04",
+      "stable_key": "ai-large-models-lesson-fix-retry-rollback",
+      "unit_id": "ai-l3-u06",
+      "day": 4,
+      "order": 4,
+      "title": "修复、重试与回滚",
+      "lesson_type": "new_content",
+      "description": "修正输入、等待连接、回滚问题改动并保留正常部分。",
+      "learning_goals": [
+        "根据失败类型决定是否重试",
+        "安全回滚并保留有效结果"
+      ],
+      "new_sentence_ids": [
+        "ai-s0128",
+        "ai-s0129",
+        "ai-s0130",
+        "ai-s0131",
+        "ai-s0132"
+      ],
+      "review_sentence_ids": [
+        "ai-s0112",
+        "ai-s0115",
+        "ai-s0123"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0128",
+            "ai-s0129",
+            "ai-s0130",
+            "ai-s0131",
+            "ai-s0132"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0128",
+            "ai-s0129",
+            "ai-s0132"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0130",
+            "ai-s0131",
+            "ai-s0132"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u06-d05",
+      "stable_key": "ai-large-models-lesson-error-recovery-scenario",
+      "unit_id": "ai-l3-u06",
+      "day": 5,
+      "order": 5,
+      "title": "综合场景：诊断并恢复任务",
+      "lesson_type": "scenario",
+      "description": "从失败现象到日志检查、原因判断、修复和安全恢复。",
+      "learning_goals": [
+        "按顺序说明排错过程",
+        "避免无依据或无休止的重试"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0111",
+        "ai-s0112",
+        "ai-s0113",
+        "ai-s0117",
+        "ai-s0118",
+        "ai-s0119",
+        "ai-s0120",
+        "ai-s0123",
+        "ai-s0124",
+        "ai-s0125",
+        "ai-s0128",
+        "ai-s0130",
+        "ai-s0131",
+        "ai-s0132"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0111",
+            "ai-s0117",
+            "ai-s0118",
+            "ai-s0119",
+            "ai-s0123",
+            "ai-s0125",
+            "ai-s0128",
+            "ai-s0132"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0111",
+            "ai-s0112",
+            "ai-s0113",
+            "ai-s0117",
+            "ai-s0118",
+            "ai-s0119",
+            "ai-s0120",
+            "ai-s0123",
+            "ai-s0124",
+            "ai-s0125",
+            "ai-s0128",
+            "ai-s0130",
+            "ai-s0131",
+            "ai-s0132"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0118",
+            "ai-s0119",
+            "ai-s0130",
+            "ai-s0131"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u06-d06",
+      "stable_key": "ai-large-models-lesson-error-dictation-speaking",
+      "unit_id": "ai-l3-u06",
+      "day": 6,
+      "order": 6,
+      "title": "听写与跟读",
+      "lesson_type": "dictation",
+      "description": "听写错误词汇，跟读原因、条件和恢复说明。",
+      "learning_goals": [
+        "听辨 failed、invalid、timeout 与 permission",
+        "自然朗读失败原因和恢复步骤"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0111",
+        "ai-s0112",
+        "ai-s0113",
+        "ai-s0117",
+        "ai-s0118",
+        "ai-s0119",
+        "ai-s0120",
+        "ai-s0123",
+        "ai-s0128",
+        "ai-s0130"
+      ],
+      "activities": [
+        {
+          "activity_type": "dictation",
+          "sentence_ids": [
+            "ai-s0111",
+            "ai-s0112",
+            "ai-s0113",
+            "ai-s0117",
+            "ai-s0118",
+            "ai-s0119"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0120",
+            "ai-s0123",
+            "ai-s0128",
+            "ai-s0130"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0111",
+            "ai-s0112",
+            "ai-s0113",
+            "ai-s0117",
+            "ai-s0118",
+            "ai-s0119",
+            "ai-s0120",
+            "ai-s0123",
+            "ai-s0128",
+            "ai-s0130"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u06-d07",
+      "stable_key": "ai-large-models-lesson-error-review-assessment",
+      "unit_id": "ai-l3-u06",
+      "day": 7,
+      "order": 7,
+      "title": "复习与自测",
+      "lesson_type": "assessment",
+      "description": "复习失败分类、日志诊断和恢复策略。",
+      "learning_goals": [
+        "根据中文提示描述常见错误",
+        "为不同错误选择合理修复动作"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0111",
+        "ai-s0112",
+        "ai-s0113",
+        "ai-s0114",
+        "ai-s0115",
+        "ai-s0116",
+        "ai-s0117",
+        "ai-s0118",
+        "ai-s0119",
+        "ai-s0120",
+        "ai-s0121",
+        "ai-s0122",
+        "ai-s0123",
+        "ai-s0124",
+        "ai-s0125",
+        "ai-s0126",
+        "ai-s0127",
+        "ai-s0128",
+        "ai-s0129",
+        "ai-s0130",
+        "ai-s0131",
+        "ai-s0132"
+      ],
+      "activities": [
+        {
+          "activity_type": "self_test",
+          "sentence_ids": [
+            "ai-s0111",
+            "ai-s0113",
+            "ai-s0118",
+            "ai-s0119",
+            "ai-s0120",
+            "ai-s0123",
+            "ai-s0130",
+            "ai-s0131"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0114",
+            "ai-s0121",
+            "ai-s0124",
+            "ai-s0132"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "ai-s0111",
+            "ai-s0112",
+            "ai-s0113",
+            "ai-s0114",
+            "ai-s0115",
+            "ai-s0116",
+            "ai-s0117",
+            "ai-s0118",
+            "ai-s0119",
+            "ai-s0120",
+            "ai-s0121",
+            "ai-s0122",
+            "ai-s0123",
+            "ai-s0124",
+            "ai-s0125",
+            "ai-s0126",
+            "ai-s0127",
+            "ai-s0128",
+            "ai-s0129",
+            "ai-s0130",
+            "ai-s0131",
+            "ai-s0132"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": {
+        "assessment_type": "mixed",
+        "sentence_ids": [
+          "ai-s0111",
+          "ai-s0113",
+          "ai-s0118",
+          "ai-s0119",
+          "ai-s0120",
+          "ai-s0123",
+          "ai-s0130",
+          "ai-s0131"
+        ],
+        "passing_score": 60
+      },
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "sentences": [
+    {
+      "sentence_id": "ai-s0111",
+      "stable_key": "ai-large-models-sentence-0111",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d01",
+      "day": 1,
+      "order": 1,
+      "english": "The request failed because the input was invalid.",
+      "chinese": "请求失败，因为输入无效。",
+      "scene": "提交的数据不符合接口或表单要求",
+      "difficulty": "intermediate",
+      "core_words": [
+        "request",
+        "failed",
+        "input",
+        "invalid"
+      ],
+      "core_patterns": [
+        "The request failed because + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "The request failed because of the input was invalid.",
+          "explanation_zh": "because 后接完整句子；because of 后接名词短语。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Invalid input caused the request to fail.",
+          "chinese": "无效输入导致请求失败。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-input-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0112",
+      "stable_key": "ai-large-models-sentence-0112",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d01",
+      "day": 1,
+      "order": 2,
+      "english": "The response is missing the final section.",
+      "chinese": "回答缺少最后一个部分。",
+      "scene": "生成结果提前结束或内容不完整",
+      "difficulty": "intermediate",
+      "core_words": [
+        "response",
+        "missing",
+        "final",
+        "section"
+      ],
+      "core_patterns": [
+        "Noun + is missing + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "The final section is missing from the response.",
+          "chinese": "回答中缺少最后一个部分。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-input-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0113",
+      "stable_key": "ai-large-models-sentence-0113",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d01",
+      "day": 1,
+      "order": 3,
+      "english": "This file format is not supported.",
+      "chinese": "不支持这种文件格式。",
+      "scene": "系统无法处理上传文件的格式",
+      "difficulty": "intermediate",
+      "core_words": [
+        "file",
+        "format",
+        "supported"
+      ],
+      "core_patterns": [
+        "Noun + is not supported."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "The system does not support this file format.",
+          "chinese": "系统不支持这种文件格式。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-input-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0114",
+      "stable_key": "ai-large-models-sentence-0114",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d01",
+      "day": 1,
+      "order": 4,
+      "english": "Some required information is missing.",
+      "chinese": "缺少一些必需信息。",
+      "scene": "任务无法开始，因为必要字段未提供",
+      "difficulty": "intermediate",
+      "core_words": [
+        "required",
+        "information",
+        "missing"
+      ],
+      "core_patterns": [
+        "Some + noun + is missing."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Some required informations are missing.",
+          "explanation_zh": "information 是不可数名词，不使用 informations。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "The request is missing required information.",
+          "chinese": "请求中缺少必需信息。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-input-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0115",
+      "stable_key": "ai-large-models-sentence-0115",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d01",
+      "day": 1,
+      "order": 5,
+      "english": "The answer contains an incorrect date.",
+      "chinese": "回答中包含一个错误日期。",
+      "scene": "核对结果时发现事实错误",
+      "difficulty": "intermediate",
+      "core_words": [
+        "answer",
+        "contain",
+        "incorrect",
+        "date"
+      ],
+      "core_patterns": [
+        "Noun + contains + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "One date in the answer is incorrect.",
+          "chinese": "回答中有一个日期不正确。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-input-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0116",
+      "stable_key": "ai-large-models-sentence-0116",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d01",
+      "day": 1,
+      "order": 6,
+      "english": "The task stopped before it was complete.",
+      "chinese": "任务在完成前停止了。",
+      "scene": "执行过程意外中断",
+      "difficulty": "intermediate",
+      "core_words": [
+        "task",
+        "stopped",
+        "before",
+        "complete"
+      ],
+      "core_patterns": [
+        "Noun + stopped before + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "The task ended before completion.",
+          "chinese": "任务尚未完成就结束了。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-input-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0117",
+      "stable_key": "ai-large-models-sentence-0117",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d02",
+      "day": 2,
+      "order": 1,
+      "english": "Check your connection and try again.",
+      "chinese": "检查网络连接，然后重试。",
+      "scene": "网络连接错误后进行基础排查",
+      "difficulty": "intermediate",
+      "core_words": [
+        "check",
+        "connection",
+        "try",
+        "again"
+      ],
+      "core_patterns": [
+        "Verb A and verb B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Check the connection before retrying.",
+          "chinese": "重试前检查网络连接。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-system-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0118",
+      "stable_key": "ai-large-models-sentence-0118",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d02",
+      "day": 2,
+      "order": 2,
+      "english": "The request timed out before the server responded.",
+      "chinese": "服务器响应前，请求已超时。",
+      "scene": "服务响应时间超过客户端等待时间",
+      "difficulty": "intermediate",
+      "core_words": [
+        "request",
+        "timed out",
+        "server",
+        "responded"
+      ],
+      "core_patterns": [
+        "Noun + timed out before + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "The request was timeout.",
+          "explanation_zh": "timeout 是名词；描述动作使用 timed out。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "The server did not respond before the timeout.",
+          "chinese": "服务器未在超时前响应。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-system-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0119",
+      "stable_key": "ai-large-models-sentence-0119",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d02",
+      "day": 2,
+      "order": 3,
+      "english": "You do not have permission to access this file.",
+      "chinese": "你没有访问这个文件的权限。",
+      "scene": "文件或目录拒绝当前用户访问",
+      "difficulty": "intermediate",
+      "core_words": [
+        "permission",
+        "access",
+        "file"
+      ],
+      "core_patterns": [
+        "Person + does not have permission to + verb."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "You do not have permission for access this file.",
+          "explanation_zh": "permission 后表示动作时使用 to access。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Access to this file is not permitted.",
+          "chinese": "不允许访问这个文件。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-system-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0120",
+      "stable_key": "ai-large-models-sentence-0120",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d02",
+      "day": 2,
+      "order": 4,
+      "english": "The request failed because the rate limit was reached.",
+      "chinese": "请求失败，因为已达到速率限制。",
+      "scene": "单位时间内请求过多导致服务拒绝",
+      "difficulty": "intermediate",
+      "core_words": [
+        "request",
+        "failed",
+        "rate limit",
+        "reached"
+      ],
+      "core_patterns": [
+        "The request failed because + passive clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Too many recent requests caused a rate limit error.",
+          "chinese": "最近请求过多导致了速率限制错误。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-system-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0121",
+      "stable_key": "ai-large-models-sentence-0121",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d02",
+      "day": 2,
+      "order": 5,
+      "english": "Upload a smaller file if the size limit is exceeded.",
+      "chinese": "如果超出大小限制，请上传较小的文件。",
+      "scene": "文件大小超过服务允许范围",
+      "difficulty": "intermediate",
+      "core_words": [
+        "upload",
+        "smaller",
+        "file",
+        "size limit",
+        "exceeded"
+      ],
+      "core_patterns": [
+        "Instruction + if + passive clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "If the file is too large, upload a smaller one.",
+          "chinese": "如果文件太大，请上传较小的文件。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-system-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0122",
+      "stable_key": "ai-large-models-sentence-0122",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d02",
+      "day": 2,
+      "order": 6,
+      "english": "Use a supported format and resend the file.",
+      "chinese": "使用支持的格式并重新发送文件。",
+      "scene": "将不支持的文件转换后再次提交",
+      "difficulty": "intermediate",
+      "core_words": [
+        "supported",
+        "format",
+        "resend",
+        "file"
+      ],
+      "core_patterns": [
+        "Verb A and verb B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-system-errors",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0123",
+      "stable_key": "ai-large-models-sentence-0123",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d03",
+      "day": 3,
+      "order": 1,
+      "english": "Check the error message for the cause.",
+      "chinese": "检查错误信息以查找原因。",
+      "scene": "根据错误提示开始定位问题",
+      "difficulty": "intermediate",
+      "core_words": [
+        "check",
+        "error message",
+        "cause"
+      ],
+      "core_patterns": [
+        "Check + noun + for + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Look for the cause in the error message.",
+          "chinese": "在错误信息中查找原因。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-diagnosis",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0124",
+      "stable_key": "ai-large-models-sentence-0124",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d03",
+      "day": 3,
+      "order": 2,
+      "english": "Review the log without sharing private data.",
+      "chinese": "查看日志，但不要分享私人数据。",
+      "scene": "分析运行记录时保护敏感信息",
+      "difficulty": "intermediate",
+      "core_words": [
+        "review",
+        "log",
+        "without",
+        "private data"
+      ],
+      "core_patterns": [
+        "Verb + noun + without + verb-ing."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Review the log without share private data.",
+          "explanation_zh": "without 后接动名词 sharing。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-diagnosis",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0125",
+      "stable_key": "ai-large-models-sentence-0125",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d03",
+      "day": 3,
+      "order": 3,
+      "english": "Confirm that the input follows the required format.",
+      "chinese": "确认输入符合要求的格式。",
+      "scene": "重新提交前检查输入结构",
+      "difficulty": "intermediate",
+      "core_words": [
+        "confirm",
+        "input",
+        "follow",
+        "required",
+        "format"
+      ],
+      "core_patterns": [
+        "Confirm that + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Check that the input uses the required format.",
+          "chinese": "检查输入是否使用要求的格式。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-diagnosis",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0126",
+      "stable_key": "ai-large-models-sentence-0126",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d03",
+      "day": 3,
+      "order": 4,
+      "english": "The server returned an empty response.",
+      "chinese": "服务器返回了空响应。",
+      "scene": "请求完成但响应正文没有内容",
+      "difficulty": "intermediate",
+      "core_words": [
+        "server",
+        "returned",
+        "empty",
+        "response"
+      ],
+      "core_patterns": [
+        "Noun + returned + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "The response from the server was empty.",
+          "chinese": "服务器的响应是空的。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-diagnosis",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0127",
+      "stable_key": "ai-large-models-sentence-0127",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d03",
+      "day": 3,
+      "order": 5,
+      "english": "Record the time and request ID in the log.",
+      "chinese": "在日志中记录时间和 request ID。",
+      "scene": "保存定位一次失败所需的最小信息",
+      "difficulty": "intermediate",
+      "core_words": [
+        "record",
+        "time",
+        "request ID",
+        "log"
+      ],
+      "core_patterns": [
+        "Record + nouns + in + place."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "request ID"
+        ],
+        "note_zh": "ID 按两个字母逐个读。"
+      },
+      "review_group": "u06-diagnosis",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0128",
+      "stable_key": "ai-large-models-sentence-0128",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d04",
+      "day": 4,
+      "order": 1,
+      "english": "Fix the invalid input, then send the request again.",
+      "chinese": "修正无效输入，然后再次发送请求。",
+      "scene": "确认输入错误后修正并重试",
+      "difficulty": "intermediate",
+      "core_words": [
+        "fix",
+        "invalid",
+        "input",
+        "send",
+        "again"
+      ],
+      "core_patterns": [
+        "Verb A, then verb B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Correct the input before resending the request.",
+          "chinese": "重新发送请求前修正输入。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-recovery",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0129",
+      "stable_key": "ai-large-models-sentence-0129",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d04",
+      "day": 4,
+      "order": 2,
+      "english": "Retry the request after the connection returns.",
+      "chinese": "网络连接恢复后重试请求。",
+      "scene": "临时断网恢复后再次提交",
+      "difficulty": "intermediate",
+      "core_words": [
+        "retry",
+        "request",
+        "connection",
+        "returns"
+      ],
+      "core_patterns": [
+        "Verb + noun + after + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Try the request again after reconnecting.",
+          "chinese": "重新连接后再次尝试请求。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-recovery",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0130",
+      "stable_key": "ai-large-models-sentence-0130",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d04",
+      "day": 4,
+      "order": 3,
+      "english": "Roll back the last change if it caused the failure.",
+      "chinese": "如果上次更改导致失败，请将其回滚。",
+      "scene": "最近变更破坏正常流程时恢复旧状态",
+      "difficulty": "intermediate",
+      "core_words": [
+        "roll back",
+        "last",
+        "change",
+        "caused",
+        "failure"
+      ],
+      "core_patterns": [
+        "Verb + noun + if + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Rollback the last change.",
+          "explanation_zh": "作动词时通常写作两个词 roll back；rollback 常作名词。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Undo the last change if it caused the failure.",
+          "chinese": "如果上次更改导致失败，请撤销它。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-recovery",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0131",
+      "stable_key": "ai-large-models-sentence-0131",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d04",
+      "day": 4,
+      "order": 4,
+      "english": "Keep the parts that are already working.",
+      "chinese": "保留已经正常工作的部分。",
+      "scene": "修复局部问题时避免破坏有效结果",
+      "difficulty": "intermediate",
+      "core_words": [
+        "keep",
+        "part",
+        "already",
+        "working"
+      ],
+      "core_patterns": [
+        "Keep + noun + that + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Do not change the parts that already work.",
+          "chinese": "不要更改已经正常工作的部分。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-recovery",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0132",
+      "stable_key": "ai-large-models-sentence-0132",
+      "unit_id": "ai-l3-u06",
+      "lesson_id": "ai-l3-u06-d04",
+      "day": 4,
+      "order": 5,
+      "english": "If the issue continues, report what you already tried.",
+      "chinese": "如果问题仍然存在，请说明你已经尝试过什么。",
+      "scene": "向支持人员升级问题时提供排查过程",
+      "difficulty": "intermediate",
+      "core_words": [
+        "issue",
+        "continues",
+        "report",
+        "already",
+        "tried"
+      ],
+      "core_patterns": [
+        "If + condition, + instruction + indirect question."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Report your previous steps if the issue continues.",
+          "chinese": "如果问题仍然存在，请说明之前的处理步骤。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u06-recovery",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "status": "reviewed"
+}

@@ -1,0 +1,1452 @@
+{
+  "specification_version": "1.0",
+  "content_version": "1.0.0",
+  "unit_id": "ai-l2-u04",
+  "stable_key": "ai-large-models-unit-output-control",
+  "course_id": "ai-large-models",
+  "level_id": "ai-l2",
+  "order": 4,
+  "title": "提示词与输出控制",
+  "description": "控制回答的长度、语气、格式和内容范围，并在输出前明确检查要求。",
+  "difficulty": "elementary",
+  "estimated_days": 7,
+  "learning_goals": [
+    "调整回答长度、细节和语气",
+    "指定表格、列表、JSON 与段落格式",
+    "明确包含、排除和核查要求"
+  ],
+  "core_vocabulary": [
+    "shorter",
+    "detailed",
+    "tone",
+    "format",
+    "table",
+    "JSON",
+    "include",
+    "exclude",
+    "keep",
+    "remove",
+    "requirement"
+  ],
+  "core_patterns": [
+    "Make + object + adjective.",
+    "Do not include + noun.",
+    "Keep A, but remove B.",
+    "Before + verb-ing, + verb."
+  ],
+  "learning_plan_override": null,
+  "lessons": [
+    {
+      "lesson_id": "ai-l2-u04-d01",
+      "stable_key": "ai-large-models-lesson-length-and-tone",
+      "unit_id": "ai-l2-u04",
+      "day": 1,
+      "order": 1,
+      "title": "长度、细节与语气",
+      "lesson_type": "new_content",
+      "description": "使用简短形容词控制回答风格和目标读者。",
+      "learning_goals": [
+        "调整长度和细节",
+        "指定自然、清楚和初学者友好的语言"
+      ],
+      "new_sentence_ids": [
+        "ai-s0067",
+        "ai-s0068",
+        "ai-s0069",
+        "ai-s0070",
+        "ai-s0071",
+        "ai-s0072"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0067",
+            "ai-s0068",
+            "ai-s0069",
+            "ai-s0070",
+            "ai-s0071",
+            "ai-s0072"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0067",
+            "ai-s0069",
+            "ai-s0070",
+            "ai-s0072"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "ai-s0067",
+            "ai-s0068",
+            "ai-s0069",
+            "ai-s0070",
+            "ai-s0071",
+            "ai-s0072"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l2-u04-d02",
+      "stable_key": "ai-large-models-lesson-output-formats",
+      "unit_id": "ai-l2-u04",
+      "day": 2,
+      "order": 2,
+      "title": "表格、列表与 JSON",
+      "lesson_type": "new_content",
+      "description": "指定结构化输出以及段落和标题规则。",
+      "learning_goals": [
+        "要求常见输出格式",
+        "正确使用 each 和 exactly"
+      ],
+      "new_sentence_ids": [
+        "ai-s0073",
+        "ai-s0074",
+        "ai-s0075",
+        "ai-s0076",
+        "ai-s0077",
+        "ai-s0078"
+      ],
+      "review_sentence_ids": [
+        "ai-s0067",
+        "ai-s0068",
+        "ai-s0070"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0073",
+            "ai-s0074",
+            "ai-s0075",
+            "ai-s0076",
+            "ai-s0077",
+            "ai-s0078"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0073",
+            "ai-s0074",
+            "ai-s0078"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0075",
+            "ai-s0076",
+            "ai-s0077"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l2-u04-d03",
+      "stable_key": "ai-large-models-lesson-include-and-remove",
+      "unit_id": "ai-l2-u04",
+      "day": 3,
+      "order": 3,
+      "title": "包含、保留与删除",
+      "lesson_type": "new_content",
+      "description": "明确结果中应该保留、加入或排除的内容。",
+      "learning_goals": [
+        "控制内容范围",
+        "避免重复和个人信息"
+      ],
+      "new_sentence_ids": [
+        "ai-s0079",
+        "ai-s0080",
+        "ai-s0081",
+        "ai-s0082",
+        "ai-s0083"
+      ],
+      "review_sentence_ids": [
+        "ai-s0068",
+        "ai-s0072",
+        "ai-s0078"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0079",
+            "ai-s0080",
+            "ai-s0081",
+            "ai-s0082",
+            "ai-s0083"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0079",
+            "ai-s0080",
+            "ai-s0081"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0080",
+            "ai-s0082",
+            "ai-s0083"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l2-u04-d04",
+      "stable_key": "ai-large-models-lesson-constraints-and-review",
+      "unit_id": "ai-l2-u04",
+      "day": 4,
+      "order": 4,
+      "title": "约束与回答前检查",
+      "lesson_type": "new_content",
+      "description": "组合保留、条件、禁止和回答前检查要求。",
+      "learning_goals": [
+        "写出多条件提示词",
+        "要求 AI 明确未知信息并避免猜测"
+      ],
+      "new_sentence_ids": [
+        "ai-s0084",
+        "ai-s0085",
+        "ai-s0086",
+        "ai-s0087",
+        "ai-s0088"
+      ],
+      "review_sentence_ids": [
+        "ai-s0069",
+        "ai-s0075",
+        "ai-s0081"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0084",
+            "ai-s0085",
+            "ai-s0086",
+            "ai-s0087",
+            "ai-s0088"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0085",
+            "ai-s0086",
+            "ai-s0088"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0084",
+            "ai-s0087"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l2-u04-d05",
+      "stable_key": "ai-large-models-lesson-output-control-scenario",
+      "unit_id": "ai-l2-u04",
+      "day": 5,
+      "order": 5,
+      "title": "综合场景：约束一份输出",
+      "lesson_type": "scenario",
+      "description": "为一份面向初学者的结构化结果组合长度、格式和内容限制。",
+      "learning_goals": [
+        "组合多个不冲突的要求",
+        "检查最终输出是否遵循约束"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0067",
+        "ai-s0069",
+        "ai-s0070",
+        "ai-s0071",
+        "ai-s0073",
+        "ai-s0074",
+        "ai-s0075",
+        "ai-s0078",
+        "ai-s0080",
+        "ai-s0081",
+        "ai-s0083",
+        "ai-s0088"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0067",
+            "ai-s0069",
+            "ai-s0073",
+            "ai-s0075",
+            "ai-s0078",
+            "ai-s0080",
+            "ai-s0081",
+            "ai-s0088"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0067",
+            "ai-s0069",
+            "ai-s0070",
+            "ai-s0071",
+            "ai-s0073",
+            "ai-s0074",
+            "ai-s0075",
+            "ai-s0078",
+            "ai-s0080",
+            "ai-s0081",
+            "ai-s0083",
+            "ai-s0088"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0069",
+            "ai-s0075",
+            "ai-s0080",
+            "ai-s0088"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l2-u04-d06",
+      "stable_key": "ai-large-models-lesson-output-dictation-speaking",
+      "unit_id": "ai-l2-u04",
+      "day": 6,
+      "order": 6,
+      "title": "听写与跟读",
+      "lesson_type": "dictation",
+      "description": "听写格式与限制指令，跟读条件和回答前检查句。",
+      "learning_goals": [
+        "听辨 include、keep 与 remove",
+        "朗读带条件和转折的约束句"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0067",
+        "ai-s0068",
+        "ai-s0073",
+        "ai-s0075",
+        "ai-s0080",
+        "ai-s0081",
+        "ai-s0084",
+        "ai-s0085",
+        "ai-s0088"
+      ],
+      "activities": [
+        {
+          "activity_type": "dictation",
+          "sentence_ids": [
+            "ai-s0067",
+            "ai-s0068",
+            "ai-s0073",
+            "ai-s0075",
+            "ai-s0080",
+            "ai-s0081"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0084",
+            "ai-s0085",
+            "ai-s0086",
+            "ai-s0088"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0067",
+            "ai-s0068",
+            "ai-s0073",
+            "ai-s0075",
+            "ai-s0080",
+            "ai-s0081",
+            "ai-s0084",
+            "ai-s0085",
+            "ai-s0088"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l2-u04-d07",
+      "stable_key": "ai-large-models-lesson-output-review-assessment",
+      "unit_id": "ai-l2-u04",
+      "day": 7,
+      "order": 7,
+      "title": "复习与自测",
+      "lesson_type": "assessment",
+      "description": "复习输出风格、格式、范围和核查要求。",
+      "learning_goals": [
+        "根据中文提示写出输出约束",
+        "识别格式和范围指令"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0067",
+        "ai-s0068",
+        "ai-s0069",
+        "ai-s0070",
+        "ai-s0071",
+        "ai-s0072",
+        "ai-s0073",
+        "ai-s0074",
+        "ai-s0075",
+        "ai-s0076",
+        "ai-s0077",
+        "ai-s0078",
+        "ai-s0079",
+        "ai-s0080",
+        "ai-s0081",
+        "ai-s0082",
+        "ai-s0083",
+        "ai-s0084",
+        "ai-s0085",
+        "ai-s0086",
+        "ai-s0087",
+        "ai-s0088"
+      ],
+      "activities": [
+        {
+          "activity_type": "self_test",
+          "sentence_ids": [
+            "ai-s0068",
+            "ai-s0069",
+            "ai-s0073",
+            "ai-s0075",
+            "ai-s0080",
+            "ai-s0081",
+            "ai-s0085",
+            "ai-s0088"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0070",
+            "ai-s0076",
+            "ai-s0082",
+            "ai-s0086"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "ai-s0067",
+            "ai-s0068",
+            "ai-s0069",
+            "ai-s0070",
+            "ai-s0071",
+            "ai-s0072",
+            "ai-s0073",
+            "ai-s0074",
+            "ai-s0075",
+            "ai-s0076",
+            "ai-s0077",
+            "ai-s0078",
+            "ai-s0079",
+            "ai-s0080",
+            "ai-s0081",
+            "ai-s0082",
+            "ai-s0083",
+            "ai-s0084",
+            "ai-s0085",
+            "ai-s0086",
+            "ai-s0087",
+            "ai-s0088"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": {
+        "assessment_type": "mixed",
+        "sentence_ids": [
+          "ai-s0068",
+          "ai-s0069",
+          "ai-s0073",
+          "ai-s0075",
+          "ai-s0080",
+          "ai-s0081",
+          "ai-s0085",
+          "ai-s0088"
+        ],
+        "passing_score": 60
+      },
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "sentences": [
+    {
+      "sentence_id": "ai-s0067",
+      "stable_key": "ai-large-models-sentence-0067",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d01",
+      "day": 1,
+      "order": 1,
+      "english": "Make the answer shorter.",
+      "chinese": "把回答写得更短。",
+      "scene": "当前回答过长时要求压缩",
+      "difficulty": "elementary",
+      "core_words": [
+        "make",
+        "answer",
+        "shorter"
+      ],
+      "core_patterns": [
+        "Make + noun + adjective."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Shorten the answer.",
+          "chinese": "缩短回答。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-style",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0068",
+      "stable_key": "ai-large-models-sentence-0068",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d01",
+      "day": 1,
+      "order": 2,
+      "english": "Make it more detailed.",
+      "chinese": "把它写得更详细。",
+      "scene": "回答信息不足时要求增加细节",
+      "difficulty": "elementary",
+      "core_words": [
+        "make",
+        "detailed"
+      ],
+      "core_patterns": [
+        "Make + object + comparative adjective."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Make it more detail.",
+          "explanation_zh": "make it 后需要形容词 detailed，而不是名词 detail。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Add more detail.",
+          "chinese": "增加更多细节。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-style",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0069",
+      "stable_key": "ai-large-models-sentence-0069",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d01",
+      "day": 1,
+      "order": 3,
+      "english": "Use a natural and friendly tone.",
+      "chinese": "使用自然友好的语气。",
+      "scene": "调整消息使其更适合日常沟通",
+      "difficulty": "elementary",
+      "core_words": [
+        "use",
+        "natural",
+        "friendly",
+        "tone"
+      ],
+      "core_patterns": [
+        "Use + adjectives + noun."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Keep the tone natural and friendly.",
+          "chinese": "保持语气自然友好。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-style",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0070",
+      "stable_key": "ai-large-models-sentence-0070",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d01",
+      "day": 1,
+      "order": 4,
+      "english": "Keep the language simple.",
+      "chinese": "保持语言简单。",
+      "scene": "面向基础读者降低语言复杂度",
+      "difficulty": "elementary",
+      "core_words": [
+        "keep",
+        "language",
+        "simple"
+      ],
+      "core_patterns": [
+        "Keep + noun + adjective."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Use simple language.",
+          "chinese": "使用简单的语言。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-style",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0071",
+      "stable_key": "ai-large-models-sentence-0071",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d01",
+      "day": 1,
+      "order": 5,
+      "english": "Write for a beginner.",
+      "chinese": "以初学者为读者来写。",
+      "scene": "指定输出面向没有背景知识的读者",
+      "difficulty": "elementary",
+      "core_words": [
+        "write",
+        "beginner"
+      ],
+      "core_patterns": [
+        "Write for + audience."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Write this for a beginner.",
+          "chinese": "为初学者写这段内容。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-style",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0072",
+      "stable_key": "ai-large-models-sentence-0072",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d01",
+      "day": 1,
+      "order": 6,
+      "english": "Avoid unnecessary technical terms.",
+      "chinese": "避免不必要的技术术语。",
+      "scene": "普通用户说明中减少无用术语",
+      "difficulty": "elementary",
+      "core_words": [
+        "avoid",
+        "unnecessary",
+        "technical",
+        "term"
+      ],
+      "core_patterns": [
+        "Avoid + noun."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Avoid to use unnecessary technical terms.",
+          "explanation_zh": "avoid 后接名词或动名词，不接 to do。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-style",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0073",
+      "stable_key": "ai-large-models-sentence-0073",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d02",
+      "day": 2,
+      "order": 1,
+      "english": "Put the result in a table.",
+      "chinese": "把结果放入表格中。",
+      "scene": "需要对齐比较多项结果",
+      "difficulty": "elementary",
+      "core_words": [
+        "put",
+        "result",
+        "table"
+      ],
+      "core_patterns": [
+        "Put + noun + in + format."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Format the result as a table.",
+          "chinese": "把结果整理成表格。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-format",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0074",
+      "stable_key": "ai-large-models-sentence-0074",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d02",
+      "day": 2,
+      "order": 2,
+      "english": "Use bullet points for the main steps.",
+      "chinese": "主要步骤使用项目符号。",
+      "scene": "让操作步骤更容易浏览",
+      "difficulty": "elementary",
+      "core_words": [
+        "use",
+        "bullet point",
+        "main",
+        "step"
+      ],
+      "core_patterns": [
+        "Use + format + for + content."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Use bullet point for the main steps.",
+          "explanation_zh": "多个步骤通常对应多个项目符号，应使用复数 bullet points。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "List the main steps as bullet points.",
+          "chinese": "用项目符号列出主要步骤。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-format",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0075",
+      "stable_key": "ai-large-models-sentence-0075",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d02",
+      "day": 2,
+      "order": 3,
+      "english": "Return the answer as valid JSON.",
+      "chinese": "以有效的 JSON 返回答案。",
+      "scene": "要求机器可解析的结构化输出",
+      "difficulty": "elementary",
+      "core_words": [
+        "return",
+        "answer",
+        "valid",
+        "JSON"
+      ],
+      "core_patterns": [
+        "Return + noun + as + format."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Return the answer as a valid JSON.",
+          "explanation_zh": "JSON 表示数据格式时通常不加不定冠词 a。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Output valid JSON only.",
+          "chinese": "只输出有效的 JSON。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "JSON"
+        ],
+        "note_zh": "JSON 常读作 jay-sawn。"
+      },
+      "review_group": "u04-format",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0076",
+      "stable_key": "ai-large-models-sentence-0076",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d02",
+      "day": 2,
+      "order": 4,
+      "english": "Add a clear heading to each section.",
+      "chinese": "为每个部分添加清楚的标题。",
+      "scene": "长回答需要清晰的章节结构",
+      "difficulty": "elementary",
+      "core_words": [
+        "add",
+        "clear",
+        "heading",
+        "section"
+      ],
+      "core_patterns": [
+        "Add + noun + to + each + noun."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-format",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0077",
+      "stable_key": "ai-large-models-sentence-0077",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d02",
+      "day": 2,
+      "order": 5,
+      "english": "Put one idea in each paragraph.",
+      "chinese": "每个段落只写一个观点。",
+      "scene": "提高长文本的段落清晰度",
+      "difficulty": "elementary",
+      "core_words": [
+        "put",
+        "idea",
+        "each",
+        "paragraph"
+      ],
+      "core_patterns": [
+        "Put + number + noun + in each + noun."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Use one paragraph for each idea.",
+          "chinese": "每个观点使用一个段落。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-format",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0078",
+      "stable_key": "ai-large-models-sentence-0078",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d02",
+      "day": 2,
+      "order": 6,
+      "english": "Follow this format exactly.",
+      "chinese": "严格遵循这个格式。",
+      "scene": "输出需要被后续流程直接使用",
+      "difficulty": "elementary",
+      "core_words": [
+        "follow",
+        "format",
+        "exactly"
+      ],
+      "core_patterns": [
+        "Follow + noun + adverb."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-format",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0079",
+      "stable_key": "ai-large-models-sentence-0079",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d03",
+      "day": 3,
+      "order": 1,
+      "english": "Include the key dates and names.",
+      "chinese": "包含关键日期和名称。",
+      "scene": "摘要需要保留重要事实信息",
+      "difficulty": "elementary",
+      "core_words": [
+        "include",
+        "key",
+        "date",
+        "name"
+      ],
+      "core_patterns": [
+        "Include + noun + and + noun."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Keep the key dates and names.",
+          "chinese": "保留关键日期和名称。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-scope",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0080",
+      "stable_key": "ai-large-models-sentence-0080",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d03",
+      "day": 3,
+      "order": 2,
+      "english": "Do not include personal information.",
+      "chinese": "不要包含个人信息。",
+      "scene": "生成可分享内容时保护隐私",
+      "difficulty": "elementary",
+      "core_words": [
+        "include",
+        "personal",
+        "information"
+      ],
+      "core_patterns": [
+        "Do not include + noun."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Do not includes personal information.",
+          "explanation_zh": "助动词 do 后使用动词原形 include。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Exclude personal information.",
+          "chinese": "排除个人信息。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-scope",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0081",
+      "stable_key": "ai-large-models-sentence-0081",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d03",
+      "day": 3,
+      "order": 3,
+      "english": "Keep only the action items.",
+      "chinese": "只保留待办事项。",
+      "scene": "从会议或计划内容中提取行动项",
+      "difficulty": "elementary",
+      "core_words": [
+        "keep",
+        "only",
+        "action item"
+      ],
+      "core_patterns": [
+        "Keep only + noun."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Show only the action items.",
+          "chinese": "只显示待办事项。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-scope",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0082",
+      "stable_key": "ai-large-models-sentence-0082",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d03",
+      "day": 3,
+      "order": 4,
+      "english": "Remove repeated points from the answer.",
+      "chinese": "删除回答中重复的要点。",
+      "scene": "精简包含重复内容的回答",
+      "difficulty": "elementary",
+      "core_words": [
+        "remove",
+        "repeated",
+        "point",
+        "answer"
+      ],
+      "core_patterns": [
+        "Remove + noun + from + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Remove repeated points in the answer.",
+          "explanation_zh": "强调从回答中移除内容时使用 from。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-scope",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0083",
+      "stable_key": "ai-large-models-sentence-0083",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d03",
+      "day": 3,
+      "order": 5,
+      "english": "Add an example after each step.",
+      "chinese": "在每个步骤后添加一个示例。",
+      "scene": "为操作说明补充对应示例",
+      "difficulty": "elementary",
+      "core_words": [
+        "add",
+        "example",
+        "after",
+        "step"
+      ],
+      "core_patterns": [
+        "Add + noun + after each + noun."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-scope",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0084",
+      "stable_key": "ai-large-models-sentence-0084",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d04",
+      "day": 4,
+      "order": 1,
+      "english": "Rewrite the first paragraph, but keep the conclusion.",
+      "chinese": "改写第一段，但保留结论。",
+      "scene": "局部修改内容同时保留关键结论",
+      "difficulty": "elementary",
+      "core_words": [
+        "rewrite",
+        "paragraph",
+        "keep",
+        "conclusion"
+      ],
+      "core_patterns": [
+        "Verb A, but keep B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-constraints",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0085",
+      "stable_key": "ai-large-models-sentence-0085",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d04",
+      "day": 4,
+      "order": 2,
+      "english": "If information is missing, say so clearly.",
+      "chinese": "如果信息缺失，请明确说明。",
+      "scene": "要求 AI 坦诚说明信息不足",
+      "difficulty": "elementary",
+      "core_words": [
+        "if",
+        "information",
+        "missing",
+        "clearly"
+      ],
+      "core_patterns": [
+        "If + condition, + instruction."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Clearly state when information is missing.",
+          "chinese": "信息缺失时请明确说明。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-constraints",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0086",
+      "stable_key": "ai-large-models-sentence-0086",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d04",
+      "day": 4,
+      "order": 3,
+      "english": "Do not guess facts that are not provided.",
+      "chinese": "不要猜测未提供的事实。",
+      "scene": "限制 AI 对未知事实进行推断",
+      "difficulty": "elementary",
+      "core_words": [
+        "guess",
+        "fact",
+        "provide"
+      ],
+      "core_patterns": [
+        "Do not + verb + noun + that + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Do not invent missing facts.",
+          "chinese": "不要编造缺失的事实。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-constraints",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0087",
+      "stable_key": "ai-large-models-sentence-0087",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d04",
+      "day": 4,
+      "order": 4,
+      "english": "Use the same terms throughout the document.",
+      "chinese": "在整份文档中使用一致的术语。",
+      "scene": "保持长文档中的术语一致性",
+      "difficulty": "elementary",
+      "core_words": [
+        "same",
+        "term",
+        "throughout",
+        "document"
+      ],
+      "core_patterns": [
+        "Use + noun + throughout + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Use the same terms through the document.",
+          "explanation_zh": "表示贯穿整份文档时使用 throughout。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Keep the terms consistent throughout the document.",
+          "chinese": "保持整份文档中的术语一致。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-constraints",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0088",
+      "stable_key": "ai-large-models-sentence-0088",
+      "unit_id": "ai-l2-u04",
+      "lesson_id": "ai-l2-u04-d04",
+      "day": 4,
+      "order": 5,
+      "english": "Before answering, check all my requirements.",
+      "chinese": "回答前检查我的所有要求。",
+      "scene": "复杂提示词提交后要求逐项核对",
+      "difficulty": "elementary",
+      "core_words": [
+        "before",
+        "answer",
+        "check",
+        "requirement"
+      ],
+      "core_patterns": [
+        "Before + verb-ing, + verb + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Before answer, check my requirements.",
+          "explanation_zh": "before 后接动作时使用动名词 answering。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Check every requirement before answering.",
+          "chinese": "回答前检查每一项要求。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u04-constraints",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "status": "reviewed"
+}

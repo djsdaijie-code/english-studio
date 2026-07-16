@@ -1,0 +1,1460 @@
+{
+  "specification_version": "1.0",
+  "content_version": "1.0.0",
+  "unit_id": "ai-l3-u05",
+  "stable_key": "ai-large-models-unit-files-images",
+  "course_id": "ai-large-models",
+  "level_id": "ai-l3",
+  "order": 5,
+  "title": "文件、图片和长文本",
+  "description": "围绕文档、截图和长文本提问，提取与比较信息，并明确来源、清晰度和上下文限制。",
+  "difficulty": "intermediate",
+  "estimated_days": 7,
+  "learning_goals": [
+    "基于文件内容提问并核对来源",
+    "描述图片与截图处理要求",
+    "提取、比较和整理长文档信息"
+  ],
+  "core_vocabulary": [
+    "document",
+    "file",
+    "image",
+    "screenshot",
+    "section",
+    "source",
+    "extract",
+    "compare",
+    "export",
+    "context",
+    "page"
+  ],
+  "core_patterns": [
+    "Answer only from + source.",
+    "Verb + object + from/into + source or format.",
+    "If + limitation, + request."
+  ],
+  "learning_plan_override": null,
+  "lessons": [
+    {
+      "lesson_id": "ai-l3-u05-d01",
+      "stable_key": "ai-large-models-lesson-file-questions-and-sources",
+      "unit_id": "ai-l3-u05",
+      "day": 1,
+      "order": 1,
+      "title": "文档提问与来源",
+      "lesson_type": "new_content",
+      "description": "上传文档、限制回答来源并定位页面和章节。",
+      "learning_goals": [
+        "要求只依据文件回答",
+        "定位并引用来源位置"
+      ],
+      "new_sentence_ids": [
+        "ai-s0089",
+        "ai-s0090",
+        "ai-s0091",
+        "ai-s0092",
+        "ai-s0093",
+        "ai-s0094"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0089",
+            "ai-s0090",
+            "ai-s0091",
+            "ai-s0092",
+            "ai-s0093",
+            "ai-s0094"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0089",
+            "ai-s0090",
+            "ai-s0092",
+            "ai-s0094"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0090",
+            "ai-s0091",
+            "ai-s0092",
+            "ai-s0093"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u05-d02",
+      "stable_key": "ai-large-models-lesson-images-and-screenshots",
+      "unit_id": "ai-l3-u05",
+      "day": 2,
+      "order": 2,
+      "title": "图片与截图",
+      "lesson_type": "new_content",
+      "description": "描述图像、读取可见文字并处理模糊或旋转问题。",
+      "learning_goals": [
+        "提出图片分析请求",
+        "明确不清晰内容不能猜测"
+      ],
+      "new_sentence_ids": [
+        "ai-s0095",
+        "ai-s0096",
+        "ai-s0097",
+        "ai-s0098",
+        "ai-s0099",
+        "ai-s0100"
+      ],
+      "review_sentence_ids": [
+        "ai-s0089",
+        "ai-s0093",
+        "ai-s0094"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0095",
+            "ai-s0096",
+            "ai-s0097",
+            "ai-s0098",
+            "ai-s0099",
+            "ai-s0100"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0095",
+            "ai-s0097",
+            "ai-s0100"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0096",
+            "ai-s0098",
+            "ai-s0099"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u05-d03",
+      "stable_key": "ai-large-models-lesson-extract-and-compare-files",
+      "unit_id": "ai-l3-u05",
+      "day": 3,
+      "order": 3,
+      "title": "提取与比较",
+      "lesson_type": "new_content",
+      "description": "从文件提取结构化信息并比较两份文档。",
+      "learning_goals": [
+        "提取名称和日期",
+        "标记文件差异并导出结果"
+      ],
+      "new_sentence_ids": [
+        "ai-s0101",
+        "ai-s0102",
+        "ai-s0103",
+        "ai-s0104",
+        "ai-s0105"
+      ],
+      "review_sentence_ids": [
+        "ai-s0091",
+        "ai-s0092",
+        "ai-s0093"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0101",
+            "ai-s0102",
+            "ai-s0103",
+            "ai-s0104",
+            "ai-s0105"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0101",
+            "ai-s0102",
+            "ai-s0105"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0103",
+            "ai-s0104"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u05-d04",
+      "stable_key": "ai-large-models-lesson-long-documents-and-context",
+      "unit_id": "ai-l3-u05",
+      "day": 4,
+      "order": 4,
+      "title": "长文档与上下文",
+      "lesson_type": "new_content",
+      "description": "分段处理长文档，检查遗漏并请求缺失页面。",
+      "learning_goals": [
+        "把长文档拆分为可处理部分",
+        "合并前检查来源与完整性"
+      ],
+      "new_sentence_ids": [
+        "ai-s0106",
+        "ai-s0107",
+        "ai-s0108",
+        "ai-s0109",
+        "ai-s0110"
+      ],
+      "review_sentence_ids": [
+        "ai-s0090",
+        "ai-s0093",
+        "ai-s0103"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0106",
+            "ai-s0107",
+            "ai-s0108",
+            "ai-s0109",
+            "ai-s0110"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0106",
+            "ai-s0109",
+            "ai-s0110"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0107",
+            "ai-s0108",
+            "ai-s0109"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u05-d05",
+      "stable_key": "ai-large-models-lesson-document-analysis-scenario",
+      "unit_id": "ai-l3-u05",
+      "day": 5,
+      "order": 5,
+      "title": "综合场景：核对两份资料",
+      "lesson_type": "scenario",
+      "description": "以两份资料为上下文，完成读取、提取、比较、引用和导出。",
+      "learning_goals": [
+        "组合文件处理指令",
+        "在综合回答中保留来源与不确定性"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0089",
+        "ai-s0090",
+        "ai-s0092",
+        "ai-s0093",
+        "ai-s0094",
+        "ai-s0097",
+        "ai-s0100",
+        "ai-s0101",
+        "ai-s0102",
+        "ai-s0104",
+        "ai-s0108",
+        "ai-s0109"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0089",
+            "ai-s0090",
+            "ai-s0092",
+            "ai-s0093",
+            "ai-s0101",
+            "ai-s0102",
+            "ai-s0104",
+            "ai-s0109"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0089",
+            "ai-s0090",
+            "ai-s0092",
+            "ai-s0093",
+            "ai-s0094",
+            "ai-s0097",
+            "ai-s0100",
+            "ai-s0101",
+            "ai-s0102",
+            "ai-s0104",
+            "ai-s0108",
+            "ai-s0109"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0090",
+            "ai-s0097",
+            "ai-s0102",
+            "ai-s0109"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u05-d06",
+      "stable_key": "ai-large-models-lesson-document-dictation-speaking",
+      "unit_id": "ai-l3-u05",
+      "day": 6,
+      "order": 6,
+      "title": "听写与跟读",
+      "lesson_type": "dictation",
+      "description": "听写文件与来源表达，跟读带条件的限制说明。",
+      "learning_goals": [
+        "听辨 document、source 和 section",
+        "朗读文件限制与补充请求"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0089",
+        "ai-s0090",
+        "ai-s0092",
+        "ai-s0094",
+        "ai-s0097",
+        "ai-s0101",
+        "ai-s0102",
+        "ai-s0106",
+        "ai-s0110"
+      ],
+      "activities": [
+        {
+          "activity_type": "dictation",
+          "sentence_ids": [
+            "ai-s0089",
+            "ai-s0090",
+            "ai-s0092",
+            "ai-s0094",
+            "ai-s0101",
+            "ai-s0102"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0097",
+            "ai-s0106",
+            "ai-s0109",
+            "ai-s0110"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0089",
+            "ai-s0090",
+            "ai-s0092",
+            "ai-s0094",
+            "ai-s0097",
+            "ai-s0101",
+            "ai-s0102",
+            "ai-s0106",
+            "ai-s0110"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l3-u05-d07",
+      "stable_key": "ai-large-models-lesson-document-review-assessment",
+      "unit_id": "ai-l3-u05",
+      "day": 7,
+      "order": 7,
+      "title": "复习与自测",
+      "lesson_type": "assessment",
+      "description": "复习文件、图片、来源、提取和长上下文表达。",
+      "learning_goals": [
+        "根据中文提示写出文件指令",
+        "判断来源与限制表达是否准确"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0089",
+        "ai-s0090",
+        "ai-s0091",
+        "ai-s0092",
+        "ai-s0093",
+        "ai-s0094",
+        "ai-s0095",
+        "ai-s0096",
+        "ai-s0097",
+        "ai-s0098",
+        "ai-s0099",
+        "ai-s0100",
+        "ai-s0101",
+        "ai-s0102",
+        "ai-s0103",
+        "ai-s0104",
+        "ai-s0105",
+        "ai-s0106",
+        "ai-s0107",
+        "ai-s0108",
+        "ai-s0109",
+        "ai-s0110"
+      ],
+      "activities": [
+        {
+          "activity_type": "self_test",
+          "sentence_ids": [
+            "ai-s0090",
+            "ai-s0092",
+            "ai-s0094",
+            "ai-s0097",
+            "ai-s0101",
+            "ai-s0102",
+            "ai-s0109",
+            "ai-s0110"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0093",
+            "ai-s0096",
+            "ai-s0104",
+            "ai-s0107"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "ai-s0089",
+            "ai-s0090",
+            "ai-s0091",
+            "ai-s0092",
+            "ai-s0093",
+            "ai-s0094",
+            "ai-s0095",
+            "ai-s0096",
+            "ai-s0097",
+            "ai-s0098",
+            "ai-s0099",
+            "ai-s0100",
+            "ai-s0101",
+            "ai-s0102",
+            "ai-s0103",
+            "ai-s0104",
+            "ai-s0105",
+            "ai-s0106",
+            "ai-s0107",
+            "ai-s0108",
+            "ai-s0109",
+            "ai-s0110"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": {
+        "assessment_type": "mixed",
+        "sentence_ids": [
+          "ai-s0090",
+          "ai-s0092",
+          "ai-s0094",
+          "ai-s0097",
+          "ai-s0101",
+          "ai-s0102",
+          "ai-s0109",
+          "ai-s0110"
+        ],
+        "passing_score": 60
+      },
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "sentences": [
+    {
+      "sentence_id": "ai-s0089",
+      "stable_key": "ai-large-models-sentence-0089",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d01",
+      "day": 1,
+      "order": 1,
+      "english": "Upload the document before asking questions about its content.",
+      "chinese": "询问文档内容前先上传文档。",
+      "scene": "开始基于文档的问答前提供文件",
+      "difficulty": "intermediate",
+      "core_words": [
+        "upload",
+        "document",
+        "before",
+        "question"
+      ],
+      "core_patterns": [
+        "Verb + noun + before + verb-ing."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Upload the document before ask questions.",
+          "explanation_zh": "before 后接动作时使用动名词 asking。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-file-sources",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0090",
+      "stable_key": "ai-large-models-sentence-0090",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d01",
+      "day": 1,
+      "order": 2,
+      "english": "Answer each question using only information from the uploaded file.",
+      "chinese": "每个问题都只根据上传文件中的信息回答。",
+      "scene": "限制回答依据为用户提供的文件",
+      "difficulty": "intermediate",
+      "core_words": [
+        "answer",
+        "question",
+        "only",
+        "information",
+        "uploaded",
+        "file"
+      ],
+      "core_patterns": [
+        "Verb + object + using only + source."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Base the answer only on the uploaded file.",
+          "chinese": "回答只能以上传的文件为依据。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-file-sources",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0091",
+      "stable_key": "ai-large-models-sentence-0091",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d01",
+      "day": 1,
+      "order": 3,
+      "english": "Summarize each document section in one clear sentence.",
+      "chinese": "用一句清楚的话总结文档的每个部分。",
+      "scene": "快速浏览长文档的章节内容",
+      "difficulty": "intermediate",
+      "core_words": [
+        "summarize",
+        "each",
+        "section",
+        "sentence"
+      ],
+      "core_patterns": [
+        "Verb + each + noun + in + amount."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Give a one-sentence summary of each section.",
+          "chinese": "为每个部分写一句话摘要。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-file-sources",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0092",
+      "stable_key": "ai-large-models-sentence-0092",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d01",
+      "day": 1,
+      "order": 4,
+      "english": "Find the page that specifically mentions the project deadline.",
+      "chinese": "找到明确提及项目截止日期的页面。",
+      "scene": "在文档中定位关键信息",
+      "difficulty": "intermediate",
+      "core_words": [
+        "find",
+        "page",
+        "mention",
+        "deadline"
+      ],
+      "core_patterns": [
+        "Find + noun + that + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Which page mentions the deadline?",
+          "chinese": "哪一页提到了截止日期？"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-file-sources",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0093",
+      "stable_key": "ai-large-models-sentence-0093",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d01",
+      "day": 1,
+      "order": 5,
+      "english": "Cite the exact source section for each answer you provide.",
+      "chinese": "为你提供的每个回答标明确切来源章节。",
+      "scene": "回答多个问题时保留可核查来源",
+      "difficulty": "intermediate",
+      "core_words": [
+        "cite",
+        "source",
+        "section",
+        "each",
+        "answer"
+      ],
+      "core_patterns": [
+        "Verb + noun + for each + noun."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Cite the source section to each answer.",
+          "explanation_zh": "表示为每个回答提供来源时使用 for。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Name the source section for each answer.",
+          "chinese": "为每个回答写明来源章节。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-file-sources",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0094",
+      "stable_key": "ai-large-models-sentence-0094",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d01",
+      "day": 1,
+      "order": 6,
+      "english": "Tell me if the file cannot be read.",
+      "chinese": "如果文件无法读取，请告诉我。",
+      "scene": "文件解析失败时要求明确说明",
+      "difficulty": "intermediate",
+      "core_words": [
+        "tell",
+        "file",
+        "read"
+      ],
+      "core_patterns": [
+        "Verb + person + if + passive clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Say clearly if you cannot read the file.",
+          "chinese": "如果无法读取文件，请明确说明。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-file-sources",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0095",
+      "stable_key": "ai-large-models-sentence-0095",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d02",
+      "day": 2,
+      "order": 1,
+      "english": "Describe the main elements in this image.",
+      "chinese": "描述这张图片中的主要元素。",
+      "scene": "获取图片内容的整体说明",
+      "difficulty": "intermediate",
+      "core_words": [
+        "describe",
+        "main",
+        "element",
+        "image"
+      ],
+      "core_patterns": [
+        "Verb + noun + in + image."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Describe what you can see in this image.",
+          "chinese": "描述你在这张图片中能看到的内容。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-images",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0096",
+      "stable_key": "ai-large-models-sentence-0096",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d02",
+      "day": 2,
+      "order": 2,
+      "english": "Read the visible text in the screenshot.",
+      "chinese": "读取截图中清晰可见的文字。",
+      "scene": "从软件截图中识别可见文字",
+      "difficulty": "intermediate",
+      "core_words": [
+        "read",
+        "visible",
+        "text",
+        "screenshot"
+      ],
+      "core_patterns": [
+        "Verb + noun + in + image."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Extract the visible text from the screenshot.",
+          "chinese": "提取截图中清晰可见的文字。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-images",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0097",
+      "stable_key": "ai-large-models-sentence-0097",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d02",
+      "day": 2,
+      "order": 3,
+      "english": "Do not guess text that is unclear.",
+      "chinese": "不要猜测看不清的文字。",
+      "scene": "图片文字模糊时限制编造内容",
+      "difficulty": "intermediate",
+      "core_words": [
+        "guess",
+        "text",
+        "unclear"
+      ],
+      "core_patterns": [
+        "Do not + verb + noun + that + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Mark any unclear text instead of guessing.",
+          "chinese": "标出看不清的文字，不要猜测。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-images",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0098",
+      "stable_key": "ai-large-models-sentence-0098",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d02",
+      "day": 2,
+      "order": 4,
+      "english": "Compare the two charts in this image.",
+      "chinese": "比较这张图片中的两张图表。",
+      "scene": "分析一张图片内的两个数据图表",
+      "difficulty": "intermediate",
+      "core_words": [
+        "compare",
+        "chart",
+        "image"
+      ],
+      "core_patterns": [
+        "Compare + number + nouns + in + image."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-images",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0099",
+      "stable_key": "ai-large-models-sentence-0099",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d02",
+      "day": 2,
+      "order": 5,
+      "english": "Check whether the image is rotated.",
+      "chinese": "检查图片是否发生旋转。",
+      "scene": "识别可能影响文字读取的图片方向",
+      "difficulty": "intermediate",
+      "core_words": [
+        "check",
+        "whether",
+        "image",
+        "rotated"
+      ],
+      "core_patterns": [
+        "Check whether + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Check whether is the image rotated.",
+          "explanation_zh": "whether 引导的间接疑问使用陈述句语序。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-images",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0100",
+      "stable_key": "ai-large-models-sentence-0100",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d02",
+      "day": 2,
+      "order": 6,
+      "english": "Ask for a clearer image if needed.",
+      "chinese": "如有需要，请求一张更清晰的图片。",
+      "scene": "当前图片无法可靠分析时请求替换",
+      "difficulty": "intermediate",
+      "core_words": [
+        "ask for",
+        "clearer",
+        "image",
+        "needed"
+      ],
+      "core_patterns": [
+        "Verb + for + noun + if needed."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Ask a clearer image if needed.",
+          "explanation_zh": "表示请求某物时使用 ask for。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-images",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0101",
+      "stable_key": "ai-large-models-sentence-0101",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d03",
+      "day": 3,
+      "order": 1,
+      "english": "Extract the names and dates into a table.",
+      "chinese": "把名称和日期提取到表格中。",
+      "scene": "从文档中整理关键实体信息",
+      "difficulty": "intermediate",
+      "core_words": [
+        "extract",
+        "name",
+        "date",
+        "table"
+      ],
+      "core_patterns": [
+        "Extract + nouns + into + format."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Extract the names and dates to a table.",
+          "explanation_zh": "强调整理为表格结构时使用 into。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Put the extracted names and dates in a table.",
+          "chinese": "把提取出的名称和日期放入表格。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-extract",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0102",
+      "stable_key": "ai-large-models-sentence-0102",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d03",
+      "day": 3,
+      "order": 2,
+      "english": "Compare these two documents and list the changes.",
+      "chinese": "比较这两份文档并列出变化。",
+      "scene": "核对文档两个版本之间的差异",
+      "difficulty": "intermediate",
+      "core_words": [
+        "compare",
+        "document",
+        "list",
+        "change"
+      ],
+      "core_patterns": [
+        "Verb A and verb B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "List the differences between these two documents.",
+          "chinese": "列出这两份文档之间的差异。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-extract",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0103",
+      "stable_key": "ai-large-models-sentence-0103",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d03",
+      "day": 3,
+      "order": 3,
+      "english": "Keep the original order of the items.",
+      "chinese": "保持各项的原始顺序。",
+      "scene": "提取内容时避免改变源文件顺序",
+      "difficulty": "intermediate",
+      "core_words": [
+        "keep",
+        "original",
+        "order",
+        "item"
+      ],
+      "core_patterns": [
+        "Keep + noun + of + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-extract",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0104",
+      "stable_key": "ai-large-models-sentence-0104",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d03",
+      "day": 3,
+      "order": 4,
+      "english": "Mark any information that appears in only one file.",
+      "chinese": "标出只出现在一份文件中的信息。",
+      "scene": "突出两份资料之间的单边内容",
+      "difficulty": "intermediate",
+      "core_words": [
+        "mark",
+        "information",
+        "appear",
+        "only",
+        "file"
+      ],
+      "core_patterns": [
+        "Verb + noun + that + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Highlight information found in only one file.",
+          "chinese": "突出只在一份文件中找到的信息。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-extract",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0105",
+      "stable_key": "ai-large-models-sentence-0105",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d03",
+      "day": 3,
+      "order": 5,
+      "english": "Export the final table as a CSV file.",
+      "chinese": "把最终表格导出为 CSV 文件。",
+      "scene": "将结构化结果保存为通用数据文件",
+      "difficulty": "intermediate",
+      "core_words": [
+        "export",
+        "final",
+        "table",
+        "CSV",
+        "file"
+      ],
+      "core_patterns": [
+        "Export + noun + as + format."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Save the final table as a CSV file.",
+          "chinese": "把最终表格保存为 CSV 文件。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "CSV"
+        ],
+        "note_zh": "CSV 按三个字母逐个读。"
+      },
+      "review_group": "u05-extract",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0106",
+      "stable_key": "ai-large-models-sentence-0106",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d04",
+      "day": 4,
+      "order": 1,
+      "english": "Split the long document into smaller sections.",
+      "chinese": "把长文档拆分成较小的部分。",
+      "scene": "分段处理超长或复杂文档",
+      "difficulty": "intermediate",
+      "core_words": [
+        "split",
+        "long",
+        "document",
+        "smaller",
+        "section"
+      ],
+      "core_patterns": [
+        "Split + noun + into + plural noun."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Split the document to smaller sections.",
+          "explanation_zh": "表示拆分成若干部分时使用 split into。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-long-context",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0107",
+      "stable_key": "ai-large-models-sentence-0107",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d04",
+      "day": 4,
+      "order": 2,
+      "english": "Summarize each section before combining the results.",
+      "chinese": "合并结果前先总结每个部分。",
+      "scene": "分段处理后再生成整体摘要",
+      "difficulty": "intermediate",
+      "core_words": [
+        "summarize",
+        "each",
+        "section",
+        "before",
+        "combine"
+      ],
+      "core_patterns": [
+        "Verb A before verb-ing B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-long-context",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0108",
+      "stable_key": "ai-large-models-sentence-0108",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d04",
+      "day": 4,
+      "order": 3,
+      "english": "Use the document title when citing a source.",
+      "chinese": "引用来源时使用文档标题。",
+      "scene": "多文档回答中标明来源名称",
+      "difficulty": "intermediate",
+      "core_words": [
+        "document",
+        "title",
+        "cite",
+        "source"
+      ],
+      "core_patterns": [
+        "Verb + noun + when + verb-ing."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-long-context",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0109",
+      "stable_key": "ai-large-models-sentence-0109",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d04",
+      "day": 4,
+      "order": 4,
+      "english": "Check that no important section was skipped.",
+      "chinese": "检查是否遗漏了重要部分。",
+      "scene": "合并长文档结果后检查完整性",
+      "difficulty": "intermediate",
+      "core_words": [
+        "check",
+        "important",
+        "section",
+        "skip"
+      ],
+      "core_patterns": [
+        "Check that + negative clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Make sure no important section was skipped.",
+          "chinese": "确保没有遗漏重要部分。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-long-context",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0110",
+      "stable_key": "ai-large-models-sentence-0110",
+      "unit_id": "ai-l3-u05",
+      "lesson_id": "ai-l3-u05-d04",
+      "day": 4,
+      "order": 5,
+      "english": "If the context is incomplete, request the missing pages.",
+      "chinese": "如果上下文不完整，请求提供缺失页面。",
+      "scene": "上传内容不全时先补齐资料",
+      "difficulty": "intermediate",
+      "core_words": [
+        "context",
+        "incomplete",
+        "request",
+        "missing",
+        "page"
+      ],
+      "core_patterns": [
+        "If + condition, + instruction."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Ask for the missing pages if the context is incomplete.",
+          "chinese": "如果上下文不完整，请求提供缺失页面。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u05-long-context",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "status": "reviewed"
+}

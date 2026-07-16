@@ -9,8 +9,9 @@ import sys
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from english_typing_trainer.application.bootstrap import run_acceptance_smoke
-from english_typing_trainer.application.context import build_app_context
+from english_typing_trainer.application.context import AppContext, build_app_context
 from english_typing_trainer.courses.paths import default_courses_root
+from english_typing_trainer.models.course_progress import CourseActivityType
 from english_typing_trainer.models.pronunciation import PronunciationResult
 from english_typing_trainer.models.tts import TTSAudioResult, TTSRequest
 from english_typing_trainer.services.audio_playback import AudioPlaybackService
@@ -58,6 +59,42 @@ def _save_json(path: Path, payload: dict) -> None:
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+
+
+def _complete_required_course_activities(context: AppContext) -> None:
+    activity_types: dict[str, CourseActivityType] = {
+        "typing": "typing",
+        "dictation": "dictation",
+        "speaking": "speaking",
+        "vocabulary": "vocabulary",
+        "review": "review",
+        "fsrs": "review",
+        "listening": "review",
+        "reading": "typing",
+        "translation": "typing",
+        "self_test": "typing",
+    }
+    course = context.course_repository.get_course(COURSE_ID)
+    assert course is not None
+    required: set[tuple[str, CourseActivityType]] = set()
+    for level in course.levels:
+        for unit in level.units:
+            sentences = {sentence.sentence_id: sentence for sentence in unit.sentences}
+            for lesson in unit.lessons:
+                for activity in lesson.activities:
+                    if not activity.required:
+                        continue
+                    activity_type = activity_types.get(activity.activity_type, "typing")
+                    required.update(
+                        (sentences[sentence_id].stable_key, activity_type)
+                        for sentence_id in activity.sentence_ids
+                    )
+    for stable_key, activity_type in sorted(required):
+        context.course_progress_service.complete_activity(
+            COURSE_ID,
+            stable_key,
+            activity_type,
+        )
 
 
 def test_course_state_and_capability_history_survive_new_app_context(
@@ -266,14 +303,8 @@ def test_course_version_upgrade_notice_preserves_completed_stable_state(
     data_dir = tmp_path / "state"
     original = _context(data_dir, courses_root)
     try:
-        course = original.course_repository.get_course(COURSE_ID)
-        assert course is not None
-        for level in course.levels:
-            for unit in level.units:
-                for sentence in unit.sentences:
-                    original.course_progress_service.complete_item(
-                        COURSE_ID, sentence.stable_key
-                    )
+        original.course_progress_service.complete_item(COURSE_ID, FIRST_ITEM)
+        _complete_required_course_activities(original)
         enrollment = original.course_progress_service.get_enrollment(COURSE_ID)
         assert enrollment is not None and enrollment.status == "completed"
     finally:
@@ -285,28 +316,34 @@ def test_course_version_upgrade_notice_preserves_completed_stable_state(
         courses_root / "ai-large-models" / "units" / "unit-01-foundations.json"
     )
     course_doc = _load_json(course_path)
-    course_doc["version"] = "0.2.0"
-    course_doc["content_version"] = "0.2.0"
-    course_doc["estimated_sentences"] = 13
+    course_doc["version"] = "1.1.0"
+    course_doc["content_version"] = "1.1.0"
+    course_doc["estimated_sentences"] = 177
     _save_json(course_path, course_doc)
     catalog = _load_json(catalog_path)
-    catalog["courses"][0]["version"] = "0.2.0"
+    catalog["courses"][0]["version"] = "1.1.0"
     _save_json(catalog_path, catalog)
     unit = _load_json(unit_path)
-    new_sentence = dict(unit["sentences"][-1])
+    new_sentence = dict(
+        next(
+            sentence
+            for sentence in unit["sentences"]
+            if sentence["sentence_id"] == "ai-s0012"
+        )
+    )
     new_sentence.update(
         {
-            "sentence_id": "ai-s0013",
-            "stable_key": "ai-large-models-sentence-0013",
+            "sentence_id": "ai-s0177",
+            "stable_key": "ai-large-models-sentence-0177",
             "order": 7,
             "english": "Use stable references for new course content.",
             "chinese": "为课程新内容使用稳定引用。",
-            "content_version": "0.2.0",
+            "content_version": "1.1.0",
         }
     )
     unit["sentences"].append(new_sentence)
-    unit["lessons"][1]["new_sentence_ids"].append("ai-s0013")
-    unit["lessons"][1]["activities"][0]["sentence_ids"].append("ai-s0013")
+    unit["lessons"][1]["new_sentence_ids"].append("ai-s0177")
+    unit["lessons"][1]["activities"][0]["sentence_ids"].append("ai-s0177")
     _save_json(unit_path, unit)
 
     upgraded = _context(data_dir, courses_root)
@@ -315,12 +352,12 @@ def test_course_version_upgrade_notice_preserves_completed_stable_state(
         status = upgraded.course_progress_service.get_version_status(COURSE_ID)
         assert status is not None
         assert status.has_new_content and status.completed_recorded_version
-        assert status.recorded_content_version == "0.1.0"
-        assert status.current_content_version == "0.2.0"
+        assert status.recorded_content_version == "1.0.0"
+        assert status.current_content_version == "1.1.0"
         progress = upgraded.course_progress_service.get_course_progress(COURSE_ID)
         assert (progress.completed_required_items, progress.total_required_items) == (
-            12,
-            13,
+            256,
+            257,
         )
         assert upgraded.course_progress_service.get_item_progress(
             COURSE_ID, FIRST_ITEM
@@ -330,8 +367,8 @@ def test_course_version_upgrade_notice_preserves_completed_stable_state(
         app.processEvents()
         assert "课程有新内容" in page.version_notice_label.text()
         assert "你曾完成" in page.version_notice_label.text()
-        assert "0.1.0" in page.version_notice_label.text()
-        assert "0.2.0" in page.version_notice_label.text()
+        assert "1.0.0" in page.version_notice_label.text()
+        assert "1.1.0" in page.version_notice_label.text()
         assert page.view_new_content_button.isVisibleTo(page)
         page.view_new_content_button.click()
         assert "Day 2" in page.detail_status_label.text()

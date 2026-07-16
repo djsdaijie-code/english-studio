@@ -50,8 +50,8 @@ def add_second_valid_course(root: Path) -> None:
             "course_id": "second-course",
             "title": "Second Course",
             "path": "second-course/course.json",
-            "version": "0.1.0",
-            "content_status": "draft",
+            "version": "1.0.0",
+            "content_status": "reviewed",
             "default_order": 2,
             "built_in": True,
             "read_only": True,
@@ -105,7 +105,7 @@ def test_loads_catalog_hierarchy_and_read_only_models() -> None:
     catalog = repository.load_catalog()
 
     assert isinstance(catalog, CourseCatalog)
-    assert catalog.catalog_version == "1.0.0"
+    assert catalog.catalog_version == "1.1.0"
     assert len(catalog.courses) == 1
     assert catalog.failures == ()
     course = catalog.courses[0]
@@ -116,8 +116,8 @@ def test_loads_catalog_hierarchy_and_read_only_models() -> None:
     assert [level.order for level in course.levels] == [1, 2, 3, 4, 5]
     sample = repository.get_unit(course.course_id, "ai-l1-u01")
     assert sample is not None and sample.is_materialized
-    assert len(sample.lessons) == 2
-    assert len(sample.sentences) == 12
+    assert len(sample.lessons) == 7
+    assert len(sample.sentences) == 22
     assert isinstance(sample.sentences, tuple)
     with pytest.raises(FrozenInstanceError):
         course.title = "Changed"  # type: ignore[misc]
@@ -154,7 +154,7 @@ def test_loader_sorts_hierarchy_by_explicit_order(courses_root: Path) -> None:
     assert loaded is not None
     assert [level.order for level in loaded.levels] == [1, 2, 3, 4, 5]
     sample = loaded.levels[0].units[0]
-    assert [lesson.order for lesson in sample.lessons] == [1, 2]
+    assert [lesson.order for lesson in sample.lessons] == [1, 2, 3, 4, 5, 6, 7]
     assert [(sentence.day, sentence.order) for sentence in sample.sentences] == sorted(
         (sentence.day, sentence.order) for sentence in sample.sentences
     )

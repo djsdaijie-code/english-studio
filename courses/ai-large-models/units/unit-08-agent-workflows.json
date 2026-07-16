@@ -1,0 +1,1486 @@
+{
+  "specification_version": "1.0",
+  "content_version": "1.0.0",
+  "unit_id": "ai-l5-u08",
+  "stable_key": "ai-large-models-unit-agent-workflows",
+  "course_id": "ai-large-models",
+  "level_id": "ai-l5",
+  "order": 8,
+  "title": "AI Agent、工具和工作流",
+  "description": "理解 Agent 如何接收任务、调用工具并按触发器和条件执行工作流，同时控制权限、确认、重试、监控和人工审查。",
+  "difficulty": "advanced",
+  "estimated_days": 7,
+  "learning_goals": [
+    "描述 Agent、工具、任务和工作流关系",
+    "理解触发器、条件、动作和计划执行",
+    "为高影响动作配置权限、确认、失败处理和人工审查"
+  ],
+  "core_vocabulary": [
+    "agent",
+    "tool",
+    "task",
+    "workflow",
+    "trigger",
+    "condition",
+    "action",
+    "schedule",
+    "permission",
+    "confirmation",
+    "retry",
+    "monitor",
+    "log",
+    "human review"
+  ],
+  "core_patterns": [
+    "The agent should + verb + before + action.",
+    "Run this action when/after + condition.",
+    "If + failure, + stop/retry/alert."
+  ],
+  "learning_plan_override": null,
+  "lessons": [
+    {
+      "lesson_id": "ai-l5-u08-d01",
+      "stable_key": "ai-large-models-lesson-agents-tools-tasks",
+      "unit_id": "ai-l5-u08",
+      "day": 1,
+      "order": 1,
+      "title": "Agent、工具与任务",
+      "lesson_type": "new_content",
+      "description": "理解 Agent 接收任务、选择工具、检查结果和报告失败。",
+      "learning_goals": [
+        "描述 Agent 与工具的关系",
+        "避免把失败工具调用伪装成成功"
+      ],
+      "new_sentence_ids": [
+        "ai-s0155",
+        "ai-s0156",
+        "ai-s0157",
+        "ai-s0158",
+        "ai-s0159",
+        "ai-s0160"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0156",
+            "ai-s0157",
+            "ai-s0158",
+            "ai-s0159",
+            "ai-s0160"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0156",
+            "ai-s0159",
+            "ai-s0160"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0157",
+            "ai-s0158",
+            "ai-s0160"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l5-u08-d02",
+      "stable_key": "ai-large-models-lesson-workflows-triggers-actions",
+      "unit_id": "ai-l5-u08",
+      "day": 2,
+      "order": 2,
+      "title": "工作流、触发器与动作",
+      "lesson_type": "new_content",
+      "description": "使用 trigger、condition、action 和 schedule 描述自动化顺序。",
+      "learning_goals": [
+        "描述工作流启动条件",
+        "安排步骤保存、失败记录和无人值守任务"
+      ],
+      "new_sentence_ids": [
+        "ai-s0161",
+        "ai-s0162",
+        "ai-s0163",
+        "ai-s0164",
+        "ai-s0165",
+        "ai-s0166"
+      ],
+      "review_sentence_ids": [
+        "ai-s0155",
+        "ai-s0157",
+        "ai-s0159"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0161",
+            "ai-s0162",
+            "ai-s0163",
+            "ai-s0164",
+            "ai-s0165",
+            "ai-s0166"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0161",
+            "ai-s0162",
+            "ai-s0165"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0163",
+            "ai-s0164",
+            "ai-s0166"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l5-u08-d03",
+      "stable_key": "ai-large-models-lesson-agent-permissions-confirmation",
+      "unit_id": "ai-l5-u08",
+      "day": 3,
+      "order": 3,
+      "title": "权限、确认与密钥",
+      "lesson_type": "new_content",
+      "description": "在发送、删除和写入前检查权限、确认和敏感信息。",
+      "learning_goals": [
+        "为高影响动作要求确认",
+        "遵守最小权限并保护密钥"
+      ],
+      "new_sentence_ids": [
+        "ai-s0167",
+        "ai-s0168",
+        "ai-s0169",
+        "ai-s0170",
+        "ai-s0171"
+      ],
+      "review_sentence_ids": [
+        "ai-s0158",
+        "ai-s0160",
+        "ai-s0162"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0167",
+            "ai-s0168",
+            "ai-s0169",
+            "ai-s0170",
+            "ai-s0171"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0167",
+            "ai-s0169",
+            "ai-s0171"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0168",
+            "ai-s0170"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l5-u08-d04",
+      "stable_key": "ai-large-models-lesson-agent-monitoring-recovery",
+      "unit_id": "ai-l5-u08",
+      "day": 4,
+      "order": 4,
+      "title": "重试、监控与人工审查",
+      "lesson_type": "new_content",
+      "description": "根据错误决定重试或停止，监控流程并升级给用户审查。",
+      "learning_goals": [
+        "区分可重试和永久错误",
+        "在无法继续或影响较高时引入人工审查"
+      ],
+      "new_sentence_ids": [
+        "ai-s0172",
+        "ai-s0173",
+        "ai-s0174",
+        "ai-s0175",
+        "ai-s0176"
+      ],
+      "review_sentence_ids": [
+        "ai-s0157",
+        "ai-s0159",
+        "ai-s0165"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0172",
+            "ai-s0173",
+            "ai-s0174",
+            "ai-s0175",
+            "ai-s0176"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0172",
+            "ai-s0174",
+            "ai-s0176"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0173",
+            "ai-s0175",
+            "ai-s0176"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l5-u08-d05",
+      "stable_key": "ai-large-models-lesson-agent-workflow-scenario",
+      "unit_id": "ai-l5-u08",
+      "day": 5,
+      "order": 5,
+      "title": "综合场景：安全运行工作流",
+      "lesson_type": "scenario",
+      "description": "从任务和触发器开始，经过工具调用、权限确认、结果检查、失败处理和人工审查。",
+      "learning_goals": [
+        "理解完整 Agent 工作流",
+        "在自动化效率与人工控制之间保持边界"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0155",
+        "ai-s0157",
+        "ai-s0158",
+        "ai-s0159",
+        "ai-s0160",
+        "ai-s0161",
+        "ai-s0162",
+        "ai-s0163",
+        "ai-s0164",
+        "ai-s0165",
+        "ai-s0167",
+        "ai-s0168",
+        "ai-s0170",
+        "ai-s0172",
+        "ai-s0174",
+        "ai-s0175",
+        "ai-s0176"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0157",
+            "ai-s0161",
+            "ai-s0162",
+            "ai-s0163",
+            "ai-s0167",
+            "ai-s0172",
+            "ai-s0176"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "reading",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0157",
+            "ai-s0158",
+            "ai-s0159",
+            "ai-s0160",
+            "ai-s0161",
+            "ai-s0162",
+            "ai-s0163",
+            "ai-s0164",
+            "ai-s0165",
+            "ai-s0167",
+            "ai-s0168",
+            "ai-s0170",
+            "ai-s0172",
+            "ai-s0174",
+            "ai-s0175",
+            "ai-s0176"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0160",
+            "ai-s0167",
+            "ai-s0170",
+            "ai-s0176"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l5-u08-d06",
+      "stable_key": "ai-large-models-lesson-agent-dictation-speaking",
+      "unit_id": "ai-l5-u08",
+      "day": 6,
+      "order": 6,
+      "title": "听写与跟读",
+      "lesson_type": "dictation",
+      "description": "听写 Agent 与工作流术语，跟读权限和失败处理说明。",
+      "learning_goals": [
+        "听辨 agent、tool、trigger 和 workflow",
+        "自然朗读条件、权限与人工审查句"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0155",
+        "ai-s0156",
+        "ai-s0157",
+        "ai-s0161",
+        "ai-s0162",
+        "ai-s0163",
+        "ai-s0167",
+        "ai-s0168",
+        "ai-s0172",
+        "ai-s0176"
+      ],
+      "activities": [
+        {
+          "activity_type": "dictation",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0156",
+            "ai-s0157",
+            "ai-s0161",
+            "ai-s0162",
+            "ai-s0163"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "speaking",
+          "sentence_ids": [
+            "ai-s0167",
+            "ai-s0168",
+            "ai-s0172",
+            "ai-s0176"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "listening",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0156",
+            "ai-s0157",
+            "ai-s0161",
+            "ai-s0162",
+            "ai-s0163",
+            "ai-s0167",
+            "ai-s0168",
+            "ai-s0172",
+            "ai-s0176"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "lesson_id": "ai-l5-u08-d07",
+      "stable_key": "ai-large-models-lesson-agent-review-assessment",
+      "unit_id": "ai-l5-u08",
+      "day": 7,
+      "order": 7,
+      "title": "复习与自测",
+      "lesson_type": "assessment",
+      "description": "复习 Agent、工具、工作流、安全控制和失败恢复。",
+      "learning_goals": [
+        "根据中文提示写出工作流说明",
+        "判断自动化动作是否需要权限和人工审查"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "ai-s0155",
+        "ai-s0156",
+        "ai-s0157",
+        "ai-s0158",
+        "ai-s0159",
+        "ai-s0160",
+        "ai-s0161",
+        "ai-s0162",
+        "ai-s0163",
+        "ai-s0164",
+        "ai-s0165",
+        "ai-s0166",
+        "ai-s0167",
+        "ai-s0168",
+        "ai-s0169",
+        "ai-s0170",
+        "ai-s0171",
+        "ai-s0172",
+        "ai-s0173",
+        "ai-s0174",
+        "ai-s0175",
+        "ai-s0176"
+      ],
+      "activities": [
+        {
+          "activity_type": "self_test",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0157",
+            "ai-s0161",
+            "ai-s0163",
+            "ai-s0167",
+            "ai-s0170",
+            "ai-s0172",
+            "ai-s0176"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "translation",
+          "sentence_ids": [
+            "ai-s0160",
+            "ai-s0164",
+            "ai-s0168",
+            "ai-s0175"
+          ],
+          "required": false
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "ai-s0155",
+            "ai-s0156",
+            "ai-s0157",
+            "ai-s0158",
+            "ai-s0159",
+            "ai-s0160",
+            "ai-s0161",
+            "ai-s0162",
+            "ai-s0163",
+            "ai-s0164",
+            "ai-s0165",
+            "ai-s0166",
+            "ai-s0167",
+            "ai-s0168",
+            "ai-s0169",
+            "ai-s0170",
+            "ai-s0171",
+            "ai-s0172",
+            "ai-s0173",
+            "ai-s0174",
+            "ai-s0175",
+            "ai-s0176"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": {
+        "assessment_type": "mixed",
+        "sentence_ids": [
+          "ai-s0155",
+          "ai-s0157",
+          "ai-s0161",
+          "ai-s0163",
+          "ai-s0167",
+          "ai-s0170",
+          "ai-s0172",
+          "ai-s0176"
+        ],
+        "passing_score": 60
+      },
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "sentences": [
+    {
+      "sentence_id": "ai-s0155",
+      "stable_key": "ai-large-models-sentence-0155",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d01",
+      "day": 1,
+      "order": 1,
+      "english": "An agent receives a task and chooses an available tool.",
+      "chinese": "Agent 接收任务并选择可用工具。",
+      "scene": "理解 Agent 执行任务的基本过程",
+      "difficulty": "advanced",
+      "core_words": [
+        "agent",
+        "receive",
+        "task",
+        "choose",
+        "available",
+        "tool"
+      ],
+      "core_patterns": [
+        "A + subject + verbs A and B."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "An agent selects an available tool for the task.",
+          "chinese": "Agent 为任务选择可用工具。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "agent",
+          "available",
+          "tool"
+        ],
+        "note_zh": "agent 的重音在第一个音节。"
+      },
+      "review_group": "u08-agent-tools",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0156",
+      "stable_key": "ai-large-models-sentence-0156",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d01",
+      "day": 1,
+      "order": 2,
+      "english": "The tool returns a result that the agent must inspect.",
+      "chinese": "工具返回一个必须由 Agent 检查的结果。",
+      "scene": "工具调用完成后返回结构化或文本结果",
+      "difficulty": "advanced",
+      "core_words": [
+        "tool",
+        "return",
+        "result",
+        "agent"
+      ],
+      "core_patterns": [
+        "Subject + returns + object + that + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "The agent receives the result from the tool.",
+          "chinese": "Agent 接收工具返回的结果。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-agent-tools",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0157",
+      "stable_key": "ai-large-models-sentence-0157",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d01",
+      "day": 1,
+      "order": 3,
+      "english": "The agent should check each tool result before continuing the task.",
+      "chinese": "Agent 应在继续任务前检查每个工具结果。",
+      "scene": "使用工具输出执行下一步前验证结果",
+      "difficulty": "advanced",
+      "core_words": [
+        "agent",
+        "should",
+        "check",
+        "result",
+        "before",
+        "continue"
+      ],
+      "core_patterns": [
+        "Subject + should + verb + before + verb-ing."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "The agent should checks the result.",
+          "explanation_zh": "情态动词 should 后使用动词原形 check。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-agent-tools",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0158",
+      "stable_key": "ai-large-models-sentence-0158",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d01",
+      "day": 1,
+      "order": 4,
+      "english": "Give the agent only the tools required for the task.",
+      "chinese": "只向 Agent 提供任务所需的工具。",
+      "scene": "减少自动化可调用工具的范围",
+      "difficulty": "advanced",
+      "core_words": [
+        "give",
+        "agent",
+        "only",
+        "tool",
+        "required",
+        "task"
+      ],
+      "core_patterns": [
+        "Give + subject + only + object + relative clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Limit the agent to the tools required for the task.",
+          "chinese": "将 Agent 限制为只能使用任务所需工具。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-agent-tools",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0159",
+      "stable_key": "ai-large-models-sentence-0159",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d01",
+      "day": 1,
+      "order": 5,
+      "english": "A tool call can fail even when the plan is correct.",
+      "chinese": "即使计划正确，工具调用也可能失败。",
+      "scene": "区分计划质量与外部工具可用性",
+      "difficulty": "advanced",
+      "core_words": [
+        "tool call",
+        "fail",
+        "even when",
+        "plan",
+        "correct"
+      ],
+      "core_patterns": [
+        "Clause + even when + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-agent-tools",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0160",
+      "stable_key": "ai-large-models-sentence-0160",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d01",
+      "day": 1,
+      "order": 6,
+      "english": "The agent must not invent a successful result when a tool call fails.",
+      "chinese": "工具调用失败时，Agent 不得编造成功结果。",
+      "scene": "工具失败时必须如实报告状态",
+      "difficulty": "advanced",
+      "core_words": [
+        "agent",
+        "must not",
+        "invent",
+        "successful",
+        "tool result"
+      ],
+      "core_patterns": [
+        "Subject + must not + verb + object."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "The agent must report a failed tool call honestly.",
+          "chinese": "Agent 必须如实报告失败的工具调用。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-agent-tools",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0161",
+      "stable_key": "ai-large-models-sentence-0161",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d02",
+      "day": 2,
+      "order": 1,
+      "english": "A trigger starts the workflow when a condition is met.",
+      "chinese": "条件满足时，触发器启动工作流。",
+      "scene": "描述自动化流程的启动机制",
+      "difficulty": "advanced",
+      "core_words": [
+        "trigger",
+        "start",
+        "workflow",
+        "condition",
+        "met"
+      ],
+      "core_patterns": [
+        "A + subject + verb + when + passive clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "The workflow starts when its trigger condition is met.",
+          "chinese": "触发条件满足时，工作流启动。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-workflows",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0162",
+      "stable_key": "ai-large-models-sentence-0162",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d02",
+      "day": 2,
+      "order": 2,
+      "english": "Run this action only after the file has been reviewed and approved.",
+      "chinese": "只有文件经过审查并获批后才执行这个动作。",
+      "scene": "审批完成前阻止自动处理文件",
+      "difficulty": "advanced",
+      "core_words": [
+        "run",
+        "action",
+        "only after",
+        "file",
+        "approved"
+      ],
+      "core_patterns": [
+        "Verb + object + only after + passive clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-workflows",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0163",
+      "stable_key": "ai-large-models-sentence-0163",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d02",
+      "day": 2,
+      "order": 3,
+      "english": "If the required input is missing, stop the workflow and notify the user.",
+      "chinese": "如果缺少必需输入，请停止工作流并通知用户。",
+      "scene": "关键数据不足时中止自动化",
+      "difficulty": "advanced",
+      "core_words": [
+        "required",
+        "input",
+        "missing",
+        "stop",
+        "workflow"
+      ],
+      "core_patterns": [
+        "If + condition, + instruction."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Stop the workflow when required input is missing.",
+          "chinese": "缺少必需输入时停止工作流。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-workflows",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0164",
+      "stable_key": "ai-large-models-sentence-0164",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d02",
+      "day": 2,
+      "order": 4,
+      "english": "Save each completed step before the workflow starts the next one.",
+      "chinese": "工作流开始下一步前保存每个已完成步骤。",
+      "scene": "长工作流中保存中间状态",
+      "difficulty": "advanced",
+      "core_words": [
+        "save",
+        "each",
+        "completed",
+        "step",
+        "before",
+        "next"
+      ],
+      "core_patterns": [
+        "Verb + each + object + before + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Save progress after every completed step.",
+          "chinese": "每完成一步都保存进度。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-workflows",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0165",
+      "stable_key": "ai-large-models-sentence-0165",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d02",
+      "day": 2,
+      "order": 5,
+      "english": "The workflow should record which action failed and when it happened.",
+      "chinese": "工作流应记录哪个动作在何时失败。",
+      "scene": "在多步骤流程中保留失败位置",
+      "difficulty": "advanced",
+      "core_words": [
+        "workflow",
+        "should",
+        "record",
+        "action",
+        "failed"
+      ],
+      "core_patterns": [
+        "Subject + should + verb + indirect question."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "The workflow should record which action did fail.",
+          "explanation_zh": "间接疑问使用陈述句语序 which action failed。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-workflows",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0166",
+      "stable_key": "ai-large-models-sentence-0166",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d02",
+      "day": 2,
+      "order": 6,
+      "english": "Use a schedule only for tasks that can run unattended.",
+      "chinese": "只有可无人值守运行的任务才使用计划调度。",
+      "scene": "判断任务是否适合定时自动执行",
+      "difficulty": "advanced",
+      "core_words": [
+        "use",
+        "schedule",
+        "only",
+        "task",
+        "run",
+        "unattended"
+      ],
+      "core_patterns": [
+        "Verb + object + only for + noun + relative clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-workflows",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0167",
+      "stable_key": "ai-large-models-sentence-0167",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d03",
+      "day": 3,
+      "order": 1,
+      "english": "Ask for human confirmation before sending, deleting, or purchasing anything.",
+      "chinese": "发送、删除或购买任何内容前请求人工确认。",
+      "scene": "高影响外部动作需要用户确认",
+      "difficulty": "advanced",
+      "core_words": [
+        "ask for",
+        "confirmation",
+        "before",
+        "send",
+        "delete"
+      ],
+      "core_patterns": [
+        "Verb + for + noun + before + verb-ing."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Ask confirmation before sending anything.",
+          "explanation_zh": "表示请求确认时通常使用 ask for confirmation。"
+        }
+      ],
+      "alternative_expressions": [
+        {
+          "english": "Require confirmation before any send or delete action.",
+          "chinese": "任何发送或删除动作前都要求确认。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-permissions",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0168",
+      "stable_key": "ai-large-models-sentence-0168",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d03",
+      "day": 3,
+      "order": 2,
+      "english": "Do not grant write permission unless the current task clearly requires it.",
+      "chinese": "除非当前任务明确需要，否则不要授予写入权限。",
+      "scene": "按最小权限原则控制数据修改能力",
+      "difficulty": "advanced",
+      "core_words": [
+        "grant",
+        "write permission",
+        "unless",
+        "task",
+        "require"
+      ],
+      "core_patterns": [
+        "Do not + verb + unless + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Grant write access only when the task requires it.",
+          "chinese": "仅在任务需要时授予写入权限。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-permissions",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0169",
+      "stable_key": "ai-large-models-sentence-0169",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d03",
+      "day": 3,
+      "order": 3,
+      "english": "The agent should explain why it needs access before requesting permission.",
+      "chinese": "Agent 应在请求权限前解释为什么需要访问。",
+      "scene": "授予工具权限前展示用途",
+      "difficulty": "advanced",
+      "core_words": [
+        "agent",
+        "should",
+        "explain",
+        "why",
+        "need",
+        "access"
+      ],
+      "core_patterns": [
+        "Subject + should explain why + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-permissions",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0170",
+      "stable_key": "ai-large-models-sentence-0170",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d03",
+      "day": 3,
+      "order": 4,
+      "english": "Deny the action if the required permission is missing or expired.",
+      "chinese": "如果必需权限缺失或已过期，请拒绝执行该动作。",
+      "scene": "权限检查失败时阻止工具调用",
+      "difficulty": "advanced",
+      "core_words": [
+        "deny",
+        "action",
+        "required",
+        "permission",
+        "missing"
+      ],
+      "core_patterns": [
+        "Instruction + if + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Block the action when permission is missing.",
+          "chinese": "缺少权限时阻止该动作。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-permissions",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0171",
+      "stable_key": "ai-large-models-sentence-0171",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d03",
+      "day": 3,
+      "order": 5,
+      "english": "Keep secrets out of all tool arguments, workflow records, and logs.",
+      "chinese": "不要在任何工具参数、工作流记录和日志中包含密钥。",
+      "scene": "防止凭据进入调用记录和日志",
+      "difficulty": "advanced",
+      "core_words": [
+        "keep",
+        "secret",
+        "tool argument",
+        "workflow record",
+        "log"
+      ],
+      "core_patterns": [
+        "Keep + object + out of + places."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Do not put secrets in tool arguments or logs.",
+          "chinese": "不要把密钥放入工具参数或日志。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-permissions",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0172",
+      "stable_key": "ai-large-models-sentence-0172",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d04",
+      "day": 4,
+      "order": 1,
+      "english": "Retry the task only after checking whether the error is temporary.",
+      "chinese": "确认错误是否为临时错误后再重试任务。",
+      "scene": "根据失败原因决定是否重新执行",
+      "difficulty": "advanced",
+      "core_words": [
+        "retry",
+        "task",
+        "only after",
+        "check",
+        "error"
+      ],
+      "core_patterns": [
+        "Verb + object + only after + verb-ing."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Check the error before retrying the task.",
+          "chinese": "重试任务前检查错误。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-monitoring",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0173",
+      "stable_key": "ai-large-models-sentence-0173",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d04",
+      "day": 4,
+      "order": 2,
+      "english": "Stop retrying when the same permanent error appears after a fix.",
+      "chinese": "修复后相同的永久错误再次出现时停止重试。",
+      "scene": "避免对不可恢复错误无限重试",
+      "difficulty": "advanced",
+      "core_words": [
+        "stop",
+        "retry",
+        "same",
+        "permanent",
+        "error",
+        "returns"
+      ],
+      "core_patterns": [
+        "Stop + verb-ing + when + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-monitoring",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0174",
+      "stable_key": "ai-large-models-sentence-0174",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d04",
+      "day": 4,
+      "order": 3,
+      "english": "Alert the user when the workflow cannot continue without more input.",
+      "chinese": "工作流缺少更多输入而无法继续时提醒用户。",
+      "scene": "自动恢复失败后向用户升级问题",
+      "difficulty": "advanced",
+      "core_words": [
+        "alert",
+        "user",
+        "workflow",
+        "continue"
+      ],
+      "core_patterns": [
+        "Verb + person + when + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Notify the user if the workflow cannot continue.",
+          "chinese": "如果工作流无法继续，请通知用户。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-monitoring",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0175",
+      "stable_key": "ai-large-models-sentence-0175",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d04",
+      "day": 4,
+      "order": 4,
+      "english": "Monitor the workflow and save the final result with its completion time.",
+      "chinese": "监控工作流，并保存最终结果及完成时间。",
+      "scene": "运行期间观察状态并记录最终产物",
+      "difficulty": "advanced",
+      "core_words": [
+        "monitor",
+        "workflow",
+        "save",
+        "final result",
+        "completion time"
+      ],
+      "core_patterns": [
+        "Verb A and verb B + with + metadata."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-monitoring",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    },
+    {
+      "sentence_id": "ai-s0176",
+      "stable_key": "ai-large-models-sentence-0176",
+      "unit_id": "ai-l5-u08",
+      "lesson_id": "ai-l5-u08-d04",
+      "day": 4,
+      "order": 5,
+      "english": "A human should review high-impact actions before the workflow executes them.",
+      "chinese": "工作流执行高影响动作前应由人工审查。",
+      "scene": "发送、删除、付费或重要写入前保留人工控制",
+      "difficulty": "advanced",
+      "core_words": [
+        "human",
+        "should",
+        "review",
+        "high-impact",
+        "action",
+        "before",
+        "execution"
+      ],
+      "core_patterns": [
+        "A + person + should + verb + object + before + clause."
+      ],
+      "common_mistakes": [],
+      "alternative_expressions": [
+        {
+          "english": "Require human review before executing high-impact actions.",
+          "chinese": "执行高影响动作前要求人工审查。"
+        }
+      ],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "dictation",
+        "speaking",
+        "reading",
+        "fsrs",
+        "translation"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "u08-monitoring",
+      "content_version": "1.0.0",
+      "status": "reviewed"
+    }
+  ],
+  "status": "reviewed"
+}

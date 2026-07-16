@@ -2,8 +2,8 @@
   "specification_version": "1.0",
   "course_id": "ai-large-models",
   "stable_key": "ai-large-models-course",
-  "version": "0.1.0",
-  "content_version": "0.1.0",
+  "version": "1.0.0",
+  "content_version": "1.0.0",
   "title": "AI 与大模型英语",
   "subtitle": "用简单英语完成真实 AI 任务",
   "description": "面向英语基础较弱的用户，学习 AI 软件操作、提示词、文件处理、错误排查、API、Agent 与自动化场景中的高频英语。",
@@ -11,7 +11,7 @@
   "target_level": "mixed",
   "topics": ["AI 软件使用", "提示词", "文件处理", "API", "Agent", "自动化"],
   "estimated_days": 56,
-  "estimated_sentences": 192,
+  "estimated_sentences": 176,
   "prerequisites": ["能够识别基础英文单词和简单句"],
   "learning_goals": [
     "看懂常见 AI 软件界面和设置",
@@ -41,7 +41,7 @@
           "stable_key": "ai-large-models-unit-interface-foundations",
           "order": 1,
           "title": "AI 基础界面与操作",
-          "status": "draft",
+          "status": "reviewed",
           "content_path": "units/unit-01-foundations.json"
         },
         {
@@ -49,8 +49,8 @@
           "stable_key": "ai-large-models-unit-model-settings",
           "order": 2,
           "title": "模型选择与基础设置",
-          "status": "planned",
-          "content_path": null
+          "status": "reviewed",
+          "content_path": "units/unit-02-model-settings.json"
         }
       ]
     },
@@ -68,16 +68,16 @@
           "stable_key": "ai-large-models-unit-basic-instructions",
           "order": 3,
           "title": "提问与基础指令",
-          "status": "planned",
-          "content_path": null
+          "status": "reviewed",
+          "content_path": "units/unit-03-basic-instructions.json"
         },
         {
           "unit_id": "ai-l2-u04",
           "stable_key": "ai-large-models-unit-output-control",
           "order": 4,
           "title": "提示词与输出控制",
-          "status": "planned",
-          "content_path": null
+          "status": "reviewed",
+          "content_path": "units/unit-04-output-control.json"
         }
       ]
     },
@@ -95,16 +95,16 @@
           "stable_key": "ai-large-models-unit-files-images",
           "order": 5,
           "title": "文件、图片和长文本",
-          "status": "planned",
-          "content_path": null
+          "status": "reviewed",
+          "content_path": "units/unit-05-files-images.json"
         },
         {
           "unit_id": "ai-l3-u06",
           "stable_key": "ai-large-models-unit-errors-recovery",
           "order": 6,
           "title": "错误、失败和修正",
-          "status": "planned",
-          "content_path": null
+          "status": "reviewed",
+          "content_path": "units/unit-06-errors-recovery.json"
         }
       ]
     },
@@ -122,8 +122,8 @@
           "stable_key": "ai-large-models-unit-api-model-basics",
           "order": 7,
           "title": "API 与模型基础",
-          "status": "planned",
-          "content_path": null
+          "status": "reviewed",
+          "content_path": "units/unit-07-api-model-basics.json"
         }
       ]
     },
@@ -141,13 +141,13 @@
           "stable_key": "ai-large-models-unit-agent-workflows",
           "order": 8,
           "title": "AI Agent、工具和工作流",
-          "status": "planned",
-          "content_path": null
+          "status": "reviewed",
+          "content_path": "units/unit-08-agent-workflows.json"
         }
       ]
     }
   ],
-  "status": "draft",
+  "status": "reviewed",
   "built_in": true,
   "read_only": true
 }
