@@ -71,3 +71,14 @@ class CourseProgressSummary:
     total_required_items: int
     completion_percentage: float
     is_completed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class CourseVersionStatus:
+    course_stable_key: str
+    recorded_course_version: str
+    recorded_content_version: str
+    current_course_version: str
+    current_content_version: str
+    has_new_content: bool
+    completed_recorded_version: bool

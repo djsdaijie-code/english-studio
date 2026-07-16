@@ -8,7 +8,10 @@ from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QLabel, QPushButto
 
 from english_typing_trainer.models.dictation import DictationAttempt
 from english_typing_trainer.models.fsrs_review import ReviewQueueItem
-from english_typing_trainer.models.learning_content import CourseCapabilityItem
+from english_typing_trainer.models.learning_content import (
+    CourseCapabilityItem,
+    CourseReviewQueueItem,
+)
 from english_typing_trainer.services.dictation_service import DictationService
 from english_typing_trainer.ui.practice_view import PracticeInputEdit
 
@@ -22,11 +25,13 @@ class DictationPage(QWidget):
     course_audio_requested = Signal(object, float)
     course_attempt_completed = Signal(object, object)
     course_rating_requested = Signal(object, str)
+    course_review_rating_requested = Signal(int, str)
 
     def __init__(self, service: DictationService, parent=None) -> None:
         super().__init__(parent)
-        self.service = service; self.items: list[ReviewQueueItem] = []; self.course_items: list[CourseCapabilityItem] = []; self.index = 0
+        self.service = service; self.items: list[ReviewQueueItem] = []; self.course_items: list[CourseCapabilityItem] = []; self.course_reviews: list[CourseReviewQueueItem] = []; self.index = 0
         self._course_mode = False
+        self._course_review_mode = False
         self.replay_count = 0; self._started = 0.0; self._submitted = False
         self._build()
 
@@ -57,12 +62,17 @@ class DictationPage(QWidget):
         return items[self.index] if 0 <= self.index < len(items) else None
 
     def load_queue(self, items: list[ReviewQueueItem]) -> None:
-        self._course_mode=False; self.course_items=[]; self.items=list(items); self.index=0
+        self._course_mode=False; self._course_review_mode=False; self.course_items=[]; self.course_reviews=[]; self.items=list(items); self.index=0
         self.back_button.setText("返回单词本"); self.kind.setEnabled(True); self._load_current()
 
     def load_course_items(self, items: list[CourseCapabilityItem]) -> None:
-        self._course_mode=True; self.items=[]; self.course_items=list(items); self.index=0
+        self._course_mode=True; self._course_review_mode=False; self.items=[]; self.course_reviews=[]; self.course_items=list(items); self.index=0
         self.back_button.setText("返回 Day"); self.kind.setCurrentIndex(self.kind.findData("sentence")); self.kind.setEnabled(False)
+        self.mode.setCurrentIndex(self.mode.findData("learning")); self._load_current()
+
+    def load_course_reviews(self, reviews: list[CourseReviewQueueItem]) -> None:
+        self._course_mode=True; self._course_review_mode=True; self.items=[]; self.course_reviews=list(reviews); self.course_items=[review.item for review in reviews]; self.index=0
+        self.back_button.setText("返回课程"); self.kind.setCurrentIndex(self.kind.findData("sentence")); self.kind.setEnabled(False)
         self.mode.setCurrentIndex(self.mode.findData("learning")); self._load_current()
 
     def _expected(self) -> str:
@@ -78,7 +88,18 @@ class DictationPage(QWidget):
         if item is None:
             self.position.setText("已完成"); self.prompt.setText("本轮听写已结束"); self.context.setText(""); self.input.setEnabled(False); self.submit.setEnabled(False); self.play.setEnabled(False); return
         total=len(self.course_items) if self._course_mode else len(self.items)
-        self.position.setText(f"第 {self.index+1} / {total} 项"); self.prompt.setText("播放后输入你听到的内容"); self.context.setText("课程句子不会保存到普通听写历史。" if self._course_mode else "单词严格保留大小写、连字符和撇号。句子可选择学习模式。")
+        self.position.setText(f"第 {self.index+1} / {total} 项"); self.prompt.setText("播放后输入你听到的内容")
+        if self._course_review_mode:
+            review = self.course_reviews[self.index]
+            due = review.card.due_at_utc.astimezone().strftime("%Y-%m-%d %H:%M")
+            card_type = "听力卡" if review.card.card_type == "sentence_listening" else "句子卡"
+            self.context.setText(
+                f"{review.course_title} · Day {review.lesson_day} {review.lesson_title} · "
+                f"第 {review.sentence_order} 句 · {card_type} · 到期 {due}\n"
+                "课程正文不会保存到普通听写历史。"
+            )
+        else:
+            self.context.setText("课程句子不会保存到普通听写历史。" if self._course_mode else "单词严格保留大小写、连字符和撇号。句子可选择学习模式。")
         is_word=self.kind.currentData()=="word"; self.mode.setEnabled(not is_word); self.input.setEnabled(True); self.submit.setEnabled(True); self.play.setEnabled(True); QTimer.singleShot(0,self._restore_focus)
 
     def _play(self) -> None:
@@ -119,10 +140,27 @@ class DictationPage(QWidget):
         item=self.current
         if item is None:return
         if self._course_mode:
-            self.course_rating_requested.emit(item.ref,rating); self.learning_activity.emit("course_self_rated",item.ref.item_stable_key)
+            if self._course_review_mode:
+                review = self.course_reviews[self.index]
+                self.course_review_rating_requested.emit(review.card.id or 0, rating)
+                return
+            else:
+                self.course_rating_requested.emit(item.ref,rating)
+            self.learning_activity.emit("course_self_rated",item.ref.item_stable_key)
         else:
             self.rating_requested.emit(item.entry.id or 0,rating); self.learning_activity.emit("self_rated",item.entry.id)
         self.index+=1; self._load_current()
+
+    def accept_course_review_rating(self) -> None:
+        item = self.current
+        if not self._course_review_mode or item is None:
+            return
+        self.learning_activity.emit("course_self_rated", item.ref.item_stable_key)
+        self.index += 1
+        self._load_current()
+
+    def show_course_review_rating_error(self, message: str) -> None:
+        self.feedback.setText(message)
 
     def _restore_focus(self)->None:
         if self.input.isEnabled():

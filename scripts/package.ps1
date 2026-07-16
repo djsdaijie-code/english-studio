@@ -62,7 +62,11 @@ $RequiredPatterns = @(
     "dark.qss",
     "qwindows.dll",
     "Qt6Charts.dll",
-    "Qt6Svg.dll"
+    "Qt6Svg.dll",
+    "catalog.json",
+    "course.schema.json",
+    "course.json",
+    "unit-01-foundations.json"
 )
 foreach ($Pattern in $RequiredPatterns) {
     if (-not (Get-ChildItem -LiteralPath $AppDir -Recurse -File | Where-Object Name -eq $Pattern | Select-Object -First 1)) {

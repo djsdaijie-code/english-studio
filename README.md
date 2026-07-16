@@ -6,7 +6,7 @@ English Studio 是面向 Windows 的本地英语学习与打字应用，通过�
 
 - Python `>=3.14,<3.15`，当前验证环境 Python 3.14.6
 - PySide6 6.11.1
-- SQLite（标准库 `sqlite3`），schema version 12
+- SQLite（标准库 `sqlite3`），schema version 13
 - pytest 9.1.1；PyInstaller 6.21.0
 - 当前本地交付版本 `1.0.0`；Windows 安装器和便携版由 `scripts/package.ps1` 构建
 
@@ -26,6 +26,7 @@ English Studio 是面向 Windows 的本地英语学习与打字应用，通过�
 - FSRS 智能复习：首页和单词本均可进入“今日复习”。每个词条分别维护严格词形拼写卡和词义自评卡；支持忘记了、困难、记得、很熟、稍后复习、跳过与暂停，复习数据按 UTC 持久化并以本地时间显示。
 - 听写：单词听写严格保留大小写、撇号和连字符；句子听写支持严格模式与学习模式，后者仅忽略句首大小写、句末标点并规范空白。结果保存错误、遗漏、多余、重播、语速、时长和 FSRS listening 评分；比对完全离线。
 - 跟读评分 Beta：单词与来源句可播放标准发音、录音和回放；Azure Speech 区域与 Key 均由用户在设置中配置并仅保存到 Windows Credential Manager。未配置、无网络或 SDK 不可用时仅显示清晰状态，不显示 fake 或随机分数；临时录音默认在取消或评分完成后清理。
+- 内置课程：浏览 Course、Level、Unit 和 Day，按 stable key 保存打字、听写、跟读、词汇与课程 FSRS 状态；提供到期课程复习、版本升级提示和跨会话继续，课程正文不写入文章表。
 - 产品界面：简体中文、浅色/深色主题和专注练习布局。
 
 ## 安装与运行
@@ -78,7 +79,7 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishStudio-isolated"
 
 ## 数据库迁移
 
-迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v11 数据库可顺序升级到 v12。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v12 新增只保存课程 enrollment 与稀疏 Item 状态的 `course_enrollments`、`course_item_progress`，不复制课程正文，也不改变 WPM 计时或既有练习记录。
+迁移由 `src/english_typing_trainer/database/migrations.py` 管理，v1-v12 数据库可顺序升级到 v13。升级旧库前会通过 SQLite backup API 在数据目录的 `backups\` 中创建备份；迁移使用事务，失败回滚。v12 新增课程 enrollment 与稀疏 Item 状态，v13 新增按能力拆分的活动、数值尝试历史和课程 FSRS 卡/日志；两者都不复制课程正文，也不改变 WPM 计时或既有普通练习记录。真实用户库应先用 `scripts/verify_schema13_migration.py` 对仓库外副本验证，流程见 `docs/course-release-hardening.md`。
 
 ## 已知限制
 

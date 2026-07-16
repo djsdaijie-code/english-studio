@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成；`feature/course-system` 已完成内置课程 Phase 1–5，当前进入最终验收与后续 Phase 6 规划阶段。
+English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成；`feature/course-system` 已完成内置课程 Phase 1–5 和 Phase 6A 真实环境验收与发布加固。当前等待独立提交，不执行 Phase 6B 内容开发。
 
 ## 架构与目录
 
@@ -12,6 +12,7 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 - `services/learning_*`：有效学习时间状态机、档位、等级和成就计算。
 - `database`：标准库 SQLite、事务、v1-v13 迁移和 repository。
 - `courses`、`services/course_progress.py`、`services/course_learning.py` 与 `services/course_capabilities.py`：只读课程加载、stable key 状态关联、按能力动态进度、不持久化正文的课程会话，以及 TTS/听写/跟读/词汇/FSRS 适配。
+- `services/migration_verification.py` 与 `scripts/verify_schema13_migration.py`：只读源、SQLite Backup API、副本迁移、完整性与行数一致性验证。
 - `services/fsrs_review.py`：FSRS profile、UTC 调度、评分、今日队列和延后处理。
 - `ui`：连续练习、逐句学习、课程列表/层级/Day 浏览、课程打字会话、翻译面板、跟读 Beta、设置及本地数据管理入口。
 - `tests`：临时数据库、fake clock、mock provider 和 UI 烟测。
@@ -24,11 +25,16 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 
 - 原有文章库、连续练习、历史统计、错误分析、专项练习、生词本和间隔复习保持兼容。
 - 内置课程可从主窗口浏览 Course、Level、Unit 和 Day，显示动态进度，支持推荐继续、自由进入和已完成 Day 复习。
-- 课程 Sentence Item 复用现有逐句字符判定与计时；首次输入和完成事件写入 schema 12 状态，但课程正文不写文章、文章句子、普通句子尝试或练习记录表。
+- 课程 Sentence Item 复用现有逐句字符判定与计时；首次输入和完成事件写入 schema 12 兼容状态与 schema 13 typing 活动状态，但课程正文不写文章、文章句子、普通句子尝试或练习记录表。
 - 课程朗读复用现有 MiniMax/QtMultimedia 流程；缓存以 Item stable key、内容版本和音频参数为身份，课程缓存的 `text_preview` 保持为空，普通文章 TTS 行为不变。
 - 课程听写复用纯文本比较，课程跟读复用现有录音与 Azure provider；聚合状态和数值历史写入课程专用表，不写普通 `dictation_attempts` 或 `pronunciation_attempts`。
 - 课程词汇复用共享词条与提取规则，课程来源语境只保存 stable key、版本和字符位置，显示或生成讲解时动态解析正文；一个词条可同时拥有多个文章和课程语境。
 - 课程句子使用独立 FSRS 卡与日志，stable key 幂等建卡；排序、翻译和小幅文字修订不重复建卡，deprecated Item 保留历史但不进入新的到期队列。共享词条的拼写/词义 FSRS 与课程句子卡保持概念分离。
+- 课程列表提供独立到期复习入口，按 due 排序并显示课程、Day 和句子位置；paused、archived 和 deprecated 内容不主动推荐，评分写课程 FSRS 日志且不影响普通词汇队列。
+- enrollment 记录版本低于当前 JSON 语义版本时显示“课程有新内容”、历史版本和当前版本；历史状态不清除，新增 required Item 可按当前内容改变完成率。
+- 真实 schema 11 用户库以只读方式通过 SQLite Backup API 生成仓库外副本，仅副本升级到 schema 13；源与目标 integrity 均为 `ok`，全部既有表计数一致，正式用户数据库未修改。
+- 跨 AppContext 和 PyInstaller 双启动均验证 enrollment、推荐 Lesson、课程活动、课程 FSRS 和 `in_progress` Item 可恢复；打包构建可从 `_MEIPASS` 读取 1 门课程、5 个 Level、8 个 Unit 和 12 句。
+- 本机音频设备验收检测到 1 个输入和 5 个输出，短提示音播放及临时录音成功且录音已清理。MiniMax/Azure 凭据均未配置，因此真实云请求明确保留为人工验收项。
 - Lesson 完成率按当前 JSON 的 required `(item_stable_key, activity_type)` 动态聚合；typing、dictation、speaking、vocabulary 和 review 独立，可选活动不阻止完成，重复练习保留最早完成时间。
 - 普通文章可默认进入逐句学习；老数据库升级默认保留连续模式，新安装默认启用逐句模式。
 - 首次有效输入开始计时；默认 3 秒无输入自动暂停；句子完成后进入学习计时；Enter 进入下一句但不提前启动有效计时。
@@ -56,16 +62,17 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 
 ## 测试状态
 
-2026-07-16，Python 3.14.6：全量 pytest 279 passed。覆盖新库 schema 13、11 → 13、12 → 13、备份、幂等和事务回滚；课程 TTS 无正文预览、独立听写/跟读历史、动态词汇语境、课程 FSRS、required/optional 活动、内容版本和排序变化；以及既有文章、普通 FSRS、听写、跟读 Beta 与无 Azure 配置降级。测试数量仍以每次实际 pytest 输出为准。
+2026-07-16，Python 3.14.6：课程校验通过，全量 pytest 为 291 passed。新增覆盖只读源副本迁移、关键计数一致、跨 AppContext 恢复、课程 due 队列与 FSRS 日志、版本升级提示、无凭据与无设备降级、损坏课程音频缓存、`_MEIPASS` 路径模拟和打包双启动。测试数量仍以每次实际 pytest 输出为准。
 
 ## 尚未完成
 
 - 阶段 B 已完成真实 Free Dictionary、DeepSeek 三语境讲解、词典音频、MiniMax 单词回退和来源句缓存联调；隔离数据目录中二次运行未重复调用 DeepSeek/MiniMax。
-- 真实 Azure Speech 资源联调、实际评分准确性、Prosody 与多区域验证，计划 v1.0.1。
+- 真实 MiniMax 课程短句生成、缓存命中和内容版本换键受本机缺少凭据限制，仍需按发布加固清单完成 1–2 次短请求。
+- 真实 Azure Speech 资源联调、实际评分准确性、Prosody 与多区域验证受本机缺少凭据限制，计划后续人工验收。
 - 安装器中文向导资源仍待补充；当前安装向导为英文，应用本体为中文。
 - 完整安装、覆盖安装、卸载和重装真人矩阵仍需在实际使用中持续验证。
 - 实际使用中的 Bug 收集与 v1.0.1 准备工作仍在进行。
 - 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
 - 排行榜、社交分享、商店、虚拟货币、装扮和复杂任务不在当前范围。
-- Azure Speech 真实资源联调、实际评分准确性、Prosody 与多区域验证留待 v1.0.1；其余跟读 Beta 的本地录音和安全降级已完成。
-- Phase 6 尚未执行；建议聚焦课程专用到期复习入口、跨会话能力队列体验、课程版本升级提示和真实 provider 人工验收，不扩展 schema 14 或复制课程正文。
+- Azure Speech 真实资源联调、实际评分准确性、Prosody 与多区域验证留待后续；其余跟读 Beta 的本地录音和安全降级已完成。
+- Phase 6B 仅建议开展受控内容开发和内容 QA；不得顺带升级 schema、引入在线课程或复制课程正文。真实 Provider 人工验收应作为独立发布门禁先完成。

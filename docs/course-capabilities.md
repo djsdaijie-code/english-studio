@@ -131,7 +131,11 @@ schema 12 已完成的打字状态继续作为 typing 的兼容来源；下一�
 
 课程 Day 页按 Lesson activity 显示朗读、听写和跟读入口，并根据课程词汇与 FSRS 标签显示收藏和课程复习入口。逐句课程练习继续复用 `SentencePracticeView`，只增加薄的课程能力按钮；听写和跟读复用原页面的课程运行时模式。
 
+Phase 6A 在课程列表增加独立的到期复习入口。`due_sentence_reviews()` 返回按 due 排序且包含课程、Day 和句子位置的只读队列对象；UI 使用卡片 ID 提交评分并更新课程 FSRS 日志。paused、archived 和 deprecated 内容不进入主动队列，普通词汇 FSRS 队列不受影响。
+
 内容刷新、stable key 丢失、数据库失败、provider 不可用和空活动都会显示可理解的提示并记录课程 ID/stable key 与原因，不记录课程全文或用户输入全文。单门课程加载失败仍由课程仓储隔离，不影响其他课程或主窗口。
+
+课程详情通过 `CourseProgressService.get_version_status()` 比较 enrollment 记录版本和当前 JSON 语义版本。版本提高时显示记录版本、当前版本和“课程有新内容”，并定位当前推荐 Day；历史完成状态不重置，完成率按当前 required 活动重新计算。
 
 测试中应使用：
 
@@ -146,4 +150,4 @@ context = build_app_context(
 
 ## 边界
 
-本阶段不把课程正文写入文章表，不创建临时文章，不改变普通文章编辑/删除语义，不实现 schema 14、在线课程、课程包、自定义课程或强制 Level 解锁。Phase 6 应在现有 `CourseCapabilityService`、独立课程 FSRS 队列和动态课程版本解析之上继续，而不是引入第二套正文存储。
+本阶段不把课程正文写入文章表，不创建临时文章，不改变普通文章编辑/删除语义，不实现 schema 14、在线课程、课程包、自定义课程或强制 Level 解锁。真实迁移、跨会话、Provider/设备和 PyInstaller 验收见 `docs/course-release-hardening.md`；后续内容开发不应引入第二套正文存储。

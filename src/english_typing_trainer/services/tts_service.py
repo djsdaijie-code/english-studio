@@ -68,10 +68,17 @@ class TTSService:
         if row is None:
             return None
         path = self.cache_dir / row["file_path"]
-        if not path.is_file() or path.stat().st_size != row["size_bytes"] or path.stat().st_size <= 0:
+        try:
+            size = path.stat().st_size if path.is_file() else 0
+        except OSError:
+            size = 0
+        if size != row["size_bytes"] or size <= 0:
             with self._database.independent_transaction() as connection:
                 self._repository.delete(connection, key)
-            path.unlink(missing_ok=True)
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                pass
             return None
         return CachedAudio(key, path, row["audio_format"], row["size_bytes"], row["duration_ms"])
 

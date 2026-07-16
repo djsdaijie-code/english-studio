@@ -85,6 +85,8 @@ schema 13 同时增加不含正文的课程能力历史和课程 FSRS 表，详�
 - 语义变化必须使用新 `stable_key`；已经删除或弃用的 key 不得复用。
 - enrollment 和 Item 的内容版本在下一次实际学习写入时更新，课程正文始终从当前 JSON 读取。
 
+Phase 6A 增加只读 `get_version_status(course_id)`：它按语义版本比较 enrollment 最后学习时记录的 course/content version 与当前 JSON。当前版本提高时返回 `has_new_content=True`，同时指出用户是否曾完成记录版本。该查询不更新 enrollment；历史状态继续按 stable key 保留，完成率按当前 required 活动重算。用户实际开始新版本活动后，enrollment 才记录当前版本。
+
 迁移从 schema 11 顺序执行到 12 再到 13，也支持从 12 直接升级到 13。迁移前沿用现有备份机制，全部 DDL 和版本更新运行在同一 savepoint 内，失败会回滚列、表、索引和版本号；新数据库可直接初始化到 13，重复启动不会重复建表或写 enrollment。
 
 ## enrollment 生命周期
@@ -136,4 +138,4 @@ context = build_app_context(data_dir=temp_data, courses_root=temp_courses)
 
 ## 当前边界
 
-Phase 5 已在 schema 13 中增加独立课程活动状态、数值尝试历史和课程句子 FSRS，但仍不把课程句子插入文章表，也不建立泛型课程内容映射表。课程听写、跟读和 FSRS 不写普通历史表；课程词汇只复用共享词条，并以 stable key 保存来源语境。完整能力边界见 `docs/course-capabilities.md`。
+Phase 5 已在 schema 13 中增加独立课程活动状态、数值尝试历史和课程句子 FSRS，但仍不把课程句子插入文章表，也不建立泛型课程内容映射表。课程听写、跟读和 FSRS 不写普通历史表；课程词汇只复用共享词条，并以 stable key 保存来源语境。完整能力边界见 `docs/course-capabilities.md`，真实副本迁移和跨会话验收见 `docs/course-release-hardening.md`。

@@ -252,6 +252,7 @@ class MainWindow(QMainWindow):
         self.current_course_session: CourseLearningSession | None = None
         self.current_course_capability_item: CourseCapabilityItem | None = None
         self.current_course_return: tuple[str, str] | None = None
+        self.course_review_queue_active = False
         self.current_practice_saved = True
         self.preview_special_material: PracticeMaterial | None = None
         self._logger = logging.getLogger(__name__)
@@ -318,6 +319,7 @@ class MainWindow(QMainWindow):
         )
         self.course_page.lesson_start_requested.connect(self._start_course_lesson)
         self.course_page.capability_requested.connect(self._start_course_capability)
+        self.course_page.due_review_requested.connect(self._start_course_due_review)
         self.special_practice_page = SpecialPracticePage()
         self.special_practice_page.generate_requested.connect(self._generate_special_preview)
         self.special_practice_page.start_preview_requested.connect(self._start_preview_special_practice)
@@ -364,6 +366,7 @@ class MainWindow(QMainWindow):
         self.dictation_page.course_audio_requested.connect(self._play_course_dictation_audio)
         self.dictation_page.course_attempt_completed.connect(self._save_course_dictation_attempt)
         self.dictation_page.course_rating_requested.connect(self._rate_course_dictation_card)
+        self.dictation_page.course_review_rating_requested.connect(self._rate_course_review_card)
         self.pronunciation_page = PronunciationPage()
         self.pronunciation_page.back_requested.connect(self._leave_pronunciation)
         self.pronunciation_page.standard_audio_requested.connect(self._play_pronunciation_reference)
@@ -609,6 +612,7 @@ class MainWindow(QMainWindow):
         self.sidebar.setVisible(self.stack.currentWidget() not in {self.practice_view, self.sentence_practice_view})
         if self.stack.currentWidget() is self.course_page:
             self.course_page.reload()
+            self._refresh_course_review_count()
         for button_index, button in self.nav_buttons.items():
             button.setProperty("active", "true" if button_index == index else "false")
             button.style().unpolish(button)
@@ -720,6 +724,31 @@ class MainWindow(QMainWindow):
 
     def _show_courses(self) -> None:
         self._switch_page(6)
+
+    def _refresh_course_review_count(self) -> None:
+        try:
+            count = len(self.context.course_capability_service.due_sentence_reviews())
+        except Exception as exc:
+            self._logger.error("course review count failed reason=%s", exc)
+            count = 0
+        self.course_page.set_due_review_count(count)
+
+    def _start_course_due_review(self) -> None:
+        try:
+            reviews = self.context.course_capability_service.due_sentence_reviews()
+        except Exception as exc:
+            self._logger.error("course due review queue failed reason=%s", exc)
+            QMessageBox.warning(self, "课程复习不可用", f"暂时无法读取课程复习队列：{exc}")
+            return
+        if not reviews:
+            QMessageBox.information(self, "课程复习", "当前没有已到期的课程复习卡。")
+            return
+        self.course_review_queue_active = True
+        self.current_course_return = None
+        self.current_course_capability_item = reviews[0].item
+        self.dictation_page.load_course_reviews(list(reviews))
+        self.stack.setCurrentWidget(self.dictation_page)
+        self.sidebar.hide()
 
     def _show_vocabulary(self) -> None:
         self._switch_page(2)
@@ -948,9 +977,30 @@ class MainWindow(QMainWindow):
                 exc,
             )
 
+    def _rate_course_review_card(self, card_id: int, rating: str) -> None:
+        try:
+            self.context.course_capability_service.rate_sentence_review(
+                card_id, rating
+            )
+            self._refresh_course_review_count()
+            self.dictation_page.accept_course_review_rating()
+        except Exception as exc:
+            self._logger.error(
+                "course review rating failed card_id=%s reason=%s",
+                card_id,
+                exc,
+            )
+            self.dictation_page.show_course_review_rating_error(
+                f"课程复习评分暂时无法保存：{exc}"
+            )
+
     def _leave_dictation(self) -> None:
         self.audio_playback.stop()
         self.current_course_capability_item = None
+        if self.course_review_queue_active:
+            self.course_review_queue_active = False
+            self._show_courses()
+            return
         if self.current_course_session is not None:
             self.stack.setCurrentWidget(self.sentence_practice_view)
             self.sidebar.hide()
@@ -1396,6 +1446,7 @@ class MainWindow(QMainWindow):
     def _open_course_dictation(
         self, items: tuple[CourseCapabilityItem, ...]
     ) -> None:
+        self.course_review_queue_active = False
         self.current_course_capability_item = items[0] if items else None
         self.dictation_page.load_course_items(list(items))
         self.stack.setCurrentWidget(self.dictation_page)
@@ -1502,11 +1553,35 @@ class MainWindow(QMainWindow):
                     exc,
                 )
                 self._active_course_activity_ref = None
-        cached = (
-            self.context.tts_service.get_cached_course(content_ref, request)
-            if content_ref is not None
-            else self.context.tts_service.get_cached(request)
-        )
+        try:
+            cached = (
+                self.context.tts_service.get_cached_course(content_ref, request)
+                if content_ref is not None
+                else self.context.tts_service.get_cached(request)
+            )
+        except Exception as exc:
+            self._logger.error(
+                "tts cache read failed item_stable_key=%s reason=%s",
+                content_ref.item_stable_key if content_ref is not None else None,
+                exc,
+            )
+            message = "音频缓存暂时无法读取，请稍后重试。"
+            if controls:
+                controls.set_state("error", message)
+            else:
+                QMessageBox.warning(self, "语音不可用", message)
+            if self._active_course_activity_ref is not None:
+                failed_ref = self._active_course_activity_ref
+                self._active_course_activity_ref = None
+                try:
+                    self.context.course_capability_service.fail_listening(failed_ref)
+                except Exception as save_exc:
+                    self._logger.error(
+                        "course listening cache failure save failed item_stable_key=%s reason=%s",
+                        failed_ref.item_stable_key,
+                        save_exc,
+                    )
+            return
         if cached:
             self.context.tts_service.mark_played(cached.cache_key)
             self.audio_playback.toggle(cached.file_path)
@@ -1515,8 +1590,26 @@ class MainWindow(QMainWindow):
             key = self.context.tts_credential_store.get()
             provider = MiniMaxTTSProvider(key or "", timeout=15.0)
         except Exception as exc:
+            message = (
+                str(exc)
+                if isinstance(exc, TTSProviderError)
+                else "无法读取 MiniMax 凭据，请在设置中重新配置。"
+            )
             if controls:
-                controls.set_state("error", str(exc))
+                controls.set_state("error", message)
+            else:
+                QMessageBox.information(self, "语音不可用", message)
+            if self._active_course_activity_ref is not None:
+                failed_ref = self._active_course_activity_ref
+                self._active_course_activity_ref = None
+                try:
+                    self.context.course_capability_service.fail_listening(failed_ref)
+                except Exception as save_exc:
+                    self._logger.error(
+                        "course listening credential failure save failed item_stable_key=%s reason=%s",
+                        failed_ref.item_stable_key,
+                        save_exc,
+                    )
             return
         if controls: controls.set_state("loading", "生成中")
         worker = TTSWorker(
@@ -1538,8 +1631,11 @@ class MainWindow(QMainWindow):
 
     def _speech_generation_failed(self, request, error, worker, content_ref=None) -> None:
         self._tts_workers.discard(worker)
-        if request.text == self._active_speech_text and content_ref == self._active_speech_ref and self._active_speech_control:
-            self._active_speech_control.set_state("error", str(error))
+        if request.text == self._active_speech_text and content_ref == self._active_speech_ref:
+            if self._active_speech_control:
+                self._active_speech_control.set_state("error", str(error))
+            elif content_ref is not None:
+                QMessageBox.warning(self, "语音生成失败", str(error))
         if (
             request.text == self._active_speech_text
             and content_ref == self._active_course_activity_ref
@@ -1584,6 +1680,12 @@ class MainWindow(QMainWindow):
     def _speech_playback_failed(self, message: str) -> None:
         if self._active_speech_control:
             self._active_speech_control.set_state("error", message or "音频播放失败。")
+        elif self._active_speech_ref is not None:
+            QMessageBox.warning(
+                self,
+                "音频播放失败",
+                message or "音频播放失败，请检查播放设备。",
+            )
         if self._active_course_activity_ref is not None:
             content_ref = self._active_course_activity_ref
             self._active_course_activity_ref = None

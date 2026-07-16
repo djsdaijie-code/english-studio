@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QTreeWidget,
     QTreeWidgetItem,
+    QTreeWidgetItemIterator,
     QVBoxLayout,
     QWidget,
 )
@@ -57,6 +58,7 @@ class CoursePage(QWidget):
 
     lesson_start_requested = Signal(str, str, str)
     capability_requested = Signal(str, str, str)
+    due_review_requested = Signal()
 
     def __init__(
         self,
@@ -109,7 +111,10 @@ class CoursePage(QWidget):
         self.quick_start_button = QPushButton("开始学习")
         self.quick_start_button.setProperty("variant", "primary")
         self.quick_start_button.clicked.connect(self._start_selected_course)
+        self.due_review_button = QPushButton("课程到期复习")
+        self.due_review_button.clicked.connect(self.due_review_requested.emit)
         actions.addWidget(self.reload_button)
+        actions.addWidget(self.due_review_button)
         actions.addStretch(1)
         actions.addWidget(self.open_course_button)
         actions.addWidget(self.quick_start_button)
@@ -161,15 +166,21 @@ class CoursePage(QWidget):
         self.course_progress_label.setProperty("role", "subtitle")
         self.recommended_label = QLabel("")
         self.recommended_label.setWordWrap(True)
+        version_row = QHBoxLayout()
         self.version_notice_label = QLabel("")
         self.version_notice_label.setWordWrap(True)
         self.version_notice_label.setStyleSheet("color:#b54708;")
+        self.view_new_content_button = QPushButton("查看新内容")
+        self.view_new_content_button.clicked.connect(self._focus_new_content)
+        self.view_new_content_button.hide()
         layout.addWidget(self.course_title_label)
         layout.addWidget(self.course_description_label)
         layout.addWidget(self.course_goals_label)
         layout.addWidget(self.course_progress_label)
         layout.addWidget(self.recommended_label)
-        layout.addWidget(self.version_notice_label)
+        version_row.addWidget(self.version_notice_label, stretch=1)
+        version_row.addWidget(self.view_new_content_button)
+        layout.addLayout(version_row)
 
         self.hierarchy_tree = QTreeWidget()
         self.hierarchy_tree.setHeaderLabels(["课程结构", "内容", "状态"])
@@ -296,6 +307,12 @@ class CoursePage(QWidget):
     def show_list(self) -> None:
         self.view_stack.setCurrentWidget(self.list_view)
 
+    def set_due_review_count(self, count: int) -> None:
+        count = max(0, count)
+        self.due_review_button.setText(
+            f"课程到期复习（{count}）" if count else "课程到期复习"
+        )
+
     def show_course(self, course_id: str) -> None:
         try:
             course = self.courses.get_course(course_id)
@@ -327,23 +344,59 @@ class CoursePage(QWidget):
                 self.recommended_label.setText("必做内容已完成，可以自由选择 Day 复习。")
                 self.recommended_button.setText("复习第一个 Day")
                 self.recommended_button.setEnabled(self._first_lesson(course) is not None)
-            if enrollment and (
-                enrollment.course_version != course.version
-                or enrollment.content_version != course.content_version
-            ):
-                self.version_notice_label.setText(
-                    "课程内容版本已更新。历史完成记录仍保留；精确的“有新内容”标记将在后续阶段接入。"
+            version_status = self.progress.get_version_status(course_id)
+            if version_status is not None and version_status.has_new_content:
+                completed_prefix = (
+                    "你曾完成该记录版本。" if version_status.completed_recorded_version else ""
                 )
+                self.version_notice_label.setText(
+                    "课程有新内容。"
+                    f"已记录：课程 {version_status.recorded_course_version} / 内容 "
+                    f"{version_status.recorded_content_version}；当前：课程 "
+                    f"{version_status.current_course_version} / 内容 "
+                    f"{version_status.current_content_version}。"
+                    f"{completed_prefix}历史完成状态不会被清除。"
+                )
+                self.view_new_content_button.show()
             else:
                 self.version_notice_label.setText("")
+                self.view_new_content_button.hide()
         except Exception as exc:
             self._log_progress_error(course, None, exc)
             self.course_progress_label.setText("进度暂时无法读取。")
             self.recommended_label.setText("推荐 Day 暂时不可用，仍可浏览课程结构。")
             self.recommended_button.setEnabled(False)
+            self.version_notice_label.setText("")
+            self.view_new_content_button.hide()
 
         self._populate_hierarchy(course)
         self.view_stack.setCurrentWidget(self.detail_view)
+
+    def _focus_new_content(self) -> None:
+        if not self.current_course_id:
+            return
+        try:
+            lesson = self.progress.get_next_lesson(self.current_course_id)
+        except Exception as exc:
+            course = self.courses.get_course(self.current_course_id)
+            if course is not None:
+                self._log_progress_error(course, None, exc)
+            self.detail_status_label.setText("暂时无法定位新内容，请从课程结构中查看。")
+            return
+        if lesson is None:
+            self.detail_status_label.setText("当前没有未完成的必做内容，可自由选择 Day 复习。")
+            return
+        iterator = QTreeWidgetItemIterator(self.hierarchy_tree)
+        while iterator.value() is not None:
+            item = iterator.value()
+            if item.data(0, Qt.ItemDataRole.UserRole) == lesson.lesson_id:
+                self.hierarchy_tree.setCurrentItem(item)
+                self.hierarchy_tree.scrollToItem(item)
+                self.detail_status_label.setText(
+                    f"已定位到当前新内容：Day {lesson.day} · {lesson.title}。"
+                )
+                return
+            iterator += 1
 
     def show_lesson(self, course_id: str, lesson_id: str) -> None:
         try:

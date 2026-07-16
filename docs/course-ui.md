@@ -39,7 +39,7 @@ session_mode: recommended | manual | review
 
 - 中文区显示课程 JSON 已提供的译文，不调用 AI 翻译，也不写翻译缓存；
 - 课程模式关闭文章级翻译、人工编辑和单词收藏入口；
-- 当前 TTS 缓存表会保存文本预览，因此课程模式暂时隐藏并阻止 TTS，避免把课程正文写入 SQLite；后续需先把缓存身份改为只保存不可逆哈希，才可安全接入；
+- Phase 5 已通过 stable key、内容版本和音频参数建立课程 TTS 缓存键，课程缓存的正文预览为空；课程模式现可复用朗读、暂停、重放和错误降级；
 - 学习事件使用 `course_` 前缀，且不附带文章或文章句子 ID，以区分课程来源；
 - 不生成临时文章，不调用文章编辑、删除或分段服务。
 
@@ -51,7 +51,7 @@ session_mode: recommended | manual | review
 - 重练已完成句子：保留最早完成时间和完成状态，仅按状态服务既有规则更新实际练习信息。
 - Day、Unit 和 Course 完成率：每次展示时由当前 JSON 的有效必做 Item 动态聚合，不另建进度行。
 
-`skipped` 在 UI 中显示“暂时跳过”，不显示为完成。schema 12 已能发现 enrollment 的课程版本与当前版本不同，UI 会提示“课程内容版本已更新”；它没有保存旧版本必做 Item 集合，因此 Phase 4 不伪造精确的“有新内容”状态。后续若需要区分“已完成旧版本”和“新增必做内容”，应增加显式的版本快照或升级差异服务。
+`skipped` 在 UI 中显示“暂时跳过”，不显示为完成。Phase 6A 会比较 enrollment 最后学习版本和当前课程语义版本；版本提高时显示“课程有新内容”、记录版本与当前版本，并定位当前推荐 Day。历史状态仍按 stable key 保留，完成率按当前 required 活动动态重算。schema 13 不保存长期版本时间线，因此用户开始学习新版本后，enrollment 会记录当前版本。
 
 ## 错误与重新加载
 
@@ -70,6 +70,6 @@ context = build_app_context(
 
 内置课程是版本化、只读的发布资源，文章则是用户可编辑、可删除的持久内容。把课程句子伪装成文章会引入两套身份、升级同步、删除语义和全文复制问题。因此课程学习只把正文放入当前进程的打字会话，持久化只使用 stable key 关联 schema 12 状态；`articles`、`article_sections`、`article_sentences`、`sentence_attempts` 和普通 `practice_sessions` 都不会收到课程正文或课程学习记录。
 
-## 当前边界与 Phase 5 接入点
+## 当前边界
 
-Phase 4 不创建 FSRS 卡，不进入听写、跟读评分或课程词汇映射，也不升级数据库 schema。Phase 5 建议从 `CourseLearningSession.item_stable_keys` 和完成事件建立显式的能力适配层：先定义课程 Item 与 FSRS/词汇/听写目标的稳定关联及生命周期，再分别接入既有服务；不要反向依赖文章 ID，也不要把课程对象改成可写模型。
+Phase 4 的基础打字设计不创建普通文章或练习记录。Phase 5 已在 `CourseLearningSession.item_stable_keys` 之上完成显式能力适配，Phase 6A 已补齐课程到期复习、版本提示和真实环境加固。当前仍不实现 schema 14、课程编辑、在线更新、强制解锁或完整内容；详见 `docs/course-capabilities.md` 与 `docs/course-release-hardening.md`。

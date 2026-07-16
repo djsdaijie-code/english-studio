@@ -19,6 +19,7 @@ from english_typing_trainer.models.course_progress import (
     CourseEnrollment,
     CourseItemProgress,
     CourseProgressSummary,
+    CourseVersionStatus,
     EnrollmentStatus,
     ItemProgressStatus,
     ProgressScope,
@@ -76,6 +77,27 @@ class CourseProgressService:
     def get_enrollment(self, course_id: str) -> CourseEnrollment | None:
         course = self._require_course(course_id)
         return self.progress.get_enrollment(course.stable_key)
+
+    def get_version_status(self, course_id: str) -> CourseVersionStatus | None:
+        """Compare the last studied versions with the immutable bundled course."""
+        course = self._require_course(course_id)
+        enrollment = self.progress.get_enrollment(course.stable_key)
+        if enrollment is None:
+            return None
+        return CourseVersionStatus(
+            course_stable_key=course.stable_key,
+            recorded_course_version=enrollment.course_version,
+            recorded_content_version=enrollment.content_version,
+            current_course_version=course.version,
+            current_content_version=course.content_version,
+            has_new_content=(
+                self._is_newer_version(course.version, enrollment.course_version)
+                or self._is_newer_version(
+                    course.content_version, enrollment.content_version
+                )
+            ),
+            completed_recorded_version=enrollment.status == "completed",
+        )
 
     def set_enrollment_status(
         self,
@@ -481,6 +503,31 @@ class CourseProgressService:
             ):
                 return lesson
         return None
+
+    @staticmethod
+    def _is_newer_version(current: str, recorded: str) -> bool:
+        try:
+            return CourseProgressService._semver_key(
+                current
+            ) > CourseProgressService._semver_key(recorded)
+        except (TypeError, ValueError):
+            # Bundled versions are schema-validated. This fallback keeps a legacy,
+            # malformed enrollment visible instead of silently hiding an update.
+            return current != recorded
+
+    @staticmethod
+    def _semver_key(value: str) -> tuple[object, ...]:
+        core, separator, prerelease = value.partition("-")
+        numbers = tuple(int(part) for part in core.split("."))
+        if len(numbers) != 3:
+            raise ValueError("Expected semantic version")
+        if not separator:
+            return (*numbers, 1, ())
+        identifiers: tuple[tuple[int, object], ...] = tuple(
+            (0, int(part)) if part.isdigit() else (1, part)
+            for part in prerelease.split(".")
+        )
+        return (*numbers, 0, identifiers)
 
     def _summarize(
         self,

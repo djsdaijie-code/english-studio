@@ -87,3 +87,7 @@ class CourseReviewLog:
 class CourseReviewQueueItem:
     card: CourseReviewCard
     item: CourseCapabilityItem
+    course_title: str
+    lesson_title: str
+    lesson_day: int
+    sentence_order: int

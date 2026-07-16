@@ -408,9 +408,21 @@ class CourseCapabilityService:
                 continue
             try:
                 item = self.item(course.course_id, card.item_stable_key)
+                _course, _unit, lesson, resolved_sentence = self._require_item(
+                    course.course_id, card.item_stable_key
+                )
             except CourseCapabilityError:
                 continue
-            result.append(CourseReviewQueueItem(card, item))
+            result.append(
+                CourseReviewQueueItem(
+                    card=card,
+                    item=item,
+                    course_title=course.title,
+                    lesson_title=lesson.title,
+                    lesson_day=lesson.day,
+                    sentence_order=resolved_sentence.order,
+                )
+            )
         return tuple(result)
 
     def resolve_item(self, content_ref: LearningContentRef) -> CourseCapabilityItem:
