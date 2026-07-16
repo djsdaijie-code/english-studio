@@ -36,4 +36,4 @@ catalog.json
 5. 运行课程校验和相关项目测试。
 6. 完成英语、中文、技术事实、听写、跟读和 FSRS 人工审核后再提升状态。
 
-本轮只建立数据与架构，不包含运行时加载器。`scripts/validate_courses.py` 使用 Python 标准库完成离线结构、引用、唯一性和大小写检查；它验证本仓库使用的 JSON Schema 子集，不会修改课程或用户数据。
+运行时入口为 `english_typing_trainer.courses.CourseRepository`。它把课程解析为冻结的 Python 对象，隔离损坏课程，并支持 ID、`stable_key`、缓存刷新和测试目录注入。`scripts/validate_courses.py` 与运行时加载器复用同一套标准库校验模块，不会修改课程或用户数据。开发说明见 `docs/course-loader.md`。

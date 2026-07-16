@@ -20,6 +20,7 @@ a = Analysis(
         (str(project_root / "resources" / "styles"), "resources/styles"),
         (str(project_root / "resources" / "icons"), "resources/icons"),
         (str(project_root / "resources" / "sample_article.txt"), "resources"),
+        (str(project_root / "courses"), "courses"),
     ],
     hiddenimports=hidden_imports,
     hookspath=[],

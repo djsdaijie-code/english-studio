@@ -30,6 +30,7 @@ from english_typing_trainer.services.dictation_service import DictationService
 from english_typing_trainer.services.pronunciation_service import PronunciationService as PronunciationAssessmentService
 from english_typing_trainer.services.recording_service import RecordingService
 from english_typing_trainer.services.data_management import DataManagementService
+from english_typing_trainer.courses.repository import CourseRepository
 
 
 @dataclass(slots=True)
@@ -63,9 +64,16 @@ class AppContext:
     recording_service: RecordingService
     pronunciation_credential_store: CredentialStore
     data_management_service: DataManagementService
+    course_repository: CourseRepository
 
 
-def build_app_context(data_dir: Path | None = None, credential_store: CredentialStore | None = None, tts_credential_store: CredentialStore | None = None, pronunciation_credential_store: CredentialStore | None = None) -> AppContext:
+def build_app_context(
+    data_dir: Path | None = None,
+    credential_store: CredentialStore | None = None,
+    tts_credential_store: CredentialStore | None = None,
+    pronunciation_credential_store: CredentialStore | None = None,
+    courses_root: Path | None = None,
+) -> AppContext:
     path_service = AppPathService(base_dir=data_dir)
     paths = path_service.ensure_directories()
     database = DatabaseManager(paths.database_path)
@@ -96,6 +104,7 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
     pronunciation_assessment_service = PronunciationAssessmentService(database)
     recording_service = RecordingService(paths.recordings_dir)
     data_management_service = DataManagementService(database, paths.backups_dir, paths.logs_dir)
+    course_repository = CourseRepository(courses_root)
     if credential_store is None:
         credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
             WindowsCredentialStore("English Studio/DeepSeek API", "DeepSeek API"), WindowsCredentialStore()
@@ -143,4 +152,5 @@ def build_app_context(data_dir: Path | None = None, credential_store: Credential
         recording_service=recording_service,
         pronunciation_credential_store=pronunciation_credential_store,
         data_management_service=data_management_service,
+        course_repository=course_repository,
     )
