@@ -200,6 +200,34 @@ def test_practice_input_handles_correct_space_punctuation_and_newline() -> None:
     assert view.input_edit.toPlainText() == "a, \nB"
 
 
+def test_continuous_practice_keeps_source_and_input_in_sync_after_sentence_boundary() -> None:
+    content = "First you must listen every day. listening is very important."
+    prefix = "First you must listen every day."
+    view = _start_view(content)
+
+    for character in prefix:
+        view._handle_input_event(_key(Qt.Key_unknown, character))
+
+    assert view.session is not None
+    assert view.session.position == len(prefix)
+    assert view.input_edit.toPlainText() == prefix
+    assert view.progress_label.text() == f"进度 {len(prefix)} / {len(content)}"
+    assert view.target_hint.text() == "当前目标：空格"
+    selection = view.text_browser.extraSelections()[-1]
+    current_selection = QTextCursor(selection.cursor)
+    assert current_selection.selectionStart() == len(prefix)
+    assert current_selection.selectionEnd() == len(prefix) + 1
+
+    for character in " listening":
+        view._handle_input_event(_key(Qt.Key_unknown, character))
+
+    assert view.session.position == len(prefix) + len(" listening")
+    assert view.input_edit.toPlainText().endswith(" listening")
+    selection = view.text_browser.extraSelections()[-1]
+    current_selection = QTextCursor(selection.cursor)
+    assert current_selection.selectionStart() == view.session.position
+
+
 def test_practice_input_blocks_paste_and_uses_same_view_for_special_practice() -> None:
     view = _start_view("word", practice_type="error_word")
     view._handle_input_event(_key(Qt.Key_V, "v", Qt.ControlModifier))

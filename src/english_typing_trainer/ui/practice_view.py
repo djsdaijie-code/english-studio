@@ -125,6 +125,9 @@ class PracticeView(QWidget):
         self._translation_visible = True
         self._speech_segments: list[tuple[int, int, str]] = []
         self._current_speech_text = ""
+        self._source_line_spacing_dirty = True
+        self._rendered_input_session: TypingSession | None = None
+        self._rendered_input_count = -1
 
         self._timer = QTimer(self)
         self._timer.setInterval(250)
@@ -306,6 +309,8 @@ class PracticeView(QWidget):
     def apply_settings(self, settings: AppSettings) -> None:
         self._settings_font_size = settings.font_size
         self.stats_frame.setVisible(settings.show_live_stats)
+        self._source_line_spacing_dirty = True
+        self._invalidate_input_render()
         self._update_responsive_geometry()
         self._render_text()
         self._render_input()
@@ -325,6 +330,8 @@ class PracticeView(QWidget):
         self._translation_visible = True
         self._update_translation_visibility()
         self._settings_font_size = settings.font_size
+        self._source_line_spacing_dirty = True
+        self._invalidate_input_render()
         self._refresh_ui()
         self._update_responsive_geometry()
         self._render_text()
@@ -452,6 +459,7 @@ class PracticeView(QWidget):
             return
         snapshot = self.session.snapshot()
         self.progress_label.setText(f"进度 {snapshot.position} / {len(self.session.content)}")
+        self._refresh_target_hint()
         self.wpm_value.setText(f"{snapshot.wpm:.1f}")
         self.accuracy_value.setText(f"{snapshot.accuracy:.1f}%")
         self.errors_value.setText(str(snapshot.error_keystrokes))
@@ -466,6 +474,7 @@ class PracticeView(QWidget):
         content = self.session.content
         if self.text_browser.toPlainText() != content:
             self.text_browser.setPlainText(content)
+            self._source_line_spacing_dirty = True
         dark = self.palette().window().color().lightness() < 128
         muted = QColor("#8291a5" if dark else "#94a3b8")
         error_text = QColor("#fecaca" if dark else "#b42318")
@@ -502,17 +511,31 @@ class PracticeView(QWidget):
         cursor.setPosition(min(self.session.position, len(content)))
         self.text_browser.setTextCursor(cursor)
         self.text_browser.ensureCursorVisible()
-        self._apply_line_spacing(self.text_browser, 148)
+        if self._source_line_spacing_dirty:
+            self._apply_line_spacing(self.text_browser, 148)
+            self._source_line_spacing_dirty = False
 
     def _render_input(self) -> None:
         if self.session is None:
             self.input_edit.clear()
+            self._invalidate_input_render()
             return
+        typed_count = len(self.session.typed_characters)
+        if self._rendered_input_session is self.session:
+            if self._rendered_input_count == typed_count:
+                self._place_input_cursor_at_end()
+                return
+            if self._rendered_input_count + 1 == typed_count:
+                self._append_typed_input(self.session.typed_characters[-1])
+                self._rendered_input_count = typed_count
+                return
+            if self._rendered_input_count - 1 == typed_count:
+                self._remove_last_typed_input()
+                self._rendered_input_count = typed_count
+                return
+
         dark = self.palette().window().color().lightness() < 128
-        normal = QColor("#d9f3e4" if dark else "#18392a")
         resumed = QColor("#8291a5" if dark else "#64748b")
-        error_text = QColor("#fecaca" if dark else "#b42318")
-        error_bg = QColor("#4a2528" if dark else "#fee4e2")
         document = self.input_edit.document()
         document.clear()
         cursor = QTextCursor(document)
@@ -522,19 +545,49 @@ class PracticeView(QWidget):
             prefix_format.setForeground(resumed)
             cursor.insertText(self.session.content[: self.session.start_position], prefix_format)
         for typed in self.session.typed_characters:
-            char_format = QTextCharFormat()
-            if typed.is_correct:
-                char_format.setForeground(normal)
-            else:
-                char_format.setForeground(error_text)
-                char_format.setBackground(error_bg)
-                char_format.setFontUnderline(True)
-            cursor.insertText(typed.actual_char, char_format)
+            cursor.insertText(typed.actual_char, self._input_character_format(typed))
 
         cursor.movePosition(QTextCursor.MoveOperation.End)
         self.input_edit.setTextCursor(cursor)
         self.input_edit.ensureCursorVisible()
         self._apply_line_spacing(self.input_edit, 148)
+        self._rendered_input_session = self.session
+        self._rendered_input_count = typed_count
+
+    def _append_typed_input(self, typed) -> None:
+        cursor = self.input_edit.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        cursor.insertText(typed.actual_char, self._input_character_format(typed))
+        self.input_edit.setTextCursor(cursor)
+        self.input_edit.ensureCursorVisible()
+
+    def _remove_last_typed_input(self) -> None:
+        cursor = self.input_edit.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        cursor.deletePreviousChar()
+        self.input_edit.setTextCursor(cursor)
+        self.input_edit.ensureCursorVisible()
+
+    def _input_character_format(self, typed) -> QTextCharFormat:
+        dark = self.palette().window().color().lightness() < 128
+        char_format = QTextCharFormat()
+        if typed.is_correct:
+            char_format.setForeground(QColor("#d9f3e4" if dark else "#18392a"))
+        else:
+            char_format.setForeground(QColor("#fecaca" if dark else "#b42318"))
+            char_format.setBackground(QColor("#4a2528" if dark else "#fee4e2"))
+            char_format.setFontUnderline(True)
+        return char_format
+
+    def _place_input_cursor_at_end(self) -> None:
+        cursor = self.input_edit.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.input_edit.setTextCursor(cursor)
+        self.input_edit.ensureCursorVisible()
+
+    def _invalidate_input_render(self) -> None:
+        self._rendered_input_session = None
+        self._rendered_input_count = -1
 
     def _selection(
         self,
@@ -575,12 +628,17 @@ class PracticeView(QWidget):
             responsive_size = 22
         else:
             responsive_size = 24
-        self._current_font_size = min(26, max(18, responsive_size + self._settings_font_size - 18))
+        target_font_size = min(26, max(18, responsive_size + self._settings_font_size - 18))
+        font_changed = self._current_font_size != target_font_size
+        self._current_font_size = target_font_size
         for editor in (self.text_browser, self.input_edit):
             font = editor.font()
             font.setPixelSize(self._current_font_size)
             editor.setFont(font)
             editor.document().setDefaultFont(font)
+        if font_changed:
+            self._source_line_spacing_dirty = True
+            self._invalidate_input_render()
 
     @staticmethod
     def _describe_character(character: str) -> str:
@@ -591,6 +649,22 @@ class PracticeView(QWidget):
         if character == " ":
             return "空格"
         return f"“{character}”"
+
+    def _refresh_target_hint(self) -> None:
+        if self.session is None or self.session.is_complete:
+            self.target_hint.setText("本段练习已完成")
+        elif self.session.is_paused:
+            self.target_hint.setText("练习已暂停")
+        else:
+            target = self.session.content[self.session.position]
+            if target == " ":
+                self.target_hint.setText("当前目标：空格")
+            elif target == "\n":
+                self.target_hint.setText("当前目标：换行")
+            elif target == "\t":
+                self.target_hint.setText("当前目标：Tab")
+            else:
+                self.target_hint.setText("高亮位置是当前输入目标")
 
     def _restore_focus(self) -> None:
         if self.session is None or self.session.is_paused or self.session.is_complete:
