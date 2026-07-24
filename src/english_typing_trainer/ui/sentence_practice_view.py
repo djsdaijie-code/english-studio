@@ -27,6 +27,7 @@ class SentencePracticeView(QWidget):
     translate_article_requested = Signal()
     speech_requested = Signal(str, float, object)
     speech_sentence_changed = Signal(str)
+    content_preparation_requested = Signal(object, float)
     word_collection_requested = Signal(str, int, int)
     learning_activity = Signal(str)
     course_dictation_requested = Signal()
@@ -46,6 +47,7 @@ class SentencePracticeView(QWidget):
         self._course_translations: tuple[str, ...] = ()
         self._course_activity_types: tuple[tuple[str, ...], ...] = ()
         self._auto_read_sentence_index = -1
+        self._prepared_sentence_index = -1
         self._section_start_offset = 0
         self._timer = QTimer(self)
         self._timer.setInterval(250)
@@ -203,7 +205,7 @@ class SentencePracticeView(QWidget):
         self._start_session(material, sentences, settings)
 
     def _start_session(self, material: PracticeMaterial, sentences: list[ArticleSentence], settings: AppSettings) -> None:
-        self.material = material; self.sentences = sentences; self._emitted_attempts = 0; self._auto_read_sentence_index = -1
+        self.material = material; self.sentences = sentences; self._emitted_attempts = 0; self._auto_read_sentence_index = -1; self._prepared_sentence_index = -1
         leading_whitespace = len(material.section_text) - len(material.section_text.lstrip())
         self._section_start_offset = sentences[0].start_offset - leading_whitespace
         absolute = self._section_start_offset + material.resume_character_index
@@ -237,6 +239,7 @@ class SentencePracticeView(QWidget):
         if not character: return
         result = self.learning.handle_character(character)
         if result is None: return
+        self._prepare_current_sentence_content()
         self.session.handle_character(character)
         self.learning_activity.emit("typing_activity")
         self.input_feedback.setText("输入正确" if result else "输入错误，已继续前进")
@@ -357,6 +360,18 @@ class SentencePracticeView(QWidget):
             self.learning_activity.emit("audio_started")
             self.speech_requested.emit(self.current_sentence.normalized_text, speed, self.speech_controls)
         QTimer.singleShot(0, self._restore_focus)
+
+    def _prepare_current_sentence_content(self) -> None:
+        if not self.learning or self._course_mode:
+            return
+        sentence_index = self.learning.current_index
+        if sentence_index == self._prepared_sentence_index or not self.current_sentence:
+            return
+        self._prepared_sentence_index = sentence_index
+        self.content_preparation_requested.emit(
+            self.current_sentence,
+            float(self.speech_controls.speed_combo.currentData()),
+        )
 
     def _repeat_current_sentence(self) -> None:
         if not self.learning or self.learning.state != SentenceLearningState.LEARNING_PAUSED:

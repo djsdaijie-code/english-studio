@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QApplication
 
 from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.services.credential_store import MemoryCredentialStore
+from english_typing_trainer.models.tts import TTSAudioResult, TTSRequest
 from english_typing_trainer.services.sentence_learning import SentenceLearningState
 from english_typing_trainer.services.translation_provider import TranslationResult
 from english_typing_trainer.ui.main_window import MainWindow
@@ -109,6 +110,108 @@ def test_sentence_translation_panel_states_and_responsive_sizes(tmp_path: Path) 
         apply_theme(window, "dark")
         app.processEvents()
         assert window.styleSheet()
+    finally:
+        window.current_practice_saved = True
+        window.close(); context.database.close()
+
+
+def test_sentence_content_preparation_starts_on_first_input_once(tmp_path: Path) -> None:
+    app, context, window, sentences = _window(tmp_path, "Prepare this sentence. Then continue.")
+    prepared: list[tuple[object, float]] = []
+    try:
+        view = window.sentence_practice_view
+        view.content_preparation_requested.disconnect(window._prepare_sentence_content)
+        view.content_preparation_requested.connect(
+            lambda sentence, speed: prepared.append((sentence, speed))
+        )
+
+        view._handle_key(_key(sentences[0].text[0]))
+        view._handle_key(_key(sentences[0].text[1]))
+        app.processEvents()
+
+        assert prepared == [(sentences[0], 1.0)]
+        assert view.translation_text.text() == "翻译尚未显示"
+    finally:
+        window.current_practice_saved = True
+        window.close(); context.database.close()
+
+
+def test_sentence_content_is_prefetched_without_early_reveal(tmp_path: Path, monkeypatch) -> None:
+    class FakeTranslationProvider:
+        name = "deepseek"
+        calls = 0
+
+        def __init__(self, *_args, model: str, **_kwargs) -> None:
+            self.model = model
+
+        def translate(self, _text, **_kwargs):
+            type(self).calls += 1
+            return TranslationResult("提前准备的翻译。", [{"expression": "prepare", "meaning": "准备"}])
+
+    class FakeTTSProvider:
+        name = "minimax"
+        calls = 0
+
+        def __init__(self, *_args, **_kwargs) -> None:
+            pass
+
+        def synthesize(self, request, *, cancel_event=None):
+            type(self).calls += 1
+            return TTSAudioResult(
+                b"ID3-prefetched-audio",
+                request.audio_format,
+                self.name,
+                request.model,
+                request.voice_id,
+                duration_ms=900,
+                usage_characters=len(request.text),
+            )
+
+    monkeypatch.setattr(
+        "english_typing_trainer.ui.main_window.DeepSeekTranslationProvider",
+        FakeTranslationProvider,
+    )
+    monkeypatch.setattr(
+        "english_typing_trainer.ui.main_window.MiniMaxTTSProvider",
+        FakeTTSProvider,
+    )
+    app, context, window, sentences = _window(tmp_path, "Prepare this sentence. Then continue.")
+    try:
+        context.credential_store.set("deepseek-test-key")
+        context.tts_credential_store.set("minimax-test-key")
+        view = window.sentence_practice_view
+        first = sentences[0]
+
+        view._handle_key(_key(first.text[0]))
+        assert window._thread_pool.waitForDone(5000)
+        app.processEvents()
+
+        translation = context.translation_service.get(first.sentence_hash)
+        request = TTSRequest(
+            text=first.normalized_text,
+            content_type="sentence",
+            model=window.settings.tts_model,
+            voice_id=window.settings.tts_voice_id,
+            speed=1.0,
+        )
+        assert translation and translation.status == "completed"
+        assert context.tts_service.get_cached(request) is not None
+        assert view.translation_text.text() == "翻译尚未显示"
+        assert not window.audio_playback.is_playing()
+        assert FakeTranslationProvider.calls == 1
+        assert FakeTTSProvider.calls == 1
+
+        speech_requests = []
+        view.speech_requested.disconnect(window._request_speech)
+        view.speech_requested.connect(lambda text, speed, _controls: speech_requests.append((text, speed)))
+        for character in first.text[1:]:
+            view._handle_key(_key(character))
+        app.processEvents()
+
+        assert view.translation_text.text() == "提前准备的翻译。"
+        assert speech_requests == [(first.normalized_text, 1.0)]
+        assert FakeTranslationProvider.calls == 1
+        assert FakeTTSProvider.calls == 1
     finally:
         window.current_practice_saved = True
         window.close(); context.database.close()

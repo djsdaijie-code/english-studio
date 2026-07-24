@@ -84,6 +84,7 @@ from english_typing_trainer.models.learning_content import (
 )
 from english_typing_trainer.services.pronunciation_provider import AzurePronunciationAssessmentProvider
 from english_typing_trainer.services.course_learning import CourseLearningSession
+from english_typing_trainer.services.sentence_learning import SentenceLearningState
 from english_typing_trainer.services.article_proofreading import (
     ArticleProofreadingError,
     DeepSeekArticleProofreadingProvider,
@@ -293,6 +294,7 @@ class MainWindow(QMainWindow):
         self.sentence_practice_view.translate_article_requested.connect(self._translate_current_article)
         self.sentence_practice_view.speech_requested.connect(self._request_speech)
         self.sentence_practice_view.speech_sentence_changed.connect(self._speech_sentence_changed)
+        self.sentence_practice_view.content_preparation_requested.connect(self._prepare_sentence_content)
         self.sentence_practice_view.word_collection_requested.connect(self._collect_selected_word)
         self.sentence_practice_view.learning_activity.connect(self._track_learning_activity)
         self._sentence_attempts = SentenceAttemptRepository(self.context.database.connect)
@@ -1804,6 +1806,44 @@ class MainWindow(QMainWindow):
                 self._active_speech_control.set_state("ready")
             self._active_speech_text = text
 
+    def _prepare_sentence_content(self, sentence: ArticleSentence, speed: float) -> None:
+        if self.settings.show_translation_after_sentence and self.settings.translation_auto_on_demand:
+            self._request_sentence_translation(sentence, prefetch=True)
+        self._prefetch_sentence_speech(sentence.normalized_text, speed)
+
+    def _prefetch_sentence_speech(self, text: str, speed: float) -> None:
+        request = TTSRequest(
+            text=text,
+            content_type="sentence",
+            model=self.settings.tts_model,
+            voice_id=self.settings.tts_voice_id,
+            speed=speed,
+        )
+        try:
+            if self.context.tts_service.get_cached(request):
+                return
+            key = self.context.tts_credential_store.get()
+            provider = MiniMaxTTSProvider(key or "", timeout=15.0)
+        except Exception as exc:
+            self._logger.info("sentence speech prefetch skipped reason=%s", type(exc).__name__)
+            return
+        worker = TTSWorker(self.context.tts_service, provider, request)
+        self._tts_workers.add(worker)
+        worker.signals.completed.connect(
+            lambda _request, _audio, w=worker: self._speech_prefetch_finished(w)
+        )
+        worker.signals.failed.connect(
+            lambda _request, error, w=worker: self._speech_prefetch_failed(error, w)
+        )
+        self._thread_pool.start(worker)
+
+    def _speech_prefetch_finished(self, worker: TTSWorker) -> None:
+        self._tts_workers.discard(worker)
+
+    def _speech_prefetch_failed(self, error: Exception, worker: TTSWorker) -> None:
+        self._tts_workers.discard(worker)
+        self._logger.info("sentence speech prefetch failed reason=%s", type(error).__name__)
+
     def _speech_playback_state_changed(self, state: str) -> None:
         if self._active_speech_control:
             self._active_speech_control.set_state(state)
@@ -1893,7 +1933,7 @@ class MainWindow(QMainWindow):
         with self.context.database.transaction() as connection:
             self._sentence_attempts.attach_to_session(connection, self._sentence_attempt_ids, session.persisted_session_id)
 
-    def _request_sentence_translation(self, sentence, retry: bool = False) -> None:
+    def _request_sentence_translation(self, sentence, retry: bool = False, *, prefetch: bool = False) -> None:
         decision = self.context.translation_service.prepare(
             sentence,
             provider="deepseek",
@@ -1902,20 +1942,28 @@ class MainWindow(QMainWindow):
             retry=retry,
         )
         if decision.cached and decision.cached.status == "completed":
-            self.sentence_practice_view.show_translation(decision.cached, cached=True)
+            if not prefetch and self._can_reveal_sentence_translation(sentence):
+                self.sentence_practice_view.show_translation(decision.cached, cached=True)
             return
         if not decision.should_request:
-            if decision.cached and decision.cached.status == "failed":
+            if (
+                not prefetch
+                and decision.cached
+                and decision.cached.status == "failed"
+                and self._can_reveal_sentence_translation(sentence)
+            ):
                 self.sentence_practice_view.show_translation_failed(decision.cached.error_message or "翻译失败")
             return
-        self._handle_learning_update(self.context.learning_time_tracker.suspend_for_network())
+        if not prefetch:
+            self._handle_learning_update(self.context.learning_time_tracker.suspend_for_network())
         try:
             api_key = self.context.credential_store.get()
             provider = DeepSeekTranslationProvider(api_key or "", model=self.settings.translation_model, timeout=10.0)
         except Exception as exc:
             error = exc if isinstance(exc, TranslationProviderError) else TranslationProviderError("credential", "无法读取 API Key。")
             self.context.translation_service.fail(sentence.sentence_hash, error)
-            self.sentence_practice_view.show_translation_failed(str(error))
+            if not prefetch and self._can_reveal_sentence_translation(sentence):
+                self.sentence_practice_view.show_translation_failed(str(error))
             return
         index = self.sentence_practice_view.sentences.index(sentence)
         previous = self.sentence_practice_view.sentences[index - 1].normalized_text if index > 0 else ""
@@ -1932,17 +1980,25 @@ class MainWindow(QMainWindow):
             sentence.sentence_hash, result, provider=provider.name, model=provider.model,
             prompt_version=self.settings.translation_prompt_version,
         )
-        current = self.sentence_practice_view.current_sentence
-        if cached and current and current.sentence_hash == sentence.sentence_hash:
+        if cached and self._can_reveal_sentence_translation(sentence):
             self.sentence_practice_view.show_translation(cached)
 
     def _translation_failed(self, sentence, error, worker) -> None:
         self._translation_workers.discard(worker)
         provider_error = error if isinstance(error, TranslationProviderError) else TranslationProviderError("unknown", "翻译请求失败。")
         self.context.translation_service.fail(sentence.sentence_hash, provider_error)
-        current = self.sentence_practice_view.current_sentence
-        if current and current.sentence_hash == sentence.sentence_hash:
+        if self._can_reveal_sentence_translation(sentence):
             self.sentence_practice_view.show_translation_failed(str(provider_error))
+
+    def _can_reveal_sentence_translation(self, sentence: ArticleSentence) -> bool:
+        current = self.sentence_practice_view.current_sentence
+        learning = self.sentence_practice_view.learning
+        return bool(
+            current
+            and current.sentence_hash == sentence.sentence_hash
+            and learning
+            and learning.state == SentenceLearningState.LEARNING_PAUSED
+        )
 
     def _edit_sentence_translation(self, sentence) -> None:
         cached = self.context.translation_service.get(sentence.sentence_hash)
