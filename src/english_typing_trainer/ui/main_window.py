@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QCheckBox,
     QComboBox,
+    QDialog,
     QStackedWidget,
     QTextEdit,
     QToolButton,
@@ -83,6 +84,12 @@ from english_typing_trainer.models.learning_content import (
 )
 from english_typing_trainer.services.pronunciation_provider import AzurePronunciationAssessmentProvider
 from english_typing_trainer.services.course_learning import CourseLearningSession
+from english_typing_trainer.services.article_proofreading import (
+    ArticleProofreadingError,
+    DeepSeekArticleProofreadingProvider,
+)
+from english_typing_trainer.ui.article_proofreading_dialog import ArticleProofreadingDialog
+from english_typing_trainer.ui.article_proofreading_tasks import ArticleProofreadingWorker
 
 
 class MetricCard(QFrame):
@@ -293,6 +300,9 @@ class MainWindow(QMainWindow):
         self._thread_pool = QThreadPool(self)
         self._thread_pool.setMaxThreadCount(3)
         self._translation_workers: set[TranslationWorker] = set()
+        self._proofreading_workers: set[ArticleProofreadingWorker] = set()
+        self._proofreading_article_ids: set[int] = set()
+        self._proofreading_missing_key_notified = False
         self._tts_workers: set[TTSWorker] = set()
         self._active_speech_control = None
         self._active_speech_text = ""
@@ -596,6 +606,10 @@ class MainWindow(QMainWindow):
         action_row.addWidget(self.continue_button)
         action_row.addWidget(self.restart_button)
         action_row.addWidget(self.more_button)
+        self.proofread_button = QPushButton("重新检测")
+        self.proofread_button.setToolTip("使用 DeepSeek 检查文章格式、拼写和单词错误")
+        self.proofread_button.clicked.connect(self._proofread_selected_article)
+        action_row.addWidget(self.proofread_button)
         action_row.addStretch(1)
         detail_layout.addLayout(action_row)
 
@@ -1076,7 +1090,7 @@ class MainWindow(QMainWindow):
         stats=self.context.tts_service.stats(); self.settings_page.set_tts_cache_stats(stats.file_count,stats.total_size_bytes)
         self._switch_page(self.PAGE_SETTINGS)
 
-    def _reload_articles(self) -> None:
+    def _reload_articles(self, preferred_article_id: int | None = None) -> None:
         self.articles = self.context.article_library.list_articles(self.search_input.text())
         self.article_list.clear()
         for article in self.articles:
@@ -1091,7 +1105,13 @@ class MainWindow(QMainWindow):
         self.empty_state.setVisible(not has_articles)
         self._set_content_layout_visible(has_articles)
         if has_articles:
-            self.article_list.setCurrentRow(0)
+            selected_row = 0
+            if preferred_article_id is not None:
+                for row in range(self.article_list.count()):
+                    if self.article_list.item(row).data(Qt.ItemDataRole.UserRole) == preferred_article_id:
+                        selected_row = row
+                        break
+            self.article_list.setCurrentRow(selected_row)
         else:
             self._update_preview(-1)
         self.history_page.populate_articles(self.articles)
@@ -1181,6 +1201,8 @@ class MainWindow(QMainWindow):
             self.preview_meta.setText("从左侧选择一篇文章，查看详情并开始练习。")
             self.preview_content.setPlainText("导入一篇英文 TXT，开始第一次练习")
             self.current_vocabulary_article_id=None; self.vocabulary_page.set_article_available(False)
+            self.proofread_button.setText("重新检测")
+            self.proofread_button.setEnabled(False)
             return
         article = self.articles[row]
         imported = article.imported_at.strftime("%Y-%m-%d %H:%M") if article.imported_at else "暂无"
@@ -1196,6 +1218,9 @@ class MainWindow(QMainWindow):
         self.preview_meta.setToolTip(article.source_path)
         self.preview_content.setPlainText(article.full_text[:3500])
         self.current_vocabulary_article_id=article.id; self.vocabulary_page.set_article_available(True)
+        proofreading = article.id in self._proofreading_article_ids
+        self.proofread_button.setText("检测中…" if proofreading else "重新检测")
+        self.proofread_button.setEnabled(not proofreading)
         if article.id is not None:self.context.article_word_index_service.ensure(article.id)
 
     def _show_article_preview_menu(self,position) -> None:
@@ -1246,6 +1271,7 @@ class MainWindow(QMainWindow):
         if not file_paths:
             return
         messages: list[str] = []
+        proofreading_ids: list[int] = []
         for file_path in file_paths:
             result = self.context.article_library.import_txt_file(
                 file_path,
@@ -1253,8 +1279,101 @@ class MainWindow(QMainWindow):
             )
             name = result.article.title if result.article else file_path
             messages.append(f"{result.status}：{name} - {result.message}")
+            if result.status in {"imported", "restored"} and result.article and result.article.id is not None:
+                proofreading_ids.append(result.article.id)
         self._reload_articles()
         QMessageBox.information(self, "导入结果", "\n".join(messages))
+        for article_id in proofreading_ids:
+            self._start_article_proofreading(article_id, automatic=True)
+
+    def _proofread_selected_article(self) -> None:
+        article_id = self._selected_article_id()
+        if article_id is not None:
+            self._start_article_proofreading(article_id, automatic=False)
+
+    def _start_article_proofreading(self, article_id: int, *, automatic: bool) -> None:
+        if article_id in self._proofreading_article_ids:
+            if not automatic:
+                QMessageBox.information(self, "文章检测", "这篇文章正在检测中，请稍候。")
+            return
+        article = self.context.article_library.get_article(article_id)
+        if article is None:
+            return
+        try:
+            provider = DeepSeekArticleProofreadingProvider(
+                self.context.credential_store.get() or "",
+                model=self.settings.translation_model,
+                timeout=30.0,
+            )
+        except Exception as exc:
+            message = str(exc) if isinstance(exc, ArticleProofreadingError) else "无法读取 DeepSeek API Key。"
+            if not automatic or not self._proofreading_missing_key_notified:
+                QMessageBox.information(self, "未执行文章检测", f"{message}\n文章已经正常保存，可在配置 Key 后点击“重新检测”。")
+                self._proofreading_missing_key_notified = True
+            return
+
+        worker = ArticleProofreadingWorker(
+            article_id,
+            self.context.article_proofreading_service,
+            provider,
+            article.full_text,
+        )
+        self._proofreading_workers.add(worker)
+        self._proofreading_article_ids.add(article_id)
+        if self._selected_article_id() == article_id:
+            self.proofread_button.setText("检测中…")
+            self.proofread_button.setEnabled(False)
+        worker.signals.completed.connect(
+            lambda completed_id, result, current=worker: self._article_proofreading_completed(
+                completed_id, result, current
+            )
+        )
+        worker.signals.failed.connect(
+            lambda failed_id, error, current=worker: self._article_proofreading_failed(
+                failed_id, error, current
+            )
+        )
+        self._thread_pool.start(worker)
+
+    def _article_proofreading_completed(self, article_id: int, result, worker: ArticleProofreadingWorker) -> None:
+        self._finish_article_proofreading(article_id, worker)
+        article = self.context.article_library.get_article(article_id)
+        if article is None:
+            return
+        if article.full_text != worker.text:
+            QMessageBox.information(self, "检测结果已过期", "检测期间文章内容已经变化，请重新检测。")
+            return
+        if not result.issues and not result.differs_from(article.full_text):
+            QMessageBox.information(self, "文章检测完成", f"《{article.title}》未发现明显的格式、拼写或单词错误。")
+            return
+
+        dialog = ArticleProofreadingDialog(article.title, article.full_text, result, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            self.context.article_library.replace_article_content(
+                article_id,
+                result.corrected_text,
+                self.settings.section_target_characters,
+            )
+        except Exception as exc:
+            QMessageBox.warning(self, "应用建议失败", str(exc))
+            return
+        self._reload_articles(preferred_article_id=article_id)
+        QMessageBox.information(self, "文章已更新", "已应用建议并重新分段；本文进度已重置，历史练习记录仍然保留。")
+
+    def _article_proofreading_failed(self, article_id: int, error: Exception, worker: ArticleProofreadingWorker) -> None:
+        self._finish_article_proofreading(article_id, worker)
+        if isinstance(error, ArticleProofreadingError) and error.category == "cancelled":
+            return
+        QMessageBox.warning(self, "文章检测失败", f"{error}\n文章内容没有发生更改，稍后可点击“重新检测”。")
+
+    def _finish_article_proofreading(self, article_id: int, worker: ArticleProofreadingWorker) -> None:
+        self._proofreading_workers.discard(worker)
+        self._proofreading_article_ids.discard(article_id)
+        if self._selected_article_id() == article_id:
+            self.proofread_button.setText("重新检测")
+            self.proofread_button.setEnabled(True)
 
     def _start_selected_article(self, mode: str) -> None:
         article_id = self._selected_article_id()
@@ -1285,7 +1404,8 @@ class MainWindow(QMainWindow):
             show_translation_panel = material.practice_type in {"article", "article_section"} and material.section_id is not None
             if show_translation_panel:
                 sentences = self.context.sentence_service.ensure_for_section(material.section_id)
-                section_start = min((sentence.start_offset for sentence in sentences), default=0)
+                leading_whitespace = len(material.section_text) - len(material.section_text.lstrip())
+                section_start = sentences[0].start_offset - leading_whitespace if sentences else 0
                 for sentence in sentences:
                     cached = self.context.translation_service.get(sentence.sentence_hash)
                     translation = cached.chinese_translation if cached and cached.status == "completed" else ""
@@ -2494,7 +2614,8 @@ class MainWindow(QMainWindow):
             sentence=self.current_material.section_text
             if self.current_material.section_id:
                 sentences=self.context.sentence_service.ensure_for_section(self.current_material.section_id)
-                section_start=min((s.start_offset for s in sentences),default=0)
+                leading_whitespace=len(self.current_material.section_text)-len(self.current_material.section_text.lstrip())
+                section_start=sentences[0].start_offset-leading_whitespace if sentences else 0
                 for item in sentences:
                     a=item.start_offset-section_start; b=item.end_offset-section_start
                     if a<=start<b: sentence=item.normalized_text; article_sentence_id=item.id; local_start=start-a; break
@@ -2709,6 +2830,8 @@ class MainWindow(QMainWindow):
         self.context.recording_service.cancel()
         self._handle_learning_update(self.context.learning_time_tracker.stop())
         for worker in self._tts_workers:
+            worker.cancel()
+        for worker in self._proofreading_workers:
             worker.cancel()
         self._thread_pool.clear()
         self._thread_pool.waitForDone(10000)

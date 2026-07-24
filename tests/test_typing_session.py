@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
@@ -276,3 +278,15 @@ def test_clicking_source_or_input_restores_focus_and_keeps_cursor_at_end() -> No
     app.processEvents()
     assert view.input_edit.hasFocus()
     assert view.input_edit.textCursor().position() == len(view.input_edit.toPlainText())
+
+
+def test_typing_session_can_skip_untyped_boundary_whitespace_without_counting_it() -> None:
+    session = TypingSession("First. \t\n Second.")
+    for character in "First.":
+        session.handle_character(character)
+    total_before = session.total_keystrokes
+    session.skip_whitespace_to(len("First. \t\n "))
+    assert session.position == len("First. \t\n ")
+    assert session.total_keystrokes == total_before
+    with pytest.raises(ValueError):
+        session.skip_whitespace_to(len(session.content))

@@ -188,6 +188,14 @@ class TypingSession:
         # Historical key and error counters intentionally remain unchanged.
         return True
 
+    def skip_whitespace_to(self, position: int) -> None:
+        target = max(self.position, min(position, len(self.content)))
+        if any(not character.isspace() for character in self.content[self.position:target]):
+            raise ValueError("只能跳过尚未输入的空白字符。")
+        self.position = target
+        if self.is_complete and self.started_at is not None:
+            self._finish()
+
     def mark_persisted(self, session_id: int) -> None:
         self._persisted = True
         self._persisted_session_id = session_id

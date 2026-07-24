@@ -209,6 +209,25 @@ class ArticleRepository:
     def rename_article(self, connection: sqlite3.Connection, article_id: int, new_title: str) -> None:
         connection.execute("UPDATE articles SET title = ? WHERE id = ?", (new_title, article_id))
 
+    def update_article_content(
+        self,
+        connection: sqlite3.Connection,
+        article_id: int,
+        *,
+        content_hash: str,
+        full_text: str,
+        character_count: int,
+        word_count: int,
+    ) -> None:
+        connection.execute(
+            """
+            UPDATE articles
+            SET content_hash = ?, full_text = ?, character_count = ?, word_count = ?
+            WHERE id = ?
+            """,
+            (content_hash, full_text, character_count, word_count, article_id),
+        )
+
     def soft_delete_article(self, connection: sqlite3.Connection, article_id: int) -> None:
         connection.execute("UPDATE articles SET is_deleted = 1 WHERE id = ?", (article_id,))
 

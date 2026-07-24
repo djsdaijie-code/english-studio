@@ -10,10 +10,11 @@ from english_typing_trainer.database.migrations import MigrationRunner
 from english_typing_trainer.services.sentence_segmentation import SentenceSegmentationService
 
 
-def _reconstructed(text: str, target: int = 500):
+def _segmented(text: str, target: int = 500):
     segments = SentenceSegmentationService(target).split(text)
-    assert "".join(item.text for item in segments) == text
     assert all(item.text and item.text.strip() for item in segments)
+    assert all(item.text == item.text.strip() for item in segments)
+    assert "".join("".join(item.text for item in segments).split()) == "".join(text.split())
     for item in segments:
         assert text[item.start_offset:item.end_offset] == item.text
     return segments
@@ -21,23 +22,23 @@ def _reconstructed(text: str, target: int = 500):
 
 def test_sentence_segmentation_handles_basic_terminal_marks() -> None:
     text = "First sentence. Is this working? Yes, it is! Done"
-    segments = _reconstructed(text)
+    segments = _segmented(text)
     assert len(segments) == 4
-    assert segments[0].text == "First sentence. "
-    assert segments[1].text == "Is this working? "
+    assert segments[0].text == "First sentence."
+    assert segments[1].text == "Is this working?"
 
 
 def test_sentence_segmentation_keeps_quotes_and_continuous_punctuation() -> None:
     text = 'He asked, "Really?!" Then she answered (quietly). Next.'
-    segments = _reconstructed(text)
+    segments = _segmented(text)
     assert len(segments) == 3
-    assert segments[0].text.endswith('" ')
+    assert segments[0].text.endswith('"')
     assert "Really?!" in segments[0].text
 
 
 def test_sentence_segmentation_protects_abbreviations_and_decimals() -> None:
     text = "Mr. Smith met Dr. Brown in the U.S. today. They used e.g. 3.14 as a value."
-    segments = _reconstructed(text)
+    segments = _segmented(text)
     assert len(segments) == 2
     assert "Mr. Smith" in segments[0].text
     assert "U.S. today." in segments[0].text
@@ -46,15 +47,18 @@ def test_sentence_segmentation_protects_abbreviations_and_decimals() -> None:
 
 def test_sentence_segmentation_preserves_newlines() -> None:
     text = "A line without punctuation\nAnother line.\n\nFinal line!"
-    segments = _reconstructed(text)
+    segments = _segmented(text)
     assert len(segments) == 3
-    assert segments[0].text.endswith("\n")
-    assert "\n\n" in segments[1].text
+    assert [item.text for item in segments] == [
+        "A line without punctuation",
+        "Another line.",
+        "Final line!",
+    ]
 
 
 def test_sentence_segmentation_falls_back_for_long_unpunctuated_text() -> None:
     text = ("alpha beta gamma delta " * 30).strip()
-    segments = _reconstructed(text, target=100)
+    segments = _segmented(text, target=100)
     assert len(segments) > 1
     assert all(len(item.text) <= 110 for item in segments)
 
@@ -65,6 +69,18 @@ def test_sentence_hash_reuses_normalized_equivalent_text() -> None:
     second = service.split("Hello world.")[0]
     assert first.normalized_text == second.normalized_text
     assert first.sentence_hash == second.sentence_hash
+
+
+def test_sentence_segmentation_removes_spaces_tabs_and_enters_at_boundaries() -> None:
+    text = "  First sentence. \t\n\n  Second sentence?\t\n Third sentence!  "
+    segments = _segmented(text)
+    assert [item.text for item in segments] == [
+        "First sentence.",
+        "Second sentence?",
+        "Third sentence!",
+    ]
+    assert segments[0].start_offset == 2
+    assert text[segments[1].start_offset:segments[1].end_offset] == "Second sentence?"
 
 
 def test_sentence_service_lazily_persists_active_section_sentences(tmp_path: Path) -> None:
@@ -78,7 +94,7 @@ def test_sentence_service_lazily_persists_active_section_sentences(tmp_path: Pat
         second = context.sentence_service.ensure_for_section(material.section_id)
         assert len(first) == 3
         assert [item.id for item in first] == [item.id for item in second]
-        assert "".join(item.text for item in first) == material.section_text
+        assert [item.text for item in first] == ["First sentence.", "Second sentence?", "Third!"]
         section = context.article_library.get_article(imported.article.id)
         assert section is not None
         active = context.database.connect().execute("SELECT start_offset FROM article_sections WHERE id = ?", (material.section_id,)).fetchone()

@@ -8,7 +8,7 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 
 - `typing_engine`：逐字符输入判定与基础指标。
 - `services/sentence_*`：拆句、懒生成和集中式计时状态机。
-- `services/translation_*`：provider 抽象、DeepSeek 请求、缓存去重和重试。
+- `services/translation_*`、`services/article_proofreading.py`：句子翻译缓存，以及 DeepSeek 文章格式/拼写校对和安全分块请求。
 - `services/learning_*`：有效学习时间状态机、档位、等级和成就计算。
 - `database`：标准库 SQLite、事务、v1-v13 迁移和 repository。
 - `courses`、`services/course_progress.py`、`services/course_learning.py` 与 `services/course_capabilities.py`：只读课程加载、stable key 状态关联、按能力动态进度、不持久化正文的课程会话，以及 TTS/听写/跟读/词汇/FSRS 适配。
@@ -42,6 +42,7 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 - 普通文章可默认进入逐句学习；老数据库升级默认保留连续模式，新安装默认启用逐句模式。
 - 首次有效输入开始计时；默认 3 秒无输入自动暂停；句子完成后进入学习计时；Enter 进入下一句但不提前启动有效计时。
 - DeepSeek provider、Windows Credential Manager、异步请求、全局缓存、人工编辑、显式重新生成和整篇翻译已接入。
+- 文章导入后可异步调用 DeepSeek 检查格式、拼写和单词错误；已有文章支持重新检测，建议版本经用户确认后事务化更新、重新分段并保留历史。逐句文本不再包含首尾空格、Tab 或换行。
 - MiniMax 同步 T2A provider、独立凭据、异步生成、参数化缓存、并发去重、退避重试和 QtMultimedia 播放已接入逐句与连续练习。
 - Free Dictionary 标准词典、DeepSeek 当前句中文讲解、文章选词收藏、多来源语境、单词/来源句发音、重复打字、原句填空、自评复习和离线缓存已完成第一版。
 - 新文章导入后本地拆词，旧文章首次访问懒生成；单词本支持待学习、当前文章和全部范围，文章预览可查看或重新提取。

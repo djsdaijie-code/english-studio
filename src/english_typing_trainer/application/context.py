@@ -36,6 +36,7 @@ from english_typing_trainer.courses.repository import CourseRepository
 from english_typing_trainer.services.course_progress import CourseProgressService
 from english_typing_trainer.services.course_learning import CourseLearningService
 from english_typing_trainer.services.course_capabilities import CourseCapabilityService
+from english_typing_trainer.services.article_proofreading import ArticleProofreadingService
 
 
 @dataclass(slots=True)
@@ -75,6 +76,7 @@ class AppContext:
     course_learning_service: CourseLearningService
     course_capability_repository: CourseCapabilityRepository
     course_capability_service: CourseCapabilityService
+    article_proofreading_service: ArticleProofreadingService
 
 
 def build_app_context(
@@ -127,6 +129,7 @@ def build_app_context(
         article_word_index_service,
         fsrs_review_service,
     )
+    article_proofreading_service = ArticleProofreadingService()
     vocabulary_learning_service.set_context_resolver(
         course_capability_service.resolve_context
     )
@@ -184,4 +187,5 @@ def build_app_context(
         course_learning_service=course_learning_service,
         course_capability_repository=course_capability_repository,
         course_capability_service=course_capability_service,
+        article_proofreading_service=article_proofreading_service,
     )

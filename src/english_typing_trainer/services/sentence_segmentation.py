@@ -50,6 +50,10 @@ class SentenceSegmentationService:
         return [self._segment(sentence_index, text, start_offset, end_offset) for sentence_index, (start_offset, end_offset) in enumerate(ranges)]
 
     def _segment(self, index: int, text: str, start: int, end: int) -> SentenceSegment:
+        while start < end and text[start].isspace():
+            start += 1
+        while end > start and text[end - 1].isspace():
+            end -= 1
         sentence_text = text[start:end]
         normalized = " ".join(sentence_text.split())
         digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()

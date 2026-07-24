@@ -46,6 +46,7 @@ class SentencePracticeView(QWidget):
         self._course_translations: tuple[str, ...] = ()
         self._course_activity_types: tuple[tuple[str, ...], ...] = ()
         self._auto_read_sentence_index = -1
+        self._section_start_offset = 0
         self._timer = QTimer(self)
         self._timer.setInterval(250)
         self._timer.timeout.connect(self._tick)
@@ -200,11 +201,14 @@ class SentencePracticeView(QWidget):
 
     def _start_session(self, material: PracticeMaterial, sentences: list[ArticleSentence], settings: AppSettings) -> None:
         self.material = material; self.sentences = sentences; self._emitted_attempts = 0; self._auto_read_sentence_index = -1
-        section_start = min(item.start_offset for item in sentences)
-        absolute = section_start + material.resume_character_index
-        sentence_index = 0; local_position = 0
+        leading_whitespace = len(material.section_text) - len(material.section_text.lstrip())
+        self._section_start_offset = sentences[0].start_offset - leading_whitespace
+        absolute = self._section_start_offset + material.resume_character_index
+        sentence_index = len(sentences) - 1; local_position = len(sentences[-1].text)
         for index, sentence in enumerate(sentences):
-            if sentence.start_offset <= absolute < sentence.end_offset or (absolute == sentence.end_offset and index == len(sentences) - 1):
+            if absolute < sentence.start_offset:
+                sentence_index = index; local_position = 0; break
+            if sentence.start_offset <= absolute < sentence.end_offset:
                 sentence_index = index; local_position = max(0, min(absolute - sentence.start_offset, len(sentence.text))); break
         self.learning = SentenceLearningSession(sentences, case_sensitive=settings.case_sensitive, idle_pause_seconds=settings.idle_pause_seconds, start_sentence_index=sentence_index, start_character_index=local_position)
         self.session = TypingSession(material.section_text, case_sensitive=settings.case_sensitive, start_position=material.resume_character_index)
@@ -272,11 +276,15 @@ class SentencePracticeView(QWidget):
         if self.learning.next_sentence():
             self._show_sentence(); self.state_label.setText("输入第一个字符后开始计时"); self._set_input_active(True); self._restore_focus()
         else:
+            self.session.skip_whitespace_to(len(self.session.content))
             self._timer.stop(); self._prepare_aggregate_snapshot(); self.session_completed.emit(self._aggregate_snapshot())
 
     def _show_sentence(self) -> None:
         sentence = self.current_sentence
         if not sentence or not self.learning: return
+        if self.session:
+            local_start = sentence.start_offset - self._section_start_offset
+            self.session.skip_whitespace_to(local_start)
         self.sentence_label.setText(f"第 {self.learning.current_index + 1} / {len(self.sentences)} 句")
         self.translation_source.setText(sentence.normalized_text); self.translation_status.setText("完成当前句后显示课程译文" if self._course_mode else "完成当前句后显示翻译")
         self.translation_text.setText("翻译尚未显示"); self.expressions_label.setText("暂无"); self._set_translation_actions(False); self._refresh()

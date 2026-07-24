@@ -137,6 +137,27 @@ def test_completed_sentence_auto_reads_once_and_translation_has_clear_hierarchy(
         window.close(); context.database.close()
 
 
+def test_sentence_practice_skips_boundary_whitespace_without_counting_it(tmp_path: Path) -> None:
+    app, context, window, sentences = _window(tmp_path, "First sentence. \t\n\n Second sentence.")
+    try:
+        view = window.sentence_practice_view
+        assert [item.text for item in sentences] == ["First sentence.", "Second sentence."]
+        for character in sentences[0].text:
+            view._handle_key(_key(character))
+        first_end = view.session.position
+        view._handle_key(QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Return, Qt.NoModifier, "\r"))
+        app.processEvents()
+        assert view.session.position > first_end
+        assert view.session.total_keystrokes == len(sentences[0].text)
+        for character in sentences[1].text:
+            view._handle_key(_key(character))
+        assert view.session.error_keystrokes == 0
+        assert view.session.total_keystrokes == sum(len(item.text) for item in sentences)
+    finally:
+        window.current_practice_saved = True
+        window.close(); context.database.close()
+
+
 def test_settings_page_exposes_sentence_and_masked_deepseek_controls(tmp_path: Path) -> None:
     app = _app()
     store = MemoryCredentialStore("sk-test-abcd")

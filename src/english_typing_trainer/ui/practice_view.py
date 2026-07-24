@@ -695,9 +695,7 @@ class PracticeView(QWidget):
 
     def _refresh_speech_sentence(self) -> None:
         position = self.session.position if self.session else 0
-        text = next((text for start, end, text in self._speech_segments if start <= position < end), "")
-        if not text and self._speech_segments and self.session and self.session.is_complete:
-            text = self._speech_segments[-1][2]
+        text = self._segment_value_at_position(self._speech_segments, position)
         if text != self._current_speech_text:
             self._current_speech_text = text
             self.speech_sentence_changed.emit(text)
@@ -716,14 +714,18 @@ class PracticeView(QWidget):
             self.translation_text.setProperty("hidden", "true")
         else:
             position = self.session.position if self.session else 0
-            translation = next(
-                (text for start, end, text in self._translation_hints if start <= position < end),
-                self._translation_hints[-1][2] if self._translation_hints and self.session and self.session.is_complete else "",
-            )
+            translation = self._segment_value_at_position(self._translation_hints, position)
             self.translation_text.setText(translation or "暂无翻译")
             self.translation_text.setProperty("hidden", "false")
         self.translation_text.style().unpolish(self.translation_text)
         self.translation_text.style().polish(self.translation_text)
+
+    @staticmethod
+    def _segment_value_at_position(segments: list[tuple[int, int, str]], position: int) -> str:
+        for start, end, value in segments:
+            if position < start or start <= position < end:
+                return value
+        return segments[-1][2] if segments else ""
 
     @staticmethod
     def _apply_line_spacing(editor: QPlainTextEdit | QTextBrowser, percent: int) -> None:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.database.repositories import ArticleRepository
 from english_typing_trainer.database.sentence_repositories import SentenceRepository
@@ -17,7 +19,7 @@ class SentenceService:
     def ensure_for_section(self, section_id: int) -> list[ArticleSentence]:
         existing = self._repository.list_for_section(section_id)
         if existing:
-            return existing
+            return [self._without_boundary_whitespace(item) for item in existing]
         section = self._articles.get_section(section_id)
         if section is None or section.id is None or section.article_id is None:
             raise ValueError("未找到文章段落。")
@@ -39,4 +41,17 @@ class SentenceService:
         with self._database.transaction() as connection:
             if not self._repository.list_for_section(section_id):
                 self._repository.insert_many(connection, sentences)
-        return self._repository.list_for_section(section_id)
+        return [self._without_boundary_whitespace(item) for item in self._repository.list_for_section(section_id)]
+
+    @staticmethod
+    def _without_boundary_whitespace(sentence: ArticleSentence) -> ArticleSentence:
+        left = len(sentence.text) - len(sentence.text.lstrip())
+        right = len(sentence.text.rstrip())
+        if left == 0 and right == len(sentence.text):
+            return sentence
+        return replace(
+            sentence,
+            text=sentence.text[left:right],
+            start_offset=sentence.start_offset + left,
+            end_offset=sentence.start_offset + right,
+        )

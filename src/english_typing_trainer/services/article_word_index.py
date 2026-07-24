@@ -44,12 +44,16 @@ class ArticleWordIndexService:
     def rebuild(self,article_id:int) -> int:
         article=self.articles.get_article(article_id,include_deleted=True)
         if not article:raise ValueError("未找到文章。")
-        occurrences=self.extract(article.full_text); stamp=datetime.now().isoformat(timespec="seconds")
+        occurrences=self.extract(article.full_text)
         with self.database.transaction() as connection:
-            connection.execute("DELETE FROM article_word_occurrences WHERE article_id=?",(article_id,))
-            connection.executemany("""INSERT INTO article_word_occurrences(article_id,normalized_word,source_word,source_sentence,start_offset,end_offset,occurrence_index,extraction_version,created_at)
-                VALUES (?,?,?,?,?,?,?,?,?)""",[(article_id,o.normalized_word,o.source_word,o.source_sentence,o.start_offset,o.end_offset,o.occurrence_index,self.version,stamp) for o in occurrences])
+            self.replace_in_transaction(connection, article_id, occurrences)
         return len(occurrences)
+
+    def replace_in_transaction(self, connection, article_id: int, occurrences: list[ArticleWordOccurrence]) -> None:
+        stamp=datetime.now().isoformat(timespec="seconds")
+        connection.execute("DELETE FROM article_word_occurrences WHERE article_id=?",(article_id,))
+        connection.executemany("""INSERT INTO article_word_occurrences(article_id,normalized_word,source_word,source_sentence,start_offset,end_offset,occurrence_index,extraction_version,created_at)
+            VALUES (?,?,?,?,?,?,?,?,?)""",[(article_id,o.normalized_word,o.source_word,o.source_sentence,o.start_offset,o.end_offset,o.occurrence_index,self.version,stamp) for o in occurrences])
 
     def list_words(self,article_id:int|None=None,*,search:str="",sort:str="first",hide_mastered:bool=False):
         where="WHERE 1=1"; params=[]

@@ -8,7 +8,7 @@ from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.database.repositories import ArticleRepository
 from english_typing_trainer.models.article import Article
 from english_typing_trainer.services.sectioning import SectioningService
-from english_typing_trainer.services.text_importer import read_text_file
+from english_typing_trainer.services.text_importer import normalize_text, read_text_file
 
 
 @dataclass(slots=True)
@@ -84,6 +84,46 @@ class ArticleLibraryService:
         updated = self._repository.get_article(article_id, include_deleted=True)
         if updated is None:
             raise ValueError("重新分段后无法重新载入文章。")
+        return updated
+
+    def replace_article_content(
+        self,
+        article_id: int,
+        corrected_text: str,
+        target_characters: int,
+    ) -> Article:
+        article = self._repository.get_article(article_id, include_deleted=True)
+        if article is None:
+            raise ValueError("未找到文章。")
+        content = normalize_text(corrected_text)
+        if not content:
+            raise ValueError("建议文本为空，已保留原文。")
+        content_hash = sha256(content.encode("utf-8")).hexdigest()
+        duplicate = self._repository.get_article_by_hash(content_hash)
+        if duplicate is not None and duplicate.id != article_id:
+            raise ValueError(f"建议版本与已存在文章《{duplicate.title}》内容相同，无法重复保存。")
+        if content == article.full_text:
+            return article
+
+        sections = self._sectioning.split_into_sections(content, target_characters)
+        occurrences = self._word_index.extract(content) if self._word_index else []
+        with self._database.transaction() as connection:
+            self._repository.update_article_content(
+                connection,
+                article_id,
+                content_hash=content_hash,
+                full_text=content,
+                character_count=len(content),
+                word_count=len([part for part in content.split() if part]),
+            )
+            self._repository.deactivate_active_sections(connection, article_id)
+            self._repository.insert_sections(connection, article_id, sections)
+            self._repository.reset_progress(connection, article_id)
+            if self._word_index:
+                self._word_index.replace_in_transaction(connection, article_id, occurrences)
+        updated = self._repository.get_article(article_id, include_deleted=True)
+        if updated is None:
+            raise ValueError("应用建议后无法重新载入文章。")
         return updated
 
     def get_article(self, article_id: int, include_deleted: bool = False) -> Article | None:
