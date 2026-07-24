@@ -7,6 +7,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from english_typing_trainer.application.context import build_app_context
@@ -132,6 +133,56 @@ def test_completed_sentence_auto_reads_once_and_translation_has_clear_hierarchy(
         view._handle_key(_key("x"))
         app.processEvents()
         assert len(requests) == 1
+    finally:
+        window.current_practice_saved = True
+        window.close(); context.database.close()
+
+
+def test_space_replays_completed_sentence_without_advancing(tmp_path: Path) -> None:
+    app, context, window, sentences = _window(tmp_path)
+    requests: list[tuple[str, float]] = []
+    try:
+        view = window.sentence_practice_view
+        view.speech_requested.connect(lambda text, speed, _controls: requests.append((text, speed)))
+        for character in sentences[0].text:
+            view._handle_key(_key(character))
+        app.processEvents()
+
+        assert requests == [(sentences[0].normalized_text, 1.0)]
+        assert view.repeat_speech_shortcut.isEnabled()
+        position = view.session.position
+        view.copy_button.setFocus()
+        QTest.keyClick(view.copy_button, Qt.Key.Key_Space)
+        app.processEvents()
+
+        assert requests == [
+            (sentences[0].normalized_text, 1.0),
+            (sentences[0].normalized_text, 1.0),
+        ]
+        assert view.session.position == position
+        assert view.learning.state == SentenceLearningState.LEARNING_PAUSED
+        assert "Space 重听" in view.state_label.text()
+    finally:
+        window.current_practice_saved = True
+        window.close(); context.database.close()
+
+
+def test_space_remains_typing_input_before_sentence_completion(tmp_path: Path) -> None:
+    app, context, window, _sentences = _window(tmp_path, "A B.")
+    requests: list[tuple[str, float]] = []
+    try:
+        view = window.sentence_practice_view
+        view.speech_requested.connect(lambda text, speed, _controls: requests.append((text, speed)))
+        assert not view.repeat_speech_shortcut.isEnabled()
+
+        QTest.keyClicks(view.input_edit, "A B")
+        app.processEvents()
+
+        assert "".join(item.actual_char for item in view.learning.current_session.typed_characters) == "A B"
+        assert view.input_edit.toPlainText() == "A B"
+        assert view.learning.current_session.position == 3
+        assert requests == []
+        assert not view.repeat_speech_shortcut.isEnabled()
     finally:
         window.current_practice_saved = True
         window.close(); context.database.close()

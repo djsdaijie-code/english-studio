@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QTextCharFormat, QTextCursor, QTextOption
+from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QShortcut, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
     QApplication, QFrame, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton,
     QSizePolicy, QSplitter, QTextBrowser, QTextEdit, QVBoxLayout, QWidget,
@@ -51,6 +51,10 @@ class SentencePracticeView(QWidget):
         self._timer.setInterval(250)
         self._timer.timeout.connect(self._tick)
         self._build_ui()
+        self.repeat_speech_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Space), self)
+        self.repeat_speech_shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self.repeat_speech_shortcut.setEnabled(False)
+        self.repeat_speech_shortcut.activated.connect(self._repeat_current_sentence)
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -241,7 +245,7 @@ class SentencePracticeView(QWidget):
         if self.learning.state == SentenceLearningState.LEARNING_PAUSED:
             self.learning_activity.emit("sentence_completed")
             self._set_input_active(False)
-            self.state_label.setText("有效计时已暂停，请阅读翻译；按 Enter 进入下一句")
+            self.state_label.setText("有效计时已暂停，请阅读翻译；按 Space 重听，按 Enter 进入下一句")
             if self._course_mode:
                 self._show_course_translation()
             elif self._show_translation and self._auto_translate:
@@ -355,6 +359,11 @@ class SentencePracticeView(QWidget):
             self.speech_requested.emit(self.current_sentence.normalized_text, speed, self.speech_controls)
         QTimer.singleShot(0, self._restore_focus)
 
+    def _repeat_current_sentence(self) -> None:
+        if not self.learning or self.learning.state != SentenceLearningState.LEARNING_PAUSED:
+            return
+        self._request_speech(float(self.speech_controls.speed_combo.currentData()))
+
     def _auto_read_completed_sentence(self) -> None:
         if not self.learning or self._course_mode:
             return
@@ -434,3 +443,9 @@ class SentencePracticeView(QWidget):
 
     def _set_input_active(self, active: bool) -> None:
         self.input_edit.setCursorWidth(2 if active else 0)
+        if hasattr(self, "repeat_speech_shortcut"):
+            self.repeat_speech_shortcut.setEnabled(
+                not self._course_mode
+                and bool(self.learning)
+                and self.learning.state == SentenceLearningState.LEARNING_PAUSED
+            )
