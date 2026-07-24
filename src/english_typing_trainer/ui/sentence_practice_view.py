@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from PySide6.QtCore import QEvent, QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QShortcut, QTextCharFormat, QTextCursor, QTextOption
+from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QTextCharFormat, QTextCursor, QTextOption
 from PySide6.QtWidgets import (
     QApplication, QFrame, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton,
     QSizePolicy, QSplitter, QTextBrowser, QTextEdit, QVBoxLayout, QWidget,
@@ -51,10 +51,9 @@ class SentencePracticeView(QWidget):
         self._timer.setInterval(250)
         self._timer.timeout.connect(self._tick)
         self._build_ui()
-        self.repeat_speech_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Space), self)
-        self.repeat_speech_shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-        self.repeat_speech_shortcut.setEnabled(False)
-        self.repeat_speech_shortcut.activated.connect(self._repeat_current_sentence)
+        self.installEventFilter(self)
+        for widget in self.findChildren(QWidget):
+            widget.installEventFilter(self)
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -364,6 +363,22 @@ class SentencePracticeView(QWidget):
             return
         self._request_speech(float(self.speech_controls.speed_combo.currentData()))
 
+    def eventFilter(self, watched, event) -> bool:  # type: ignore[override]
+        in_this_view = isinstance(watched, QWidget) and (watched is self or self.isAncestorOf(watched))
+        should_repeat = (
+            in_this_view
+            and event.type() == QEvent.Type.KeyPress
+            and event.key() == Qt.Key.Key_Space
+            and not event.isAutoRepeat()
+            and bool(self.learning)
+            and self.learning.state == SentenceLearningState.LEARNING_PAUSED
+            and not self._course_mode
+        )
+        if should_repeat:
+            self._repeat_current_sentence()
+            return True
+        return super().eventFilter(watched, event)
+
     def _auto_read_completed_sentence(self) -> None:
         if not self.learning or self._course_mode:
             return
@@ -443,9 +458,3 @@ class SentencePracticeView(QWidget):
 
     def _set_input_active(self, active: bool) -> None:
         self.input_edit.setCursorWidth(2 if active else 0)
-        if hasattr(self, "repeat_speech_shortcut"):
-            self.repeat_speech_shortcut.setEnabled(
-                not self._course_mode
-                and bool(self.learning)
-                and self.learning.state == SentenceLearningState.LEARNING_PAUSED
-            )

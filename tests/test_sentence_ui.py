@@ -149,7 +149,6 @@ def test_space_replays_completed_sentence_without_advancing(tmp_path: Path) -> N
         app.processEvents()
 
         assert requests == [(sentences[0].normalized_text, 1.0)]
-        assert view.repeat_speech_shortcut.isEnabled()
         position = view.session.position
         view.copy_button.setFocus()
         QTest.keyClick(view.copy_button, Qt.Key.Key_Space)
@@ -173,7 +172,6 @@ def test_space_remains_typing_input_before_sentence_completion(tmp_path: Path) -
     try:
         view = window.sentence_practice_view
         view.speech_requested.connect(lambda text, speed, _controls: requests.append((text, speed)))
-        assert not view.repeat_speech_shortcut.isEnabled()
 
         QTest.keyClicks(view.input_edit, "A B")
         app.processEvents()
@@ -182,7 +180,6 @@ def test_space_remains_typing_input_before_sentence_completion(tmp_path: Path) -
         assert view.input_edit.toPlainText() == "A B"
         assert view.learning.current_session.position == 3
         assert requests == []
-        assert not view.repeat_speech_shortcut.isEnabled()
     finally:
         window.current_practice_saved = True
         window.close(); context.database.close()
