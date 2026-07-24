@@ -256,6 +256,55 @@ QFrame#TranslationCard {
     border-radius: 12px;
 }
 
+QLabel#SentenceTranslationHeading {
+    color: #0f172a;
+    font-size: 19px;
+    font-weight: 700;
+}
+
+QLabel#SentenceTranslationStatus {
+    color: #506987;
+    font-size: 12px;
+    background: #eef4fa;
+    border: 1px solid #d9e5f1;
+    border-radius: 9px;
+    padding: 4px 9px;
+}
+
+QFrame#SentenceTranslationBody {
+    background: #f5f8fc;
+    border: 1px solid #dce6f0;
+    border-radius: 10px;
+}
+
+QLabel#SentenceTranslationText {
+    color: #142033;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+QLabel#SentenceSourceTitle {
+    color: #8491a3;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QLabel#SentenceTranslationSource {
+    color: #64748b;
+    font-size: 14px;
+}
+
+QLabel#SentenceExpressionsTitle {
+    color: #25364d;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QLabel#SentenceExpressionsText {
+    color: #526176;
+    font-size: 14px;
+}
+
 QFrame#ContinuousTranslationCard {
     background: #ffffff;
     border: 1px solid #dbe1ea;

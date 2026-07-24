@@ -113,6 +113,30 @@ def test_sentence_translation_panel_states_and_responsive_sizes(tmp_path: Path) 
         window.close(); context.database.close()
 
 
+def test_completed_sentence_auto_reads_once_and_translation_has_clear_hierarchy(tmp_path: Path) -> None:
+    app, context, window, sentences = _window(tmp_path)
+    requests: list[tuple[str, float]] = []
+    try:
+        view = window.sentence_practice_view
+        view.speech_requested.connect(lambda text, speed, _controls: requests.append((text, speed)))
+        assert view.translation_text.objectName() == "SentenceTranslationText"
+        assert view.translation_body.objectName() == "SentenceTranslationBody"
+        assert view.translation_source.objectName() == "SentenceTranslationSource"
+
+        for character in sentences[0].text:
+            view._handle_key(_key(character))
+        app.processEvents()
+
+        assert requests == [(sentences[0].normalized_text, 1.0)]
+        assert view.learning.state == SentenceLearningState.LEARNING_PAUSED
+        view._handle_key(_key("x"))
+        app.processEvents()
+        assert len(requests) == 1
+    finally:
+        window.current_practice_saved = True
+        window.close(); context.database.close()
+
+
 def test_settings_page_exposes_sentence_and_masked_deepseek_controls(tmp_path: Path) -> None:
     app = _app()
     store = MemoryCredentialStore("sk-test-abcd")

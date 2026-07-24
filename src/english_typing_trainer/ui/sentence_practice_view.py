@@ -45,6 +45,7 @@ class SentencePracticeView(QWidget):
         self._course_mode = False
         self._course_translations: tuple[str, ...] = ()
         self._course_activity_types: tuple[tuple[str, ...], ...] = ()
+        self._auto_read_sentence_index = -1
         self._timer = QTimer(self)
         self._timer.setInterval(250)
         self._timer.timeout.connect(self._tick)
@@ -130,17 +131,32 @@ class SentencePracticeView(QWidget):
 
     def _build_translation_panel(self) -> QWidget:
         panel = QFrame(); panel.setObjectName("TranslationCard"); panel.setMinimumWidth(300); panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        layout = QVBoxLayout(panel); layout.setContentsMargins(20, 20, 20, 20); layout.setSpacing(12)
-        title = QLabel("中文翻译与重点表达"); title.setProperty("role", "section-title"); layout.addWidget(title)
+        layout = QVBoxLayout(panel); layout.setContentsMargins(20, 20, 20, 20); layout.setSpacing(14)
+        heading = QHBoxLayout()
+        title = QLabel("中文译文"); title.setObjectName("SentenceTranslationHeading")
+        heading.addWidget(title); heading.addStretch(1)
         self.translate_article_button = QPushButton("翻译整篇文章")
         self.translate_article_button.setProperty("variant", "ghost")
         self.translate_article_button.clicked.connect(self.translate_article_requested.emit)
-        layout.addWidget(self.translate_article_button, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.translation_status = QLabel("完成当前句后显示翻译"); self.translation_status.setProperty("role", "muted"); layout.addWidget(self.translation_status)
-        self.translation_source = QLabel(""); self.translation_source.setWordWrap(True); self.translation_source.setProperty("role", "subtitle"); layout.addWidget(self.translation_source)
-        self.translation_text = QLabel("翻译尚未显示"); self.translation_text.setWordWrap(True); self.translation_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse); layout.addWidget(self.translation_text)
-        expression_title = QLabel("重点表达"); expression_title.setProperty("role", "section-title"); layout.addWidget(expression_title)
-        self.expressions_label = QLabel("暂无"); self.expressions_label.setWordWrap(True); self.expressions_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse); layout.addWidget(self.expressions_label)
+        heading.addWidget(self.translate_article_button)
+        layout.addLayout(heading)
+        self.translation_status = QLabel("完成当前句后显示翻译"); self.translation_status.setObjectName("SentenceTranslationStatus")
+        layout.addWidget(self.translation_status, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.translation_body = QFrame(); self.translation_body.setObjectName("SentenceTranslationBody")
+        translation_layout = QVBoxLayout(self.translation_body); translation_layout.setContentsMargins(16, 16, 16, 16)
+        self.translation_text = QLabel("翻译尚未显示"); self.translation_text.setObjectName("SentenceTranslationText")
+        self.translation_text.setWordWrap(True); self.translation_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        translation_layout.addWidget(self.translation_text)
+        layout.addWidget(self.translation_body)
+
+        source_title = QLabel("英文原句"); source_title.setObjectName("SentenceSourceTitle"); layout.addWidget(source_title)
+        self.translation_source = QLabel(""); self.translation_source.setObjectName("SentenceTranslationSource")
+        self.translation_source.setWordWrap(True); layout.addWidget(self.translation_source)
+
+        expression_title = QLabel("重点表达"); expression_title.setObjectName("SentenceExpressionsTitle"); layout.addWidget(expression_title)
+        self.expressions_label = QLabel("暂无"); self.expressions_label.setObjectName("SentenceExpressionsText")
+        self.expressions_label.setWordWrap(True); self.expressions_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse); layout.addWidget(self.expressions_label)
         layout.addStretch(1)
         actions = QHBoxLayout()
         self.retry_button = QPushButton("重新生成 AI 翻译"); self.retry_button.clicked.connect(lambda: self._request_translation(True))
@@ -183,7 +199,7 @@ class SentencePracticeView(QWidget):
         self._start_session(material, sentences, settings)
 
     def _start_session(self, material: PracticeMaterial, sentences: list[ArticleSentence], settings: AppSettings) -> None:
-        self.material = material; self.sentences = sentences; self._emitted_attempts = 0
+        self.material = material; self.sentences = sentences; self._emitted_attempts = 0; self._auto_read_sentence_index = -1
         section_start = min(item.start_offset for item in sentences)
         absolute = section_start + material.resume_character_index
         sentence_index = 0; local_position = 0
@@ -229,6 +245,7 @@ class SentencePracticeView(QWidget):
             else:
                 self.translation_status.setText("翻译已关闭" if not self._show_translation else "可按重试按钮翻译")
                 self.next_button.setVisible(True)
+            self._auto_read_completed_sentence()
 
     def _event_text(self, event: QKeyEvent) -> str:
         if event.key() in {Qt.Key.Key_Return, Qt.Key.Key_Enter}: return "\n"
@@ -261,7 +278,7 @@ class SentencePracticeView(QWidget):
         sentence = self.current_sentence
         if not sentence or not self.learning: return
         self.sentence_label.setText(f"第 {self.learning.current_index + 1} / {len(self.sentences)} 句")
-        self.translation_source.setText("" if self._course_mode else sentence.normalized_text); self.translation_status.setText("完成当前句后显示课程译文" if self._course_mode else "完成当前句后显示翻译")
+        self.translation_source.setText(sentence.normalized_text); self.translation_status.setText("完成当前句后显示课程译文" if self._course_mode else "完成当前句后显示翻译")
         self.translation_text.setText("翻译尚未显示"); self.expressions_label.setText("暂无"); self._set_translation_actions(False); self._refresh()
         if self._course_mode:
             activity_types = (
@@ -329,6 +346,15 @@ class SentencePracticeView(QWidget):
             self.learning_activity.emit("audio_started")
             self.speech_requested.emit(self.current_sentence.normalized_text, speed, self.speech_controls)
         QTimer.singleShot(0, self._restore_focus)
+
+    def _auto_read_completed_sentence(self) -> None:
+        if not self.learning or self._course_mode:
+            return
+        sentence_index = self.learning.current_index
+        if sentence_index == self._auto_read_sentence_index:
+            return
+        self._auto_read_sentence_index = sentence_index
+        self._request_speech(float(self.speech_controls.speed_combo.currentData()))
 
     def _emit_new_attempts(self) -> None:
         if not self.learning: return
