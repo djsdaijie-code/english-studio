@@ -246,7 +246,8 @@ def test_course_exit_preserves_in_progress_and_reopens_at_unfinished_item(tmp_pa
         app.processEvents()
         assert context.course_progress_service.get_item_progress(COURSE_ID, FIRST_ITEM).status == "in_progress"
         window._leave_practice_view()
-        assert window.stack.currentWidget() is window.course_page
+        assert window.stack.currentWidget() is window.learning_content_page
+        assert window.learning_content_page.current_section() == "courses"
         assert "学习中" in window.course_page.lesson_progress_label.text()
         window._start_course_lesson(COURSE_ID, DAY_ONE, "manual")
         assert window.current_course_session is not None

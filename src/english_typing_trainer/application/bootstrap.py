@@ -67,7 +67,10 @@ def run_acceptance_smoke(context, window: MainWindow, report_path: Path, action:
             for level in course.levels
             for unit in level.units
         ),
-        "course_page_opened": window.stack.currentWidget() is window.course_page,
+        "course_page_opened": (
+            window.stack.currentWidget() is window.learning_content_page
+            and window.learning_content_page.current_section() == "courses"
+        ),
         "day_page_opened": (
             window.course_page.view_stack.currentWidget()
             is window.course_page.lesson_view

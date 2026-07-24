@@ -64,12 +64,13 @@ from english_typing_trainer.ui.statistics_page import StatisticsPage
 from english_typing_trainer.ui.theme import apply_theme
 from english_typing_trainer.ui.vocabulary_page import VocabularyPage
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
-from english_typing_trainer.ui.daily_learning_card import DailyLearningCard
 from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
 from english_typing_trainer.ui.dictation_page import DictationPage
 from english_typing_trainer.ui.pronunciation_page import PronunciationPage
 from english_typing_trainer.ui.course_page import CoursePage
 from english_typing_trainer.ui.course_vocabulary_dialog import CourseVocabularyDialog
+from english_typing_trainer.ui.home_page import HomePage
+from english_typing_trainer.ui.learning_content_page import LearningContentPage
 from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
 from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
@@ -243,6 +244,14 @@ class SettingsPage(QWidget):
 
 
 class MainWindow(QMainWindow):
+    PAGE_HOME = 0
+    PAGE_LEARNING_CONTENT = 1
+    PAGE_SPECIAL_PRACTICE = 2
+    PAGE_VOCABULARY = 3
+    PAGE_HISTORY = 4
+    PAGE_STATISTICS = 5
+    PAGE_SETTINGS = 6
+
     def __init__(self, context: AppContext) -> None:
         super().__init__()
         self.context = context
@@ -419,14 +428,23 @@ class MainWindow(QMainWindow):
         sidebar_layout.addSpacing(8)
 
         self.stack = QStackedWidget()
+        self.home_page = HomePage()
+        self.home_page.article_library_requested.connect(self._show_library)
+        self.home_page.courses_requested.connect(self._show_courses)
+        self.home_page.special_practice_requested.connect(self._show_special_practice)
+        self.home_page.vocabulary_requested.connect(self._show_vocabulary)
+        self.daily_learning_card = self.home_page.daily_learning_card
+        self.daily_learning_card.review_requested.connect(self._start_fsrs_review)
         self.library_page = self._build_library_page()
-        self.stack.addWidget(self.library_page)
+        self.learning_content_page = LearningContentPage(self.library_page, self.course_page)
+        self.learning_content_page.section_changed.connect(self._learning_content_section_changed)
+        self.stack.addWidget(self.home_page)
+        self.stack.addWidget(self.learning_content_page)
         self.stack.addWidget(self.special_practice_page)
         self.stack.addWidget(self.vocabulary_page)
         self.stack.addWidget(self.history_page)
         self.stack.addWidget(self.statistics_page)
         self.stack.addWidget(self.settings_page)
-        self.stack.addWidget(self.course_page)
         self.stack.addWidget(self.practice_view)
         self.stack.addWidget(self.sentence_practice_view)
         self.stack.addWidget(self.word_learning_page)
@@ -436,13 +454,13 @@ class MainWindow(QMainWindow):
 
         self.nav_buttons: dict[int, QPushButton] = {}
         nav_specs = [
-            (0, "文章库", QStyle.StandardPixmap.SP_DirHomeIcon),
-            (1, "专项练习", QStyle.StandardPixmap.SP_MediaPlay),
-            (2, "单词本", QStyle.StandardPixmap.SP_FileDialogDetailedView),
-            (3, "练习记录", QStyle.StandardPixmap.SP_FileDialogListView),
-            (4, "学习统计", QStyle.StandardPixmap.SP_ComputerIcon),
-            (5, "设置", QStyle.StandardPixmap.SP_FileDialogContentsView),
-            (6, "课程", QStyle.StandardPixmap.SP_DirOpenIcon),
+            (self.PAGE_HOME, "首页", QStyle.StandardPixmap.SP_ComputerIcon),
+            (self.PAGE_LEARNING_CONTENT, "学习内容", QStyle.StandardPixmap.SP_DirHomeIcon),
+            (self.PAGE_SPECIAL_PRACTICE, "专项练习", QStyle.StandardPixmap.SP_MediaPlay),
+            (self.PAGE_VOCABULARY, "单词本", QStyle.StandardPixmap.SP_FileDialogDetailedView),
+            (self.PAGE_HISTORY, "练习记录", QStyle.StandardPixmap.SP_FileDialogListView),
+            (self.PAGE_STATISTICS, "学习统计", QStyle.StandardPixmap.SP_ComputerIcon),
+            (self.PAGE_SETTINGS, "设置", QStyle.StandardPixmap.SP_FileDialogContentsView),
         ]
         for index, text, icon_type in nav_specs:
             button = QPushButton(text)
@@ -467,7 +485,7 @@ class MainWindow(QMainWindow):
         shell.addWidget(content, stretch=1)
         self.setCentralWidget(root)
 
-        self._switch_page(0)
+        self._switch_page(self.PAGE_HOME)
         self.history_page.refresh_button.clicked.connect(self._refresh_history)
         self.statistics_page.trend_range.currentIndexChanged.connect(self._refresh_statistics)
         self.statistics_page.error_range.currentIndexChanged.connect(self._refresh_statistics)
@@ -492,10 +510,6 @@ class MainWindow(QMainWindow):
         self.import_button.clicked.connect(self._import_articles)
         top_row.addWidget(self.import_button, alignment=Qt.AlignmentFlag.AlignRight)
         layout.addLayout(top_row)
-
-        self.daily_learning_card=DailyLearningCard()
-        self.daily_learning_card.review_requested.connect(self._start_fsrs_review)
-        layout.addWidget(self.daily_learning_card)
 
         metrics = QGridLayout()
         metrics.setSpacing(12)
@@ -610,7 +624,10 @@ class MainWindow(QMainWindow):
     def _switch_page(self, index: int) -> None:
         self.stack.setCurrentIndex(index)
         self.sidebar.setVisible(self.stack.currentWidget() not in {self.practice_view, self.sentence_practice_view})
-        if self.stack.currentWidget() is self.course_page:
+        if (
+            self.stack.currentWidget() is self.learning_content_page
+            and self.learning_content_page.current_section() == "courses"
+        ):
             self.course_page.reload()
             self._refresh_course_review_count()
         for button_index, button in self.nav_buttons.items():
@@ -715,15 +732,24 @@ class MainWindow(QMainWindow):
         self.settings_page.load_settings(self.settings)
 
     def _show_library(self) -> None:
-        self._switch_page(0)
+        self.learning_content_page.set_section("articles")
+        self._switch_page(self.PAGE_LEARNING_CONTENT)
         self._reload_articles()
 
     def _show_special_practice(self) -> None:
-        self._switch_page(1)
+        self._switch_page(self.PAGE_SPECIAL_PRACTICE)
         self._refresh_special_practice_page()
 
     def _show_courses(self) -> None:
-        self._switch_page(6)
+        self.learning_content_page.set_section("courses")
+        self._switch_page(self.PAGE_LEARNING_CONTENT)
+
+    def _learning_content_section_changed(self, section: str) -> None:
+        if section == "courses":
+            self.course_page.reload()
+            self._refresh_course_review_count()
+        else:
+            self._reload_articles()
 
     def _refresh_course_review_count(self) -> None:
         try:
@@ -751,7 +777,7 @@ class MainWindow(QMainWindow):
         self.sidebar.hide()
 
     def _show_vocabulary(self) -> None:
-        self._switch_page(2)
+        self._switch_page(self.PAGE_VOCABULARY)
         self._refresh_vocabulary_page()
 
     def _leave_word_learning(self) -> None:
@@ -1026,11 +1052,11 @@ class MainWindow(QMainWindow):
         self.context.fsrs_review_service.defer(card_id)
 
     def _show_history(self) -> None:
-        self._switch_page(3)
+        self._switch_page(self.PAGE_HISTORY)
         self._refresh_history()
 
     def _show_statistics(self) -> None:
-        self._switch_page(4)
+        self._switch_page(self.PAGE_STATISTICS)
         self._refresh_statistics()
 
     def _show_settings(self) -> None:
@@ -1048,7 +1074,7 @@ class MainWindow(QMainWindow):
         except Exception:
             self.settings_page.set_pronunciation_key_status("读取失败")
         stats=self.context.tts_service.stats(); self.settings_page.set_tts_cache_stats(stats.file_count,stats.total_size_bytes)
-        self._switch_page(5)
+        self._switch_page(self.PAGE_SETTINGS)
 
     def _reload_articles(self) -> None:
         self.articles = self.context.article_library.list_articles(self.search_input.text())

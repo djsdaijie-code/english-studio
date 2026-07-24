@@ -25,9 +25,10 @@ def test_main_window_can_be_created_and_uses_chinese_navigation(tmp_path: Path) 
         window.show()
         app.processEvents()
         assert window.windowTitle() == "English Studio"
-        assert window.nav_buttons[0].text() == "文章库"
-        assert window.nav_buttons[1].text() == "专项练习"
-        assert window.nav_buttons[2].text() == "单词本"
+        assert window.nav_buttons[0].text() == "首页"
+        assert window.nav_buttons[1].text() == "学习内容"
+        assert window.nav_buttons[2].text() == "专项练习"
+        assert window.stack.currentWidget() is window.home_page
     finally:
         context.database.close()
 
@@ -39,7 +40,21 @@ def test_navigation_switches_pages_and_empty_state_is_visible(tmp_path: Path) ->
         window = MainWindow(context)
         window.show()
         app.processEvents()
+        assert window.home_page.isVisible()
+        window._show_library()
+        app.processEvents()
+        assert window.stack.currentWidget() is window.learning_content_page
+        assert window.learning_content_page.current_section() == "articles"
         assert window.empty_state.isVisible()
+        window._show_courses()
+        app.processEvents()
+        assert window.learning_content_page.current_section() == "courses"
+        window.home_page.article_card.action_button.click()
+        app.processEvents()
+        assert window.learning_content_page.current_section() == "articles"
+        window.home_page.course_card.action_button.click()
+        app.processEvents()
+        assert window.learning_content_page.current_section() == "courses"
         window._show_special_practice()
         app.processEvents()
         assert window.stack.currentWidget() is window.special_practice_page
