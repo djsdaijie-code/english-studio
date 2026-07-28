@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成；`feature/course-system` 已完成内置课程 Phase 1–5、Phase 6A 发布加固和 Phase 6B 第一版候选内容。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
+English Studio 当前应用开发版本为 `2.0.0-dev.1`，最新正式发布版本仍为 v1.0.0。GitHub 仓库与 v1.0.0 正式 Release 已完成；`feature/course-system` 已完成内置课程 Phase 1–5、Phase 6A 发布加固和 Phase 6B 第一版候选内容。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
 
 ## 架构与目录
 
@@ -66,7 +66,7 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 
 ## 测试状态
 
-2026-07-27，Python 3.14.6：共享课程校验与 Phase 6B 内容 QA 均通过；加入币圈课程后的全量 pytest 为 318 passed。课程专项继续覆盖原课程的 5 个 Level、8 个 Unit、56 个 Day、176 句与 stable key，车标课程的 2 个 Unit、14 个 Day、40 条品牌介绍和视觉素材，以及币圈课程的 2 个 Unit、14 个 Day、40 条短句、TVL 定义、无音频活动边界、Day 会话和文章表零写入。发布加固回归继续覆盖数据库副本迁移、跨 AppContext 恢复、课程 due 队列与 FSRS 日志、版本升级提示、Provider 降级和打包双启动。测试数量仍以每次实际 pytest 输出为准。
+2026-07-28，Python 3.14.6：共享课程校验与 Phase 6B 内容 QA 均通过；全量 pytest 为 316 passed。课程专项继续覆盖原课程的 5 个 Level、8 个 Unit、56 个 Day、176 句与 stable key，车标课程的 2 个 Unit、14 个 Day、40 条品牌介绍和视觉素材，以及币圈课程的 2 个 Unit、14 个 Day、40 条短句、TVL 定义、无音频活动边界、Day 会话和文章表零写入。发布加固回归继续覆盖数据库副本迁移、跨 AppContext 恢复、课程 due 队列与 FSRS 日志、版本升级提示、Provider 降级和打包双启动。测试数量仍以每次实际 pytest 输出为准。
 
 ## 尚未完成
 
@@ -74,7 +74,7 @@ English Studio v1.0.0 已正式发布。GitHub 仓库与正式 Release 已完成
 - 真实 MiniMax 课程短句生成、缓存命中和内容版本换键受本机缺少凭据限制，仍需按发布加固清单完成 1–2 次短请求。
 - 安装器中文向导资源仍待补充；当前安装向导为英文，应用本体为中文。
 - 完整安装、覆盖安装、卸载和重装真人矩阵仍需在实际使用中持续验证。
-- 实际使用中的 Bug 收集与 v1.0.1 准备工作仍在进行。
+- 实际使用中的 Bug 收集与 v2.0.0 验收准备工作仍在进行。
 - 真人逐句输入验收；mock provider 运行验收不能替代真人输入。
 - 排行榜、社交分享、商店、虚拟货币、装扮和复杂任务不在当前范围。
 - Phase 6B 候选内容已完成；仍需目标用户逐日试学、英语内容审核者签核、Unit 6–8 技术复核，以及真实 Provider 的短音频人工验收。未完成这些门禁前不得把课程状态提升为 `published`。

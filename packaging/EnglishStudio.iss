@@ -1,5 +1,6 @@
 #define MyAppName "English Studio"
 #define MyAppVersion GetEnv("ENGLISH_STUDIO_RELEASE_VERSION")
+#define MyAppVersionNumeric GetEnv("ENGLISH_STUDIO_RELEASE_VERSION_NUMERIC")
 #define MyAppPublisher "English Studio Contributors"
 #define MyAppExeName "EnglishStudio.exe"
 #define MyAppSource GetEnv("ENGLISH_STUDIO_APP_SOURCE")
@@ -8,6 +9,7 @@
 AppId={{7A25B33E-5B8F-4B4E-91D0-E2C07CD5D90F}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
+VersionInfoVersion={#MyAppVersionNumeric}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\English Studio
 DefaultGroupName=English Studio

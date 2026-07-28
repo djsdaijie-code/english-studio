@@ -14,7 +14,8 @@ $Python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $PyInstaller = Join-Path $ProjectRoot ".venv\Scripts\pyinstaller.exe"
 $Spec = Join-Path $ProjectRoot "EnglishStudio.spec"
 $InstallerScript = Join-Path $ProjectRoot "packaging\EnglishStudio.iss"
-$Version = "1.0.0"
+$Version = "2.0.0-dev.1"
+$VersionNumeric = "2.0.0.1"
 $DistRoot = Join-Path $ProjectRoot $(if ($DebugBuild) { "dist-debug" } else { "dist" })
 $WorkRoot = Join-Path $ProjectRoot $(if ($DebugBuild) { "build-debug" } else { "build" })
 $AppDir = Join-Path $DistRoot "EnglishStudio"
@@ -106,6 +107,7 @@ if (-not $DebugBuild -and -not $SkipInstaller) {
     }
     if (-not $IsccPath) { throw "未找到 Inno Setup 编译器 iscc。请安装 Inno Setup 6 后重试。" }
     $env:ENGLISH_STUDIO_RELEASE_VERSION = $Version
+    $env:ENGLISH_STUDIO_RELEASE_VERSION_NUMERIC = $VersionNumeric
     $env:ENGLISH_STUDIO_APP_SOURCE = $AppDir
     & $IsccPath $InstallerScript
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $SetupPath)) { throw "Inno Setup 安装程序构建失败。" }

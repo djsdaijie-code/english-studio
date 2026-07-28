@@ -2,7 +2,7 @@
 
 状态：Draft
 
-适用版本：English Studio v1.0.0 / database schema 11
+设计基线：English Studio v1.0.0 / database schema 11；当前实现版本：v2.0.0-dev.1 / schema 13
 
 本轮边界：只设计静态课程内容与后续接入方案，不修改数据库、加载器或 UI。
 
