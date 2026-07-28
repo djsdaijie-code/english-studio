@@ -22,6 +22,94 @@ QFrame#ContentArea {
     background: transparent;
 }
 
+QFrame#WordLearningFocusCard, QFrame#WordLearningDetailCard {
+    background: #152232;
+    border: 1px solid #26384f;
+    border-radius: 14px;
+}
+
+QLabel#WordLearningEyebrow, QLabel#WordLearningProgressText {
+    color: #91a2b8;
+    font-size: 13px;
+}
+
+QLabel#WordLearningPrompt {
+    color: #f2f6fb;
+    font-size: 34px;
+    font-weight: 700;
+    padding: 4px 12px;
+}
+
+QFrame#WordLearningInputPanel {
+    background: #111c29;
+    border: 1px solid #293d55;
+    border-radius: 12px;
+}
+
+QLabel#WordLearningInputTitle, QLabel#WordDetailSectionTitle {
+    color: #9fb0c5;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+QPlainTextEdit#WordLearningInput {
+    background: #101a27;
+    border: 1px solid #506984;
+    border-radius: 9px;
+    color: #edf3fa;
+    font-size: 24px;
+    padding: 13px 14px;
+}
+
+QPlainTextEdit#WordLearningInput:focus {
+    border: 2px solid #6f96cc;
+}
+
+QLabel#WordLearningInputHint, QLabel#WordExplanationText {
+    color: #91a2b8;
+    font-size: 12px;
+}
+
+QProgressBar#WordQueueProgress, QProgressBar#WordRepeatProgress {
+    background: #26384f;
+    border: none;
+    border-radius: 4px;
+}
+
+QProgressBar#WordQueueProgress::chunk, QProgressBar#WordRepeatProgress::chunk {
+    background: #6f96cc;
+    border-radius: 4px;
+}
+
+QFrame#WordLearningModeControl {
+    background: #101a27;
+    border: 1px solid #2d4058;
+    border-radius: 11px;
+}
+
+QFrame#WordMeaningCard {
+    background: #111d2b;
+    border: 1px solid #2a4059;
+    border-radius: 11px;
+}
+
+QLabel#WordMeaningText {
+    color: #f1f5fa;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+QLabel#WordCollocationText {
+    color: #d4deea;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QLabel#WordSourceSentence {
+    color: #c0ccda;
+    font-size: 15px;
+}
+
 QFrame#TodayLearningTimeBar {
     min-height: 34px;
     max-height: 34px;

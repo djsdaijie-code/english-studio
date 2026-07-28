@@ -55,11 +55,29 @@ def test_word_learning_page_typing_errors_backspace_and_completion():
 
 def test_word_learning_cloze_and_meaning_recall_do_not_grade_chinese():
     app(); page=WordLearningPage(); entry,contexts,state=data(); page.load(entry,contexts,state); attempts=[]; page.attempt_completed.connect(attempts.append)
-    page.mode_combo.setCurrentIndex(page.mode_combo.findData("sentence_cloze")); assert "___" in page.prompt.text() and "running" not in page.prompt.text()
+    page.mode_control.button("sentence_cloze").click(); assert "___" in page.prompt.text() and "running" not in page.prompt.text()
     for char in "running": page._key(key(char))
     assert attempts[-1].practice_type=="sentence_cloze" and attempts[-1].expected_answer=="running"
-    page.mode_combo.setCurrentIndex(page.mode_combo.findData("meaning_recall")); page._reveal(); assert all(not button.isHidden() for button in page.rating_buttons)
+    page.mode_control.button("meaning_recall").click(); page._reveal(); assert all(not button.isHidden() for button in page.rating_buttons)
     page._rate("fuzzy"); assert attempts[-1].is_correct is None and attempts[-1].self_rating=="fuzzy"
+
+
+def test_word_learning_layout_uses_compact_input_and_segmented_modes():
+    application=app(); page=WordLearningPage(); entry,contexts,state=data(); page.load(entry,contexts,state)
+    page.resize(1280,720); page.show(); application.processEvents()
+    assert page.mode_control.value()=="typing"
+    assert page.input.height()==72
+    assert page.input_panel.minimumWidth()==480
+    assert page.input_panel.maximumWidth()==680
+    assert 480<=page.input_panel.width()<=680
+    assert page.input_panel.maximumHeight()==150
+    assert page.input_panel.height()<=150
+    assert page.repeat_progress.maximum()==5 and page.repeat_progress.value()==0
+    assert page.input_panel.isVisibleTo(page)
+    page.mode_control.button("meaning_recall").click(); application.processEvents()
+    assert not page.input_panel.isVisible()
+    assert page.reveal.isVisibleTo(page)
+    page.close()
 
 
 def test_multiple_context_switch_updates_explanation_without_resetting_progress():
@@ -169,7 +187,7 @@ def test_cloze_and_context_switch_use_source_word_casing():
         VocabularyContext(20,"OpenAI","OpenAI builds tools.",start_offset=0,end_offset=6,id=21),
         VocabularyContext(20,"OPENAI","We wrote OPENAI here.",start_offset=9,end_offset=15,id=22),
     ]
-    page.load(entry,contexts,VocabularyLearningState(20,typing_target_count=1)); page.mode_combo.setCurrentIndex(page.mode_combo.findData("sentence_cloze"))
+    page.load(entry,contexts,VocabularyLearningState(20,typing_target_count=1)); page.mode_control.button("sentence_cloze").click()
     assert page._expected()=="OpenAI" and "___" in page.prompt.text()
     page.context_combo.setCurrentIndex(1)
     assert page._expected()=="OPENAI" and "___" in page.prompt.text()
