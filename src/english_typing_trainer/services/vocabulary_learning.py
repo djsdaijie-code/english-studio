@@ -199,13 +199,27 @@ class VocabularyLearningService:
         return attempt_id
 
     def set_mastered(self, entry_id: int, mastered: bool) -> None:
-        state=self.repository.get_state(entry_id)
-        if not state: raise ValueError("未找到学习状态。")
-        state.status="mastered" if mastered else "learning"; state.mastered_at=datetime.now() if mastered else None
-        with self.database.transaction() as connection: self.repository.update_state(connection,state)
+        self.set_mastered_many([entry_id], mastered)
+
+    def set_mastered_many(self, entry_ids: list[int], mastered: bool) -> None:
+        states = [self.repository.get_state(entry_id) for entry_id in dict.fromkeys(entry_ids)]
+        if any(state is None for state in states):
+            raise ValueError("未找到学习状态。")
+        now = datetime.now()
+        for state in states:
+            state.status = "mastered" if mastered else "learning"
+            state.mastered_at = now if mastered else None
+        with self.database.transaction() as connection:
+            for state in states:
+                self.repository.update_state(connection, state)
 
     def delete(self, entry_id: int) -> None:
-        with self.database.transaction() as connection: self.repository.delete_entry(connection,entry_id)
+        self.delete_many([entry_id])
+
+    def delete_many(self, entry_ids: list[int]) -> None:
+        with self.database.transaction() as connection:
+            for entry_id in dict.fromkeys(entry_ids):
+                self.repository.delete_entry(connection, entry_id)
 
     @staticmethod
     def cloze_text(context: VocabularyContext) -> str:

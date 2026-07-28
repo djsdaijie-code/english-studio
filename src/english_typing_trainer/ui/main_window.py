@@ -349,10 +349,12 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.save_requested.connect(self._save_vocabulary_item)
         self.vocabulary_page.archive_requested.connect(self._set_vocabulary_archived)
         self.vocabulary_page.mastery_requested.connect(self._set_vocabulary_mastery)
+        self.vocabulary_page.mastery_many_requested.connect(self._set_vocabulary_mastery_many)
         self.vocabulary_page.review_requested.connect(self._open_word_learning)
         self.vocabulary_page.open_learning_requested.connect(self._open_word_learning)
         self.vocabulary_page.play_requested.connect(self._play_vocabulary_word)
         self.vocabulary_page.delete_requested.connect(self._delete_vocabulary_entry)
+        self.vocabulary_page.delete_many_requested.connect(self._delete_vocabulary_entries)
         self.vocabulary_page.row_learning_requested.connect(self._start_vocabulary_row)
         self.vocabulary_page.scope_changed.connect(lambda _scope:self._refresh_vocabulary_page())
         self.vocabulary_page.today_review_requested.connect(self._start_fsrs_review)
@@ -2381,10 +2383,13 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.set_status_message("生词状态已更新。")
 
     def _set_vocabulary_mastery(self, item_id: int, mastered: bool) -> None:
-        self.context.vocabulary_learning_service.set_mastered(item_id,mastered)
+        self._set_vocabulary_mastery_many([item_id], mastered)
+
+    def _set_vocabulary_mastery_many(self, item_ids: list[int], mastered: bool) -> None:
+        self.context.vocabulary_learning_service.set_mastered_many(item_ids, mastered)
         self._refresh_vocabulary_page()
         self._refresh_special_practice_page()
-        self.vocabulary_page.set_status_message("熟练度状态已更新。")
+        self.vocabulary_page.set_status_message(f"已更新 {len(item_ids)} 个单词的学习状态。")
 
     def _collect_selected_word(self, text: str, start: int, end: int) -> None:
         if self.current_course_session is not None:
@@ -2611,8 +2616,16 @@ class MainWindow(QMainWindow):
         self._vocabulary_workers.discard(task); self._request_speech(word,self.settings.tts_speed if speed is None else speed)
 
     def _delete_vocabulary_entry(self,entry_id:int):
-        if QMessageBox.question(self,"删除单词","确定删除该词条、来源和学习记录吗？")!=QMessageBox.StandardButton.Yes:return
-        self.context.vocabulary_learning_service.delete(entry_id); self._refresh_vocabulary_page()
+        self._delete_vocabulary_entries([entry_id])
+
+    def _delete_vocabulary_entries(self, entry_ids: list[int]) -> None:
+        count = len(entry_ids)
+        message = "确定删除该词条、来源和学习记录吗？" if count == 1 else f"确定删除选中的 {count} 个单词及其来源和学习记录吗？"
+        if QMessageBox.question(self, "删除单词", message) != QMessageBox.StandardButton.Yes:
+            return
+        self.context.vocabulary_learning_service.delete_many(entry_ids)
+        self._refresh_vocabulary_page()
+        self.vocabulary_page.set_status_message(f"已删除 {count} 个单词。")
 
     def _review_single_vocabulary(self, item_id: int) -> None:
         generated = self.context.special_practice_service.generate_vocabulary_review_set(due_only=False, item_ids=[item_id])

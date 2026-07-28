@@ -17,12 +17,12 @@ def test_application_and_packaging_versions_are_synchronized() -> None:
     version_info = (PROJECT_ROOT / "packaging" / "version_info.txt").read_text(encoding="utf-8")
     installer = (PROJECT_ROOT / "packaging" / "EnglishStudio.iss").read_text(encoding="utf-8")
 
-    assert __version__ == "2.0.0-dev.1"
-    assert project["project"]["version"] == "2.0.0.dev1"
-    assert re.search(r'^\$Version = "2\.0\.0-dev\.1"$', package_script, re.MULTILINE)
-    assert re.search(r'^\$VersionNumeric = "2\.0\.0\.1"$', package_script, re.MULTILINE)
-    assert "filevers=(2, 0, 0, 1)" in version_info
-    assert "ProductVersion', u'2.0.0-dev.1'" in version_info
+    assert __version__ == "2.0.0-dev.2"
+    assert project["project"]["version"] == "2.0.0.dev2"
+    assert re.search(r'^\$Version = "2\.0\.0-dev\.2"$', package_script, re.MULTILINE)
+    assert re.search(r'^\$VersionNumeric = "2\.0\.0\.2"$', package_script, re.MULTILINE)
+    assert "filevers=(2, 0, 0, 2)" in version_info
+    assert "ProductVersion', u'2.0.0-dev.2'" in version_info
     assert "VersionInfoVersion={#MyAppVersionNumeric}" in installer
 
 

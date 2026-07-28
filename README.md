@@ -8,7 +8,7 @@ English Studio 是面向 Windows 的本地英语学习与打字应用，通过�
 - PySide6 6.11.1
 - SQLite（标准库 `sqlite3`），schema version 13
 - pytest 9.1.1；PyInstaller 6.21.0
-- 当前开发版本 `2.0.0-dev.1`，最新正式发布版本为 `1.0.0`；Windows 安装器和便携版由 `scripts/package.ps1` 构建
+- 当前开发版本 `2.0.0-dev.2`，最新正式发布版本为 `1.0.0`；Windows 安装器和便携版由 `scripts/package.ps1` 构建
 
 ## 功能
 
@@ -45,7 +45,7 @@ py -3.14 -m venv .venv
 powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1
 ```
 
-当前开发版本构建会生成 `EnglishStudio-2.0.0-dev.1-Setup.exe` 与 `EnglishStudio-2.0.0-dev.1-win-x64-portable.zip`。安装器默认安装到当前用户目录，不需要管理员权限；卸载默认保留学习数据。未签名构建可能触发 SmartScreen，请先核对 `SHA256SUMS.txt`。
+当前开发版本构建会生成 `EnglishStudio-2.0.0-dev.2-Setup.exe` 与 `EnglishStudio-2.0.0-dev.2-win-x64-portable.zip`。安装器默认安装到当前用户目录，不需要管理员权限；卸载默认保留学习数据。未签名构建可能触发 SmartScreen，请先核对 `SHA256SUMS.txt`。
 
 ## 数据与隐私
 
@@ -82,7 +82,7 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishStudio-isolated"
 
 ## 已知限制
 
-- English Studio v1.0.0 已正式发布，GitHub Release 提供 Windows 安装包和便携版；当前仓库正在开发 `2.0.0-dev.1`，尚未作为正式安装包发布。安装器目前为英文，应用本体为中文；安装包未签名，Windows SmartScreen 可能提示。完整安装、覆盖安装、卸载和重装矩阵仍在真实使用中持续验证。
+- English Studio v1.0.0 已正式发布，GitHub Release 提供 Windows 安装包和便携版；当前仓库正在开发 `2.0.0-dev.2`，尚未作为正式安装包发布。安装器目前为英文，应用本体为中文；安装包未签名，Windows SmartScreen 可能提示。完整安装、覆盖安装、卸载和重装矩阵仍在真实使用中持续验证。
 - 真实 DeepSeek 调用需要用户自己的 API Key；自动测试只使用 mock provider。
 - 中途退出时保存 session 级字符进度；已完成句子保存 `sentence_attempts`，未完成句子暂不单独保存 attempt。
 - 真人连续输入和真实 API 联调必须由用户按人工验收清单完成，自动化不能替代。

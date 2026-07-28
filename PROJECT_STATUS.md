@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-English Studio 当前应用开发版本为 `2.0.0-dev.1`，最新正式发布版本仍为 v1.0.0。GitHub 仓库与 v1.0.0 正式 Release 已完成；`feature/course-system` 已完成内置课程 Phase 1–5、Phase 6A 发布加固和 Phase 6B 第一版候选内容。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
+English Studio 当前应用开发版本为 `2.0.0-dev.2`，最新正式发布版本仍为 v1.0.0。GitHub 仓库与 v1.0.0 正式 Release 已完成；`feature/course-system` 已完成内置课程 Phase 1–5、Phase 6A 发布加固和 Phase 6B 第一版候选内容。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
 
 ## 架构与目录
 

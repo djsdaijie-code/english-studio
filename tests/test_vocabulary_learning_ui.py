@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM","offscreen")
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QKeyEvent, QTextCursor
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QAbstractItemView
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtTest import QTest
 
@@ -23,6 +23,7 @@ import english_typing_trainer.ui.main_window as main_window_module
 from english_typing_trainer.ui.practice_view import FocusTextBrowser
 from english_typing_trainer.ui.theme import apply_theme
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
+from english_typing_trainer.ui.vocabulary_page import VocabularyPage
 
 
 def app(): return QApplication.instance() or QApplication([])
@@ -99,6 +100,51 @@ def test_main_window_vocabulary_list_settings_and_themes(tmp_path:Path):
             apply_theme(window,theme); window.resize(1280,720); application.processEvents(); assert window.vocabulary_page.width()>700
         window.close()
     finally:context.database.close()
+
+
+def test_vocabulary_page_supports_multi_select_and_select_all():
+    application=app(); page=VocabularyPage(); page.resize(1280,720); page.show()
+    rows=[
+        {"id":1,"display_word":"run","status":"learning","meaning":"运行","note":""},
+        {"id":2,"display_word":"learn","status":"mastered","meaning":"学习","note":""},
+        {"id":3,"display_word":"practice","status":"new","meaning":"练习","note":""},
+    ]
+    page.populate_items(rows); application.processEvents()
+    assert page.table.selectionMode()==QAbstractItemView.SelectionMode.ExtendedSelection
+    assert page.selected_item_ids()==[1]
+    page.select_all_button.click(); application.processEvents()
+    assert page.selected_item_ids()==[1,2,3]
+    assert page.select_all_button.text()=="取消全选"
+    assert page.selected_count_label.text()=="已选 3 项"
+    assert page.delete_button.isEnabled()
+    assert not page.open_button.isEnabled() and not page.play_button.isEnabled()
+    assert not page.open_button.isVisible() and not page.play_button.isVisible()
+    emitted=[]; page.delete_many_requested.connect(emitted.append); page.delete_button.click()
+    assert emitted==[[1,2,3]]
+    page.select_all_button.click(); application.processEvents()
+    assert page.selected_item_ids()==[] and page.select_all_button.text()=="全选"
+    page.close()
+
+
+def test_vocabulary_multi_selection_mastery_and_delete_are_applied_once(tmp_path:Path,monkeypatch):
+    application=app(); context=build_app_context(data_dir=tmp_path/"data"); window=None
+    try:
+        first=context.vocabulary_learning_service.collect("run")
+        second=context.vocabulary_learning_service.collect("learn")
+        window=MainWindow(context); window.show(); window._show_vocabulary(); application.processEvents()
+        window.vocabulary_page.select_all_button.click(); application.processEvents()
+        window.vocabulary_page.mastered_button.click(); application.processEvents()
+        assert context.vocabulary_learning_service.repository.get_state(first.entry.id).status=="mastered"
+        assert context.vocabulary_learning_service.repository.get_state(second.entry.id).status=="mastered"
+        window.vocabulary_page.scope_combo.setCurrentIndex(window.vocabulary_page.scope_combo.findData("all")); application.processEvents()
+        window.vocabulary_page.select_all_button.click(); application.processEvents()
+        monkeypatch.setattr(QMessageBox,"question",lambda *_args,**_kwargs:QMessageBox.StandardButton.Yes)
+        window.vocabulary_page.delete_button.click(); application.processEvents()
+        assert context.vocabulary_learning_service.repository.get_entry(first.entry.id) is None
+        assert context.vocabulary_learning_service.repository.get_entry(second.entry.id) is None
+    finally:
+        if window:window.close()
+        context.database.close()
 
 
 def test_practice_views_share_collection_signal(tmp_path:Path):
