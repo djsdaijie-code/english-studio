@@ -2454,14 +2454,7 @@ class MainWindow(QMainWindow):
     def _position_vocabulary_quick_access(self) -> None:
         if not hasattr(self,"vocabulary_quick_access"):
             return
-        widget=self.vocabulary_quick_access
-        widget.adjustSize()
-        margin=24
-        widget.move(
-            max(margin,self._root_shell.width()-widget.width()-margin),
-            max(margin,self._root_shell.height()-widget.height()-margin),
-        )
-        widget.raise_()
+        self.vocabulary_quick_access.position_in_parent()
 
     def resizeEvent(self,event) -> None:  # type: ignore[override]
         super().resizeEvent(event)

@@ -3,12 +3,13 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QContextMenuEvent, QTextCursor
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtGui import QContextMenuEvent, QMouseEvent, QTextCursor
+from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
 
 from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.ui.main_window import MainWindow
+from english_typing_trainer.ui.vocabulary_quick_access import VocabularyQuickAccess
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -179,6 +180,45 @@ def test_article_preview_context_menu_collects_only_selected_words(tmp_path: Pat
         window.close()
     finally:
         context.database.close()
+
+
+def test_vocabulary_quick_access_can_be_dragged_without_opening() -> None:
+    app = _app()
+    host = QWidget()
+    host.resize(900, 640)
+    host.show()
+    quick_access = VocabularyQuickAccess(host)
+    opened: list[bool] = []
+    quick_access.open_requested.connect(lambda: opened.append(True))
+    quick_access.show()
+    quick_access.position_in_parent()
+    app.processEvents()
+    initial_position = quick_access.pos()
+    local_center = QPointF(quick_access.book_button.rect().center())
+    start_global = QPointF(quick_access.book_button.mapToGlobal(quick_access.book_button.rect().center()))
+    target_global = start_global + QPointF(-240, -180)
+    QApplication.sendEvent(
+        quick_access.book_button,
+        QMouseEvent(QMouseEvent.Type.MouseButtonPress, local_center, start_global, Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier),
+    )
+    QApplication.sendEvent(
+        quick_access.book_button,
+        QMouseEvent(QMouseEvent.Type.MouseMove, local_center, target_global, Qt.MouseButton.NoButton, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier),
+    )
+    QApplication.sendEvent(
+        quick_access.book_button,
+        QMouseEvent(QMouseEvent.Type.MouseButtonRelease, local_center, target_global, Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier),
+    )
+    app.processEvents()
+    assert quick_access.has_custom_position
+    assert quick_access.pos() != initial_position
+    assert not quick_access.book_button.isDown()
+    assert opened == []
+    host.resize(640, 480)
+    quick_access.position_in_parent()
+    assert 0 <= quick_access.x() <= host.width() - quick_access.width()
+    assert 0 <= quick_access.y() <= host.height() - quick_access.height()
+    host.close()
 
 
 def test_home_dashboard_matches_learning_routes_and_supported_width(tmp_path: Path) -> None:
