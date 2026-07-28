@@ -29,7 +29,7 @@ class UiTexts:
     article_resegment: str = "重新分段"
     article_more: str = "更多操作"
     article_empty_title: str = "还没有导入文章"
-    article_empty_body: str = "导入英文 TXT 后选择练习模式；在线翻译、语音和跟读均可稍后按需配置。"
+    article_empty_body: str = "导入英文 TXT 后选择练习模式；在线翻译和 AI 语音均可稍后按需配置。"
     article_empty_button: str = "导入第一篇文章"
     article_unselected_title: str = "暂未选择文章"
     article_unselected_body: str = "从左侧选择一篇文章，查看详情并开始练习。"
@@ -40,7 +40,7 @@ class UiTexts:
     article_resegment_confirm_body: str = "重新分段会重置当前文章进度，但不会删除历史记录。"
     import_result_title: str = "导入结果"
     no_article_selected: str = "请先选择一篇文章。"
-    section_target_label: str = "默认分段"
+    section_target_label: str = "手动分段"
     settings_saved: str = "设置已保存，新练习会使用新的配置。"
     special_title: str = "专项练习"
     special_subtitle: str = "根据历史错误、生词和上下文生成更有针对性的练习。"
@@ -77,7 +77,7 @@ class UiTexts:
             "overview_articles": "文章数量",
             "overview_completed": "已完成",
             "overview_due_words": "今日待复习",
-            "overview_section_target": "默认分段",
+            "overview_section_target": "手动分段",
             "overview_last_practice": "最近练习",
             "stats_today_seconds": "今日练习",
             "stats_today_sessions": "今日次数",

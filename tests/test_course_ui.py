@@ -14,7 +14,11 @@ from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.courses.repository import CourseRepository
 from english_typing_trainer.services.course_learning import CourseLearningService
 from english_typing_trainer.services.credential_store import MemoryCredentialStore
-from english_typing_trainer.ui.course_page import CourseListCard, CoursePage
+from english_typing_trainer.ui.course_page import (
+    CourseListCard,
+    CoursePage,
+    CourseStructureRow,
+)
 from english_typing_trainer.ui.main_window import MainWindow
 from english_typing_trainer.ui.result_dialog import ResultDialog
 
@@ -23,6 +27,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 COURSE_ID = "ai-large-models"
 DAY_ONE = "ai-l1-u01-d01"
 DAY_TWO = "ai-l1-u01-d02"
+DAY_SIX = "ai-l1-u01-d06"
 FIRST_ITEM = "ai-large-models-sentence-0001"
 
 
@@ -101,7 +106,7 @@ def test_course_page_lists_hierarchy_progress_and_arbitrary_day(tmp_path: Path) 
     try:
         page.show()
         app.processEvents()
-        assert page.course_list.count() == 1
+        assert page.course_list.count() == 3
         assert "5 个 Level" in page.course_list.item(0).text()
         assert "8 个 Unit" in page.course_list.item(0).text()
         card = page.course_list.itemWidget(page.course_list.item(0))
@@ -111,20 +116,47 @@ def test_course_page_lists_hierarchy_progress_and_arbitrary_day(tmp_path: Path) 
         assert card.description_label.property("role") == "course-card-description"
         assert "5 个 Level · 8 个 Unit" in card.statistics_label.text()
         page.show_course(COURSE_ID)
+        summary = context.course_progress_service.get_course_progress(COURSE_ID)
+        assert page.back_to_courses_button.text().startswith("←")
+        assert page.back_to_courses_button.objectName() == "CourseBackButton"
+        assert page.course_progress_bar.objectName() == "CourseOverallProgress"
+        assert page.course_progress_card.minimumHeight() >= 104
+        assert page.course_progress_bar.value() == round(summary.completion_percentage)
+        assert page.course_progress_percent_label.text() == f"{round(summary.completion_percentage)}%"
+        assert page.course_progress_label.text() == (
+            f"已完成 {summary.completed_required_items} / {summary.total_required_items} 项"
+        )
+        assert page._progress_activity_type("listening") == "review"
+        page.back_to_courses_button.click()
+        assert page.view_stack.currentWidget() is page.list_view
+        page.show_course(COURSE_ID)
         assert page.hierarchy_tree.topLevelItemCount() == 5
+        assert page.hierarchy_tree.header().isHidden()
+        level_item = page.hierarchy_tree.topLevelItem(0)
+        level_row = page.hierarchy_tree.itemWidget(level_item, 0)
+        assert isinstance(level_row, CourseStructureRow)
+        assert level_row.property("kind") == "level"
+        assert level_row.progress_bar.objectName() == "CourseStructureProgress"
+        unit_row = page.hierarchy_tree.itemWidget(level_item.child(0), 0)
+        assert isinstance(unit_row, CourseStructureRow)
+        assert unit_row.property("kind") == "unit"
+        lesson_row = page.hierarchy_tree.itemWidget(level_item.child(0).child(0), 0)
+        assert isinstance(lesson_row, CourseStructureRow)
+        assert lesson_row.property("kind") == "lesson"
+        assert lesson_row.title_label.text().startswith("Day 1")
         unit_count = sum(
             page.hierarchy_tree.topLevelItem(index).childCount()
             for index in range(page.hierarchy_tree.topLevelItemCount())
         )
         assert unit_count == 8
         page.show_lesson(COURSE_ID, DAY_TWO)
+        assert page.back_to_course_button.text().startswith("←")
+        assert page.back_to_course_button.objectName() == "CourseBackButton"
         assert "Day 2" in page.lesson_title_label.text()
         assert "前面的 Day 尚未全部完成" in page.lesson_warning_label.text()
-        assert page.capability_buttons["dictation"].isVisibleTo(page)
-        assert page.capability_buttons["speaking"].isVisibleTo(page)
         assert page.capability_buttons["tts"].isVisibleTo(page)
         assert page.capability_buttons["vocabulary"].isVisibleTo(page)
-        assert page.capability_buttons["review"].isVisibleTo(page)
+        assert set(page.capability_buttons) == {"tts", "vocabulary"}
         page.start_lesson_button.click()
         assert requested == [(COURSE_ID, DAY_TWO, "manual")]
     finally:
@@ -173,10 +205,11 @@ def test_main_window_course_typing_updates_state_without_article_writes(tmp_path
         state = context.course_progress_service.get_item_progress(COURSE_ID, FIRST_ITEM)
         assert state.status == "completed"
         assert window.sentence_practice_view.translation_status.text() == "课程译文"
+        assert "句型：Start + noun." in window.sentence_practice_view.expressions_label.text()
+        assert "核心词：start · chat" in window.sentence_practice_view.expressions_label.text()
+        assert "未接入课程词汇能力" not in window.sentence_practice_view.expressions_label.text()
         assert window.sentence_practice_view.text_browser._word_collection_enabled
-        assert window.sentence_practice_view.speech_controls.isVisibleTo(
-            window.sentence_practice_view
-        )
+        assert hasattr(window.sentence_practice_view, "speech_controls")
         assert window.sentence_practice_view.course_words_button.isVisibleTo(
             window.sentence_practice_view
         )
@@ -192,7 +225,43 @@ def test_main_window_course_typing_updates_state_without_article_writes(tmp_path
         context.database.close()
 
 
-def test_course_capability_ui_reuses_dictation_and_pronunciation_pages(
+def test_course_typing_prefetches_and_auto_reads_audio(tmp_path: Path) -> None:
+    app = _app()
+    context = _context(tmp_path)
+    window = MainWindow(context)
+    try:
+        window.show()
+        window._start_course_lesson(COURSE_ID, DAY_ONE, "manual")
+        app.processEvents()
+        view = window.sentence_practice_view
+        first = view.current_sentence
+        assert first is not None
+        prepared = []
+        requested = []
+        view.content_preparation_requested.disconnect(window._prepare_sentence_content)
+        view.content_preparation_requested.connect(lambda sentence, speed: prepared.append((sentence, speed)))
+        view.speech_requested.disconnect(window._request_speech)
+        view.speech_requested.connect(lambda text, speed, controls: requested.append((text, speed, controls)))
+
+        view._handle_key(_key(first.text[0]))
+        app.processEvents()
+        assert prepared and prepared[0][0] == first
+
+        for character in first.text[1:]:
+            view._handle_key(_key(character))
+        app.processEvents()
+
+        assert view.translation_status.text() == "课程译文"
+        assert hasattr(view, "speech_controls")
+        assert requested and requested[-1][0] == first.normalized_text
+    finally:
+        window.current_practice_saved = True
+        window.current_course_session = None
+        window.close()
+        context.database.close()
+
+
+def test_course_reinforcement_day_completes_independent_review_progress(
     tmp_path: Path,
 ) -> None:
     app = _app()
@@ -200,31 +269,47 @@ def test_course_capability_ui_reuses_dictation_and_pronunciation_pages(
     window = MainWindow(context)
     try:
         window.show()
-        window._start_course_capability(COURSE_ID, DAY_TWO, "dictation")
+        window._start_course_lesson(COURSE_ID, DAY_SIX, "manual")
         app.processEvents()
-        assert window.stack.currentWidget() is window.dictation_page
-        assert window.dictation_page._course_mode
-        current = window.dictation_page.current
-        assert current is not None
-        window.dictation_page.input.setPlainText(current.text)
-        window.dictation_page._submit()
-        assert context.course_progress_service.get_activity_progress(
-            COURSE_ID,
-            current.ref.item_stable_key,
-            "dictation",
-        ).status == "completed"
+        session = window.current_course_session
+        sentence = window.sentence_practice_view.current_sentence
+        assert session is not None and sentence is not None
+        assert "reinforcement" in session.activity_types_by_item[0]
+        stable_key = session.item_stable_keys[0]
 
-        window._leave_dictation()
-        window._start_course_capability(COURSE_ID, DAY_TWO, "speaking")
+        for character in sentence.text:
+            window.sentence_practice_view._handle_key(_key(character))
         app.processEvents()
-        assert window.stack.currentWidget() is window.pronunciation_page
-        assert window.pronunciation_page.course_item is not None
-        assert window.pronunciation_page.reference_text() == "Save this useful response."
+
+        assert context.course_progress_service.get_activity_progress(
+            COURSE_ID, stable_key, "review"
+        ).status == "completed"
+    finally:
+        window.current_practice_saved = True
+        window.current_course_session = None
+        window.close()
+        context.database.close()
+
+
+def test_course_capability_ui_exposes_ai_read_aloud_without_follow_reading(
+    tmp_path: Path,
+) -> None:
+    app = _app()
+    context = _context(tmp_path)
+    window = MainWindow(context)
+    try:
+        window.show()
+        assert not hasattr(window, "dictation_page")
+        assert not hasattr(window, "pronunciation_page")
+        requested = []
+        window._request_course_speech = lambda *args, **kwargs: requested.append((args, kwargs))
+        window._start_course_capability(COURSE_ID, DAY_TWO, "tts")
+        app.processEvents()
+        assert requested
+        assert requested[0][0][0] == "Save this useful response."
 
         connection = context.database.connect()
-        assert connection.execute("SELECT COUNT(*) FROM course_capability_attempts").fetchone()[0] == 1
-        assert connection.execute("SELECT COUNT(*) FROM dictation_attempts").fetchone()[0] == 0
-        assert connection.execute("SELECT COUNT(*) FROM pronunciation_attempts").fetchone()[0] == 0
+        assert connection.execute("SELECT COUNT(*) FROM course_capability_attempts").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM articles").fetchone()[0] == 0
     finally:
         window.current_practice_saved = True
@@ -310,7 +395,8 @@ def test_broken_course_is_isolated_and_missing_catalog_is_a_page_error(tmp_path:
     )
     try:
         app.processEvents()
-        assert broken_page.course_list.count() == 0
+        assert broken_page.course_list.count() == 2
+        assert broken_page.course_list.item(0).data(Qt.ItemDataRole.UserRole) == "global-car-logos"
         assert broken_page.failure_label.isVisibleTo(broken_page) or broken_page.failure_label.text()
         assert "部分课程加载失败" in broken_page.failure_label.text()
         assert missing_page.course_list.count() == 0

@@ -45,6 +45,7 @@ def unit_path(root: Path) -> Path:
 
 def add_second_valid_course(root: Path) -> None:
     catalog = read_json(root / "catalog.json")
+    next_order = max(item["default_order"] for item in catalog["courses"]) + 1
     catalog["courses"].append(
         {
             "course_id": "second-course",
@@ -52,7 +53,7 @@ def add_second_valid_course(root: Path) -> None:
             "path": "second-course/course.json",
             "version": "1.0.0",
             "content_status": "reviewed",
-            "default_order": 2,
+            "default_order": next_order,
             "built_in": True,
             "read_only": True,
         }
@@ -105,10 +106,15 @@ def test_loads_catalog_hierarchy_and_read_only_models() -> None:
     catalog = repository.load_catalog()
 
     assert isinstance(catalog, CourseCatalog)
-    assert catalog.catalog_version == "1.1.0"
-    assert len(catalog.courses) == 1
+    assert catalog.catalog_version == "1.3.0"
+    assert [item.course_id for item in catalog.courses] == [
+        "ai-large-models",
+        "global-car-logos",
+        "crypto-blockchain-english",
+    ]
     assert catalog.failures == ()
-    course = catalog.courses[0]
+    course = repository.get_course("ai-large-models")
+    assert course is not None
     assert isinstance(course, Course)
     assert course.course_id == "ai-large-models"
     assert len(course.levels) == 5
@@ -196,7 +202,11 @@ def test_bad_course_file_is_isolated(courses_root: Path, failure: str) -> None:
 
     catalog = CourseRepository(courses_root).load_catalog()
 
-    assert [course.course_id for course in catalog.courses] == ["second-course"]
+    assert [course.course_id for course in catalog.courses] == [
+        "global-car-logos",
+        "crypto-blockchain-english",
+        "second-course",
+    ]
     assert len(catalog.failures) == 1
     assert catalog.failures[0].course_id == "ai-large-models"
     assert catalog.failures[0].path == path
@@ -210,7 +220,10 @@ def test_broken_lesson_reference_is_isolated(courses_root: Path) -> None:
 
     catalog = CourseRepository(courses_root).load_catalog()
 
-    assert catalog.courses == ()
+    assert [course.course_id for course in catalog.courses] == [
+        "global-car-logos",
+        "crypto-blockchain-english",
+    ]
     assert len(catalog.failures) == 1
     assert "missing-sentence" in catalog.failures[0].reason
 
@@ -221,7 +234,10 @@ def test_missing_materialized_unit_is_isolated(courses_root: Path) -> None:
 
     catalog = CourseRepository(courses_root).load_catalog()
 
-    assert catalog.courses == ()
+    assert [course.course_id for course in catalog.courses] == [
+        "global-car-logos",
+        "crypto-blockchain-english",
+    ]
     assert catalog.failures[0].path == path
     assert "missing" in catalog.failures[0].reason
 
@@ -236,7 +252,10 @@ def test_duplicate_sentence_identity_is_rejected(courses_root: Path, field: str)
 
     catalog = CourseRepository(courses_root).load_catalog()
 
-    assert catalog.courses == ()
+    assert [course.course_id for course in catalog.courses] == [
+        "global-car-logos",
+        "crypto-blockchain-english",
+    ]
     assert len(catalog.failures) == 1
     assert "duplicate" in catalog.failures[0].reason
 
@@ -248,7 +267,10 @@ def test_unsupported_specification_version_has_distinct_failure(courses_root: Pa
 
     catalog = CourseRepository(courses_root).load_catalog()
 
-    assert catalog.courses == ()
+    assert [course.course_id for course in catalog.courses] == [
+        "global-car-logos",
+        "crypto-blockchain-english",
+    ]
     assert catalog.failures[0].error_type == "UnsupportedCourseVersionError"
     assert "2.0" in catalog.failures[0].reason
 
@@ -303,5 +325,8 @@ def test_unsafe_catalog_path_is_isolated(courses_root: Path) -> None:
 
     loaded = CourseRepository(courses_root).load_catalog()
 
-    assert loaded.courses == ()
+    assert [course.course_id for course in loaded.courses] == [
+        "global-car-logos",
+        "crypto-blockchain-english",
+    ]
     assert "escapes" in loaded.failures[0].reason

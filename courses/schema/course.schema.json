@@ -27,7 +27,7 @@
     "read_only"
   ],
   "properties": {
-    "specification_version": { "const": "1.0" },
+    "specification_version": { "enum": ["1.0", "1.1"] },
     "course_id": { "$ref": "#/$defs/id" },
     "stable_key": { "$ref": "#/$defs/id" },
     "version": { "$ref": "#/$defs/semver" },
@@ -75,12 +75,11 @@
     "learningPlan": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["new_sentences_per_day", "unit_days", "review_day", "dictation_day", "assessment_day"],
+      "required": ["new_sentences_per_day", "unit_days", "review_day", "assessment_day"],
       "properties": {
         "new_sentences_per_day": { "type": "integer", "minimum": 0 },
         "unit_days": { "type": "integer", "minimum": 1 },
         "review_day": { "type": "integer", "minimum": 1 },
-        "dictation_day": { "type": "integer", "minimum": 1 },
         "assessment_day": { "type": "integer", "minimum": 1 }
       }
     },

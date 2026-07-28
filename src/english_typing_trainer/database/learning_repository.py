@@ -169,6 +169,18 @@ class LearningRepository:
             latest_achievement=latest[0] if latest else "尚未解锁成就",
         )
 
+    def weekly_effective_seconds(self, today: date | None = None) -> list[float]:
+        """Return Monday-to-Sunday effective study time for the home dashboard."""
+        today = today or date.today()
+        week_start = today - timedelta(days=today.weekday())
+        week_days = [week_start + timedelta(days=index) for index in range(7)]
+        rows = self.database.connect().execute(
+            "SELECT date,effective_seconds FROM daily_learning_stats WHERE date BETWEEN ? AND ?",
+            (week_days[0].isoformat(), week_days[-1].isoformat()),
+        ).fetchall()
+        seconds_by_day = {row["date"]: float(row["effective_seconds"]) for row in rows}
+        return [seconds_by_day.get(day.isoformat(), 0.0) for day in week_days]
+
     def unlock_achievement(self, key: str, progress: float, threshold: float, metadata: dict[str, object] | None = None) -> bool:
         stamp = datetime.now().isoformat(timespec="seconds")
         with self.database.transaction() as connection:

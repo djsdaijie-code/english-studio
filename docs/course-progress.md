@@ -66,7 +66,7 @@ service.get_next_required_item(course_id)
 schema 13 新增 `course_activity_progress`，把同一个 Item 的能力状态拆为：
 
 ```text
-typing / dictation / speaking / vocabulary / review
+typing / speaking / vocabulary / review
 ```
 
 每行只保存 enrollment 外键、Item stable key、活动类型、状态、尝试次数、最好/最近分数、内容版本和时间字段，唯一约束为 `(enrollment_id, item_stable_key, activity_type)`。该表不重复保存 Course、Level、Unit 或 Lesson stable key；需要层级时从当前 `CourseRepository` 解析。
@@ -104,7 +104,7 @@ Phase 6A 增加只读 `get_version_status(course_id)`：它按语义版本比较
 ```
 
 - 只有 required activity 引用的 `(item_stable_key, activity_type)` 进入分母；可选 activity 不进入。
-- 同一句可以分别要求 typing、dictation 或 speaking；各能力必须独立完成，且不设置固定分数门槛。
+- 同一句可以分别要求 typing 或 speaking；各能力必须独立完成，且不设置固定分数门槛。
 - `deprecated` Unit、Lesson 和 Item 不进入。
 - `skipped` 保留为历史选择，但不视为完成。
 - 同一 `(item_stable_key, activity_type)` 在一个聚合范围内只计一次。
@@ -114,7 +114,7 @@ Phase 6A 增加只读 `get_version_status(course_id)`：它按语义版本比较
 
 ## 下一课与下一必做项
 
-推荐顺序来自当前只读课程对象的 Level、Unit、Lesson、activity 和 Sentence 顺序。服务选择第一个既未 `completed`、也未 `skipped` 的有效必做活动；`get_next_required_item()` 返回该活动对应的 Item，`get_next_lesson()` 返回包含它的 Lesson。同一句 typing 完成但 required dictation 未完成时仍会被推荐。跳过前置活动不会把它标记完成，但推荐可继续向后移动。
+推荐顺序来自当前只读课程对象的 Level、Unit、Lesson、activity 和 Sentence 顺序。服务选择第一个既未 `completed`、也未 `skipped` 的有效必做活动；`get_next_required_item()` 返回该活动对应的 Item，`get_next_lesson()` 返回包含它的 Lesson。同一句的 typing 与 speaking 可按课程配置独立推进。跳过前置活动不会把它标记完成，但推荐可继续向后移动。
 
 新用户可查询首个推荐，而不会因此写 enrollment。课程当前必做活动全部完成时返回 `None`。`paused` 或 `archived` enrollment 也返回 `None`；恢复为 `active` 后重新按当前 JSON 和历史活动状态计算。当前仍不实现 Level 强制解锁，调用方可以进入任意 Lesson。
 
@@ -138,4 +138,4 @@ context = build_app_context(data_dir=temp_data, courses_root=temp_courses)
 
 ## 当前边界
 
-Phase 5 已在 schema 13 中增加独立课程活动状态、数值尝试历史和课程句子 FSRS，但仍不把课程句子插入文章表，也不建立泛型课程内容映射表。课程听写、跟读和 FSRS 不写普通历史表；课程词汇只复用共享词条，并以 stable key 保存来源语境。完整能力边界见 `docs/course-capabilities.md`，真实副本迁移和跨会话验收见 `docs/course-release-hardening.md`。
+Phase 5 已在 schema 13 中增加独立课程活动状态、数值尝试历史和课程句子 FSRS，但仍不把课程句子插入文章表，也不建立泛型课程内容映射表。当前课程跟读不写普通历史表；课程词汇只复用共享词条，并以 stable key 保存来源语境。旧听写活动行只为历史兼容保留。完整能力边界见 `docs/course-capabilities.md`，真实副本迁移和跨会话验收见 `docs/course-release-hardening.md`。

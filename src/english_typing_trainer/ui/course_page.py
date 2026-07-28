@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QProgressBar,
     QPushButton,
     QStackedWidget,
     QTreeWidget,
@@ -45,11 +46,17 @@ _LESSON_TYPE_TEXT = {
 _ACTIVITY_TYPE_TEXT = {
     "typing": "打字",
     "listening": "朗读",
-    "speaking": "跟读",
-    "dictation": "听写",
     "vocabulary": "词汇",
     "fsrs": "课程复习",
     "review": "课程复习",
+    "reinforcement": "重点巩固",
+}
+_DIFFICULTY_TEXT = {
+    "beginner": "入门",
+    "elementary": "基础",
+    "intermediate": "进阶",
+    "upper_intermediate": "中高级",
+    "advanced": "高级",
 }
 
 
@@ -102,12 +109,69 @@ class CourseListCard(QFrame):
         self.update()
 
 
+class CourseStructureRow(QFrame):
+    """Compact hierarchy row with progress that remains readable at every level."""
+
+    def __init__(
+        self,
+        *,
+        kind: str,
+        title: str,
+        metadata: str,
+        percentage: int,
+        status: str,
+    ) -> None:
+        super().__init__()
+        self.setObjectName("CourseStructureRow")
+        self.setProperty("kind", kind)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(14, 9, 14, 9)
+        layout.setSpacing(16)
+
+        text_layout = QVBoxLayout()
+        text_layout.setContentsMargins(0, 0, 0, 0)
+        text_layout.setSpacing(3)
+        self.title_label = QLabel(title)
+        self.title_label.setProperty("role", f"course-structure-{kind}-title")
+        self.metadata_label = QLabel(metadata)
+        self.metadata_label.setProperty("role", "course-structure-metadata")
+        text_layout.addWidget(self.title_label)
+        text_layout.addWidget(self.metadata_label)
+        layout.addLayout(text_layout, stretch=1)
+
+        progress_panel = QWidget()
+        progress_panel.setObjectName("CourseStructureProgressPanel")
+        progress_panel.setMinimumWidth(180)
+        progress_panel.setMaximumWidth(280)
+        progress_layout = QVBoxLayout(progress_panel)
+        progress_layout.setContentsMargins(0, 0, 0, 0)
+        progress_layout.setSpacing(5)
+        progress_text = QHBoxLayout()
+        progress_text.setContentsMargins(0, 0, 0, 0)
+        self.status_label = QLabel(status)
+        self.status_label.setProperty("role", "course-structure-status")
+        self.percentage_label = QLabel(f"{percentage}%")
+        self.percentage_label.setProperty("role", "course-structure-percentage")
+        progress_text.addWidget(self.status_label)
+        progress_text.addStretch(1)
+        progress_text.addWidget(self.percentage_label)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setObjectName("CourseStructureProgress")
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(percentage)
+        self.progress_bar.setTextVisible(False)
+        progress_layout.addLayout(progress_text)
+        progress_layout.addWidget(self.progress_bar)
+        layout.addWidget(progress_panel)
+
+
 class CoursePage(QWidget):
     """Course list, hierarchy and lesson confirmation in one navigable page."""
 
     lesson_start_requested = Signal(str, str, str)
     capability_requested = Signal(str, str, str)
-    due_review_requested = Signal()
 
     def __init__(
         self,
@@ -170,10 +234,7 @@ class CoursePage(QWidget):
         self.quick_start_button = QPushButton("开始学习")
         self.quick_start_button.setProperty("variant", "primary")
         self.quick_start_button.clicked.connect(self._start_selected_course)
-        self.due_review_button = QPushButton("课程到期复习")
-        self.due_review_button.clicked.connect(self.due_review_requested.emit)
         actions.addWidget(self.reload_button)
-        actions.addWidget(self.due_review_button)
         actions.addStretch(1)
         actions.addWidget(self.open_course_button)
         actions.addWidget(self.quick_start_button)
@@ -206,13 +267,14 @@ class CoursePage(QWidget):
     def _build_detail_view(self) -> QWidget:
         page, layout = self._page_shell("课程详情", "查看 Level、Unit 与 Day，并从任意 Day 开始。")
         top = QHBoxLayout()
-        back = QPushButton("返回课程列表")
-        back.setProperty("variant", "ghost")
-        back.clicked.connect(self.show_list)
+        self.back_to_courses_button = QPushButton("←  返回课程列表")
+        self.back_to_courses_button.setObjectName("CourseBackButton")
+        self.back_to_courses_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.back_to_courses_button.clicked.connect(self.show_list)
         self.recommended_button = QPushButton("开始推荐 Day")
         self.recommended_button.setProperty("variant", "primary")
         self.recommended_button.clicked.connect(self._start_recommended_lesson)
-        top.addWidget(back)
+        top.addWidget(self.back_to_courses_button)
         top.addStretch(1)
         top.addWidget(self.recommended_button)
         layout.addLayout(top)
@@ -223,8 +285,36 @@ class CoursePage(QWidget):
         self.course_description_label.setWordWrap(True)
         self.course_goals_label = QLabel("")
         self.course_goals_label.setWordWrap(True)
-        self.course_progress_label = QLabel("")
-        self.course_progress_label.setProperty("role", "subtitle")
+        self.course_progress_card = QFrame()
+        self.course_progress_card.setObjectName("CourseProgressCard")
+        self.course_progress_card.setMinimumHeight(104)
+        progress_layout = QVBoxLayout(self.course_progress_card)
+        progress_layout.setContentsMargins(16, 14, 16, 14)
+        progress_layout.setSpacing(8)
+        progress_heading = QHBoxLayout()
+        self.course_progress_title = QLabel("课程总进度")
+        self.course_progress_title.setProperty("role", "course-progress-title")
+        self.course_progress_percent_label = QLabel("0%")
+        self.course_progress_percent_label.setProperty("role", "course-progress-value")
+        progress_heading.addWidget(self.course_progress_title)
+        progress_heading.addStretch(1)
+        progress_heading.addWidget(self.course_progress_percent_label)
+        progress_layout.addLayout(progress_heading)
+        self.course_progress_bar = QProgressBar()
+        self.course_progress_bar.setObjectName("CourseOverallProgress")
+        self.course_progress_bar.setRange(0, 100)
+        self.course_progress_bar.setValue(0)
+        self.course_progress_bar.setTextVisible(False)
+        progress_layout.addWidget(self.course_progress_bar)
+        progress_details = QHBoxLayout()
+        self.course_progress_label = QLabel("已完成 0 / 0 项")
+        self.course_progress_label.setProperty("role", "course-progress-detail")
+        self.course_progress_status_label = QLabel("未开始")
+        self.course_progress_status_label.setProperty("role", "course-progress-status")
+        progress_details.addWidget(self.course_progress_label)
+        progress_details.addStretch(1)
+        progress_details.addWidget(self.course_progress_status_label)
+        progress_layout.addLayout(progress_details)
         self.recommended_label = QLabel("")
         self.recommended_label.setWordWrap(True)
         version_row = QHBoxLayout()
@@ -237,15 +327,28 @@ class CoursePage(QWidget):
         layout.addWidget(self.course_title_label)
         layout.addWidget(self.course_description_label)
         layout.addWidget(self.course_goals_label)
-        layout.addWidget(self.course_progress_label)
+        layout.addWidget(self.course_progress_card)
         layout.addWidget(self.recommended_label)
         version_row.addWidget(self.version_notice_label, stretch=1)
         version_row.addWidget(self.view_new_content_button)
         layout.addLayout(version_row)
 
+        structure_heading = QHBoxLayout()
+        structure_title = QLabel("课程结构")
+        structure_title.setProperty("role", "section-title")
+        structure_hint = QLabel("展开 Level 和 Unit，查看每个 Day 的学习进度")
+        structure_hint.setProperty("role", "subtitle")
+        structure_heading.addWidget(structure_title)
+        structure_heading.addStretch(1)
+        structure_heading.addWidget(structure_hint)
+        layout.addLayout(structure_heading)
+
         self.hierarchy_tree = QTreeWidget()
-        self.hierarchy_tree.setHeaderLabels(["课程结构", "内容", "状态"])
-        self.hierarchy_tree.setColumnWidth(0, 360)
+        self.hierarchy_tree.setObjectName("CourseHierarchy")
+        self.hierarchy_tree.setColumnCount(1)
+        self.hierarchy_tree.setHeaderHidden(True)
+        self.hierarchy_tree.setIndentation(22)
+        self.hierarchy_tree.setUniformRowHeights(False)
         self.hierarchy_tree.itemDoubleClicked.connect(self._tree_item_activated)
         self.hierarchy_tree.itemSelectionChanged.connect(self._tree_selection_changed)
         layout.addWidget(self.hierarchy_tree, stretch=1)
@@ -263,13 +366,14 @@ class CoursePage(QWidget):
     def _build_lesson_view(self) -> QWidget:
         page, layout = self._page_shell("Day 详情", "开始前确认本 Day 的目标与学习内容。")
         top = QHBoxLayout()
-        back = QPushButton("返回课程详情")
-        back.setProperty("variant", "ghost")
-        back.clicked.connect(self._return_to_current_course)
+        self.back_to_course_button = QPushButton("←  返回课程详情")
+        self.back_to_course_button.setObjectName("CourseBackButton")
+        self.back_to_course_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.back_to_course_button.clicked.connect(self._return_to_current_course)
         self.start_lesson_button = QPushButton("开始学习")
         self.start_lesson_button.setProperty("variant", "primary")
         self.start_lesson_button.clicked.connect(self._emit_current_lesson)
-        top.addWidget(back)
+        top.addWidget(self.back_to_course_button)
         top.addStretch(1)
         top.addWidget(self.start_lesson_button)
         layout.addLayout(top)
@@ -280,10 +384,7 @@ class CoursePage(QWidget):
         self.capability_buttons: dict[str, QPushButton] = {}
         for label, capability in (
             ("朗读", "tts"),
-            ("听写", "dictation"),
-            ("跟读", "speaking"),
             ("查看与收藏单词", "vocabulary"),
-            ("加入课程复习", "review"),
         ):
             button = QPushButton(label)
             button.clicked.connect(
@@ -370,12 +471,6 @@ class CoursePage(QWidget):
     def show_list(self) -> None:
         self.view_stack.setCurrentWidget(self.list_view)
 
-    def set_due_review_count(self, count: int) -> None:
-        count = max(0, count)
-        self.due_review_button.setText(
-            f"课程到期复习（{count}）" if count else "课程到期复习"
-        )
-
     def show_course(self, course_id: str) -> None:
         try:
             course = self.courses.get_course(course_id)
@@ -395,7 +490,7 @@ class CoursePage(QWidget):
             summary = self.progress.get_course_progress(course_id)
             enrollment = self.progress.get_enrollment(course_id)
             recommended = self.progress.get_next_lesson(course_id)
-            self.course_progress_label.setText(self._summary_text(summary, enrollment))
+            self._set_course_progress(summary, enrollment)
             if recommended is not None:
                 self.recommended_label.setText(f"当前推荐：Day {recommended.day} · {recommended.title}")
                 self.recommended_button.setText("继续推荐 Day" if enrollment else "开始推荐 Day")
@@ -426,7 +521,10 @@ class CoursePage(QWidget):
                 self.view_new_content_button.hide()
         except Exception as exc:
             self._log_progress_error(course, None, exc)
-            self.course_progress_label.setText("进度暂时无法读取。")
+            self.course_progress_bar.setValue(0)
+            self.course_progress_percent_label.setText("--")
+            self.course_progress_label.setText("进度暂时无法读取")
+            self.course_progress_status_label.setText("状态不可用")
             self.recommended_label.setText("推荐 Day 暂时不可用，仍可浏览课程结构。")
             self.recommended_button.setEnabled(False)
             self.version_notice_label.setText("")
@@ -507,7 +605,12 @@ class CoursePage(QWidget):
             except Exception as exc:
                 self._log_progress_error(course, lesson, exc, sentence.stable_key)
                 status_text = "状态不可用"
-            QListWidgetItem(f"{sentence.order}. {sentence.english}  ·  {status_text}", self.lesson_items)
+            content_label = (
+                "车标识别题（答案将在练习后显示）"
+                if sentence.visual_prompt is not None and sentence.visual_prompt.hide_answer
+                else sentence.english
+            )
+            QListWidgetItem(f"{sentence.order}. {content_label}  ·  {status_text}", self.lesson_items)
         try:
             summary = self.progress.get_lesson_progress(course_id, lesson_id)
             self.lesson_progress_label.setText(
@@ -647,25 +750,95 @@ class CoursePage(QWidget):
     def _populate_hierarchy(self, course: Course) -> None:
         self.hierarchy_tree.clear()
         for level in course.levels:
-            level_item = QTreeWidgetItem([f"Level {level.order} · {level.title}", level.difficulty, ""])
-            self.hierarchy_tree.addTopLevelItem(level_item)
+            unit_summaries: list[CourseProgressSummary] = []
             for unit in level.units:
-                unit_status = "内容待补充" if not unit.is_materialized else self._unit_status(course, unit)
-                unit_item = QTreeWidgetItem(
-                    [f"Unit {unit.order} · {unit.title}", f"{len(unit.lessons)} 个 Day", unit_status]
-                )
+                try:
+                    unit_summaries.append(
+                        self.progress.get_unit_progress(course.course_id, unit.unit_id)
+                    )
+                except Exception as exc:
+                    self._log_progress_error(course, None, exc)
+            level_completed = sum(item.completed_required_items for item in unit_summaries)
+            level_total = sum(item.total_required_items for item in unit_summaries)
+            level_percentage = round((level_completed / level_total) * 100) if level_total else 0
+            level_status = "已完成" if level_percentage == 100 else ("学习中" if level_percentage else "未开始")
+            level_item = QTreeWidgetItem([""])
+            level_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            level_item.setSizeHint(0, QSize(0, 68))
+            self.hierarchy_tree.addTopLevelItem(level_item)
+            self.hierarchy_tree.setItemWidget(
+                level_item,
+                0,
+                CourseStructureRow(
+                    kind="level",
+                    title=f"Level {level.order} · {level.title}",
+                    metadata=(
+                        f"{_DIFFICULTY_TEXT.get(level.difficulty, level.difficulty)} · "
+                        f"{len(level.units)} 个 Unit"
+                    ),
+                    percentage=level_percentage,
+                    status=level_status,
+                ),
+            )
+            for unit in level.units:
+                try:
+                    unit_summary = self.progress.get_unit_progress(course.course_id, unit.unit_id)
+                    unit_percentage = round(unit_summary.completion_percentage)
+                    unit_status = (
+                        "已完成"
+                        if unit_summary.is_completed
+                        else ("学习中" if unit_summary.completed_required_items else "未开始")
+                    )
+                except Exception as exc:
+                    self._log_progress_error(course, None, exc)
+                    unit_percentage = 0
+                    unit_status = "状态不可用"
+                if not unit.is_materialized:
+                    unit_status = "内容待补充"
+                unit_item = QTreeWidgetItem([""])
+                unit_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                unit_item.setSizeHint(0, QSize(0, 64))
                 level_item.addChild(unit_item)
+                self.hierarchy_tree.setItemWidget(
+                    unit_item,
+                    0,
+                    CourseStructureRow(
+                        kind="unit",
+                        title=f"Unit {unit.order} · {unit.title}",
+                        metadata=f"{len(unit.lessons)} 个 Day",
+                        percentage=unit_percentage,
+                        status=unit_status,
+                    ),
+                )
                 for lesson in unit.lessons:
                     summary_text = self._lesson_status(course, lesson)
+                    try:
+                        lesson_summary = self.progress.get_lesson_progress(
+                            course.course_id, lesson.lesson_id
+                        )
+                        lesson_percentage = round(lesson_summary.completion_percentage)
+                    except Exception as exc:
+                        self._log_progress_error(course, lesson, exc)
+                        lesson_percentage = 0
                     content_text = (
                         f"{_LESSON_TYPE_TEXT.get(lesson.lesson_type, lesson.lesson_type)} · "
                         f"新句 {len(lesson.new_sentence_ids)} · 复习 {len(lesson.review_sentence_ids)}"
                     )
-                    lesson_item = QTreeWidgetItem(
-                        [f"Day {lesson.day} · {lesson.title}", content_text, summary_text]
-                    )
+                    lesson_item = QTreeWidgetItem([""])
                     lesson_item.setData(0, Qt.ItemDataRole.UserRole, lesson.lesson_id)
+                    lesson_item.setSizeHint(0, QSize(0, 60))
                     unit_item.addChild(lesson_item)
+                    self.hierarchy_tree.setItemWidget(
+                        lesson_item,
+                        0,
+                        CourseStructureRow(
+                            kind="lesson",
+                            title=f"Day {lesson.day} · {lesson.title}",
+                            metadata=content_text,
+                            percentage=lesson_percentage,
+                            status=summary_text,
+                        ),
+                    )
             level_item.setExpanded(True)
             for index in range(level_item.childCount()):
                 level_item.child(index).setExpanded(True)
@@ -729,17 +902,11 @@ class CoursePage(QWidget):
         ]
         visible = {
             "tts": "listening" in configured,
-            "dictation": "dictation" in configured,
-            "speaking": "speaking" in configured,
             "vocabulary": any(item.core_words for item in referenced_sentences),
-            "review": any("fsrs" in item.skill_tags for item in referenced_sentences),
         }
         base_labels = {
             "tts": "朗读",
-            "dictation": "听写",
-            "speaking": "跟读",
             "vocabulary": "查看与收藏单词",
-            "review": "加入课程复习",
         }
         for capability, button in self.capability_buttons.items():
             button.setText(base_labels[capability])
@@ -747,10 +914,7 @@ class CoursePage(QWidget):
             button.setEnabled(bool(referenced_ids))
         progress_type = {
             "tts": "review",
-            "dictation": "dictation",
-            "speaking": "speaking",
             "vocabulary": "vocabulary",
-            "review": "review",
         }
         if unit is None:
             return
@@ -832,8 +996,9 @@ class CoursePage(QWidget):
     @staticmethod
     def _progress_activity_type(activity_type: str):
         return {
-            "fsrs": "review",
             "listening": "review",
+            "reinforcement": "review",
+            "fsrs": "review",
             "reading": "typing",
             "translation": "typing",
             "self_test": "typing",
@@ -857,6 +1022,20 @@ class CoursePage(QWidget):
             f"总进度：{summary.completed_required_items}/{summary.total_required_items} "
             f"（{summary.completion_percentage:.0f}%） · {status}"
         )
+
+    def _set_course_progress(
+        self,
+        summary: CourseProgressSummary,
+        enrollment: CourseEnrollment | None,
+    ) -> None:
+        percentage = max(0, min(100, round(summary.completion_percentage)))
+        status = _ENROLLMENT_STATUS_TEXT[enrollment.status] if enrollment else "未开始"
+        self.course_progress_bar.setValue(percentage)
+        self.course_progress_percent_label.setText(f"{percentage}%")
+        self.course_progress_label.setText(
+            f"已完成 {summary.completed_required_items} / {summary.total_required_items} 项"
+        )
+        self.course_progress_status_label.setText(status)
 
     def _prerequisite_warning(self, course: Course, lesson: CourseLesson) -> str:
         earlier = [
@@ -945,4 +1124,4 @@ class CoursePage(QWidget):
         )
 
 
-__all__ = ["CoursePage"]
+__all__ = ["CourseListCard", "CoursePage", "CourseStructureRow"]

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from english_typing_trainer.courses.models import (
@@ -14,14 +15,16 @@ from english_typing_trainer.courses.models import (
     CourseMistake,
     CourseSentence,
     CourseUnit,
+    CourseVisualPrompt,
 )
+from english_typing_trainer.courses.paths import resolve_safe_relative
 from english_typing_trainer.courses.validation import LoadedCourseData
 
 
 def build_course(data: LoadedCourseData) -> Course:
     raw = data.course
     levels = tuple(
-        _build_level(level, data.units)
+        _build_level(level, data.units, data.course_path.parent)
         for level in sorted(raw["levels"], key=lambda item: item["order"])
     )
     return Course(
@@ -50,7 +53,11 @@ def build_course(data: LoadedCourseData) -> Course:
     )
 
 
-def _build_level(raw: dict[str, Any], units: dict[str, dict[str, Any]]) -> CourseLevel:
+def _build_level(
+    raw: dict[str, Any],
+    units: dict[str, dict[str, Any]],
+    course_root: Path,
+) -> CourseLevel:
     return CourseLevel(
         level_id=raw["level_id"],
         stable_key=raw["stable_key"],
@@ -60,13 +67,17 @@ def _build_level(raw: dict[str, Any], units: dict[str, dict[str, Any]]) -> Cours
         difficulty=raw["difficulty"],
         learning_goals=tuple(raw["learning_goals"]),
         units=tuple(
-            _build_unit(entry, units.get(entry["unit_id"]))
+            _build_unit(entry, units.get(entry["unit_id"]), course_root)
             for entry in sorted(raw["units"], key=lambda item: item["order"])
         ),
     )
 
 
-def _build_unit(entry: dict[str, Any], raw: dict[str, Any] | None) -> CourseUnit:
+def _build_unit(
+    entry: dict[str, Any],
+    raw: dict[str, Any] | None,
+    course_root: Path,
+) -> CourseUnit:
     if raw is None:
         return CourseUnit(
             unit_id=entry["unit_id"],
@@ -100,7 +111,7 @@ def _build_unit(entry: dict[str, Any], raw: dict[str, Any] | None) -> CourseUnit
         ),
         lessons=tuple(_build_lesson(item) for item in sorted(raw["lessons"], key=lambda item: item["order"])),
         sentences=tuple(
-            _build_sentence(item)
+            _build_sentence(item, course_root)
             for item in sorted(raw["sentences"], key=lambda item: (item["day"], item["order"]))
         ),
     )
@@ -111,7 +122,6 @@ def _build_learning_plan(raw: dict[str, Any]) -> CourseLearningPlan:
         new_sentences_per_day=raw.get("new_sentences_per_day"),
         unit_days=raw.get("unit_days"),
         review_day=raw.get("review_day"),
-        dictation_day=raw.get("dictation_day"),
         assessment_day=raw.get("assessment_day"),
     )
 
@@ -148,8 +158,9 @@ def _build_lesson(raw: dict[str, Any]) -> CourseLesson:
     )
 
 
-def _build_sentence(raw: dict[str, Any]) -> CourseSentence:
+def _build_sentence(raw: dict[str, Any], course_root: Path) -> CourseSentence:
     audio = raw["audio_hint"]
+    visual = raw.get("visual_prompt")
     return CourseSentence(
         sentence_id=raw["sentence_id"],
         stable_key=raw["stable_key"],
@@ -186,4 +197,20 @@ def _build_sentence(raw: dict[str, Any]) -> CourseSentence:
         content_version=raw["content_version"],
         status=raw["status"],
         replacement_stable_keys=tuple(raw.get("replacement_stable_keys", [])),
+        visual_prompt=(
+            CourseVisualPrompt(
+                prompt_type=visual["prompt_type"],
+                asset_path=visual["asset_path"],
+                resolved_asset_path=resolve_safe_relative(
+                    course_root, visual["asset_path"]
+                ),
+                alt_text=visual["alt_text"],
+                instruction_zh=visual["instruction_zh"],
+                source_url=visual["source_url"],
+                rights_note=visual["rights_note"],
+                hide_answer=visual["hide_answer"],
+            )
+            if visual is not None
+            else None
+        ),
     )

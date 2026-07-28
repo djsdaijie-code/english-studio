@@ -159,8 +159,8 @@ def collect_errors() -> tuple[list[str], list[str]]:
         errors.append("course status must be reviewed")
     if course["estimated_days"] != 56 or course["estimated_sentences"] != 176:
         errors.append("course estimates must match 56 Days and 176 sentences")
-    if catalog["catalog_version"] != "1.1.0":
-        errors.append("catalog version must be 1.1.0")
+    if catalog["catalog_version"] != "1.3.0":
+        errors.append("catalog version must be 1.3.0")
     catalog_entry = next((item for item in catalog["courses"] if item["course_id"] == course["course_id"]), None)
     if catalog_entry is None:
         errors.append("catalog is missing ai-large-models")
@@ -211,8 +211,11 @@ def collect_errors() -> tuple[list[str], list[str]]:
             errors.append(f"{unit['unit_id']} Days 1-4 do not own exactly the unit sentences")
         if lessons[4]["lesson_type"] not in {"scenario", "reading"} or not lessons[4]["review_sentence_ids"]:
             errors.append(f"{unit['unit_id']} Day 5 must be a review-based scenario or reading")
-        if not {"dictation", "speaking"}.issubset(_required_activity_types(lessons[5])):
-            errors.append(f"{unit['unit_id']} Day 6 must require dictation and speaking")
+        day6_types = _required_activity_types(lessons[5])
+        if lessons[5]["lesson_type"] != "review" or "reinforcement" not in day6_types:
+            errors.append(f"{unit['unit_id']} Day 6 must require reinforcement")
+        if "朗读" in lessons[5]["title"] or "listening" in day6_types:
+            errors.append(f"{unit['unit_id']} Day 6 must not be a dedicated read-aloud lesson")
         day7_types = _required_activity_types(lessons[6])
         if "self_test" not in day7_types or lessons[6]["assessment"] is None:
             errors.append(f"{unit['unit_id']} Day 7 must require self_test and define an assessment")

@@ -104,6 +104,44 @@ def test_new_cards_keep_spelling_and_meaning_independent(tmp_path: Path) -> None
         context.database.close()
 
 
+def test_legacy_listening_cards_are_preserved_but_not_queued(tmp_path: Path) -> None:
+    clock = Clock(datetime(2026, 7, 13, 8, 0, tzinfo=timezone.utc))
+    context, service = make_service(tmp_path, clock)
+    try:
+        collected = add_word(context, "English")
+        queue = service.build_today_queue(new_limit=20)
+        sample = queue.items[0].card
+        stamp = clock.now.isoformat()
+        context.database.connect().execute(
+            """INSERT INTO vocabulary_review_cards(
+                   vocabulary_entry_id, vocabulary_context_id, card_type,
+                   fsrs_card_json, due_at_utc, state, is_suspended,
+                   created_at, updated_at
+               ) VALUES (?, ?, 'listening', ?, ?, 'learning', 0, ?, ?)""",
+            (
+                collected.entry.id,
+                collected.context.id,
+                sample.fsrs_card_json,
+                stamp,
+                stamp,
+                stamp,
+            ),
+        )
+        context.database.connect().commit()
+
+        filtered = service.build_today_queue(new_limit=20)
+        assert {item.card.card_type for item in filtered.items} == {
+            "spelling",
+            "meaning",
+        }
+        assert filtered.due_count == 2
+        assert context.database.connect().execute(
+            "SELECT COUNT(*) FROM vocabulary_review_cards"
+        ).fetchone()[0] == 3
+    finally:
+        context.database.close()
+
+
 @pytest.mark.parametrize("rating", ["again", "hard", "good", "easy"])
 def test_fsrs_accepts_all_ratings_and_persists_restart(tmp_path: Path, rating: str) -> None:
     clock = Clock(datetime(2026, 7, 13, 8, 0, tzinfo=timezone.utc))

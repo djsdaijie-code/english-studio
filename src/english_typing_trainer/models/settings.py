@@ -23,7 +23,6 @@ class AppSettings:
     tts_model: str = "speech-2.8-hd"
     tts_voice_id: str = "English_expressive_narrator"
     tts_speed: float = 1.0
-    tts_auto_play: bool = False
     vocabulary_typing_count: int = 5
     vocabulary_auto_enrich: bool = True
     vocabulary_audio_preference: str = "dictionary"
@@ -35,7 +34,3 @@ class AppSettings:
     fsrs_desired_retention: float = 0.90
     fsrs_new_cards_per_day: int = 20
     fsrs_review_soft_limit: int = 100
-    pronunciation_provider: str = "azure"
-    pronunciation_region: str = ""
-    pronunciation_locale: str = "en-US"
-    pronunciation_keep_recordings: bool = False

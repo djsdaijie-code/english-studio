@@ -36,7 +36,7 @@ same_sentence = repository.get_sentence_by_stable_key(
 
 ## 领域对象
 
-公共层级对象为 `CourseCatalog`、`Course`、`CourseLevel`、`CourseUnit`、`CourseLesson` 和 `CourseSentence`。活动、测评、学习计划、易错点、替代表达与音频提示也会转换为类型明确的值对象。
+公共层级对象为 `CourseCatalog`、`Course`、`CourseLevel`、`CourseUnit`、`CourseLesson` 和 `CourseSentence`。活动、测评、学习计划、易错点、替代表达、音频提示与可选的 `CourseVisualPrompt` 也会转换为类型明确的值对象。
 
 所有模型使用 `@dataclass(frozen=True, slots=True)`，数组转换为 tuple。公共 API 不返回原始 dict，也不含 SQLite ID、用户进度或可写内容引用。尚未生成内容文件的 Unit 仍作为骨架对象返回，`is_materialized` 为 `False`，其 Lesson 和 Sentence 为空。
 
@@ -54,7 +54,9 @@ same_sentence = repository.get_sentence_by_stable_key(
 
 `english_typing_trainer.courses.validation.CourseValidator` 是运行时和离线脚本共享的校验实现。`python scripts/validate_courses.py` 只是薄入口，不再维护第二套规则。
 
-校验包括 UTF-8、JSON 语法、JSON Schema Draft 2020-12 的项目所用子集、必需文件、安全相对路径、Course/Unit/Lesson/Sentence 引用、ID、`stable_key`、顺序和固定大小写。当前支持 `specification_version: 1.0`；其他版本产生 `UnsupportedCourseVersionError`。
+校验包括 UTF-8、JSON 语法、JSON Schema Draft 2020-12 的项目所用子集、必需文件、安全相对路径、Course/Unit/Lesson/Sentence 引用、ID、`stable_key`、顺序和固定大小写。当前支持 `specification_version: 1.0` 和 `1.1`；其他版本产生 `UnsupportedCourseVersionError`。
+
+`1.1` 为 `CourseSentence` 增加可选 `visual_prompt`。`illustrated_word` 用图片辅助可见词汇学习，`image_recognition` 留给明确的识图练习，是否延迟显示目标由 `hide_answer` 控制。视觉素材路径必须位于课程目录内、使用 UTF-8 SVG、文件不超过 256 KiB，并拒绝脚本、外部图片、事件处理器、外部 URL 和其他可执行引用。加载后相对路径会解析为冻结值对象中的绝对 `Path`，因此开发态和 `_MEIPASS` 打包态都不依赖当前工作目录。
 
 ## 错误隔离
 

@@ -17,13 +17,12 @@
     "看懂常见 AI 软件界面和设置",
     "用简单英语向 AI 发出明确指令并修改输出",
     "理解文件处理、API、Agent 和自动化的基础术语",
-    "在真实 AI 工作流中完成阅读、打字、听写和跟读练习"
+    "在真实 AI 工作流中完成阅读、打字和聆听练习"
   ],
   "default_learning_plan": {
     "new_sentences_per_day": 6,
     "unit_days": 7,
     "review_day": 7,
-    "dictation_day": 6,
     "assessment_day": 7
   },
   "levels": [

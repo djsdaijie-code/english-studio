@@ -25,7 +25,7 @@
     "status"
   ],
   "properties": {
-    "specification_version": { "const": "1.0" },
+    "specification_version": { "enum": ["1.0", "1.1"] },
     "content_version": { "$ref": "#/$defs/semver" },
     "unit_id": { "$ref": "#/$defs/id" },
     "stable_key": { "$ref": "#/$defs/id" },
@@ -83,7 +83,6 @@
         "new_sentences_per_day": { "type": "integer", "minimum": 0 },
         "unit_days": { "type": "integer", "minimum": 1 },
         "review_day": { "type": "integer", "minimum": 1 },
-        "dictation_day": { "type": "integer", "minimum": 1 },
         "assessment_day": { "type": "integer", "minimum": 1 }
       }
     }

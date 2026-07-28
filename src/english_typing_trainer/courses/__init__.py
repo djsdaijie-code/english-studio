@@ -11,6 +11,7 @@ from english_typing_trainer.courses.models import (
     CourseLevel,
     CourseSentence,
     CourseUnit,
+    CourseVisualPrompt,
 )
 from english_typing_trainer.courses.repository import CourseRepository
 
@@ -24,6 +25,7 @@ __all__ = [
     "CourseRepository",
     "CourseSentence",
     "CourseUnit",
+    "CourseVisualPrompt",
     "CourseValidationError",
     "UnsupportedCourseVersionError",
 ]

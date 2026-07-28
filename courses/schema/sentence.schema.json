@@ -64,7 +64,7 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": ["typing", "listening", "dictation", "speaking", "reading", "fsrs", "translation"]
+        "enum": ["typing", "listening", "reading", "fsrs", "translation"]
       }
     },
     "source_type": {
@@ -87,6 +87,12 @@
       "type": "array",
       "items": { "$ref": "#/$defs/id" },
       "uniqueItems": true
+    },
+    "visual_prompt": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/visualPrompt" }
+      ]
     }
   },
   "$defs": {
@@ -131,6 +137,34 @@
           "uniqueItems": true
         },
         "note_zh": { "type": "string" }
+      }
+    },
+    "visualPrompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prompt_type",
+        "asset_path",
+        "alt_text",
+        "instruction_zh",
+        "source_url",
+        "rights_note",
+        "hide_answer"
+      ],
+      "properties": {
+        "prompt_type": {
+          "type": "string",
+          "enum": ["illustrated_word", "image_recognition"]
+        },
+        "asset_path": {
+          "type": "string",
+          "pattern": "^assets/[a-z0-9][a-z0-9/_-]*\\.svg$"
+        },
+        "alt_text": { "type": "string", "minLength": 1 },
+        "instruction_zh": { "type": "string", "minLength": 1 },
+        "source_url": { "type": "string", "minLength": 1 },
+        "rights_note": { "type": "string", "minLength": 1 },
+        "hide_answer": { "type": "boolean" }
       }
     }
   }

@@ -227,7 +227,7 @@ def test_item_start_complete_skip_scores_and_timestamps(tmp_path: Path) -> None:
         assert skipped.status == "skipped"
         assert skipped.attempt_count == 0
         assert skipped.first_started_at is None
-        assert service.get_course_progress(COURSE_ID).completion_percentage == pytest.approx(0.39)
+        assert service.get_course_progress(COURSE_ID).completion_percentage == pytest.approx(0.48)
     finally:
         database.close()
 
@@ -258,9 +258,9 @@ def test_lesson_unit_and_course_progress_are_derived_from_required_items(tmp_pat
         course = service.get_course_progress(COURSE_ID)
         assert (lesson.completed_required_items, lesson.total_required_items) == (6, 6)
         assert lesson.is_completed and lesson.completion_percentage == 100.0
-        assert (unit.completed_required_items, unit.total_required_items) == (6, 32)
-        assert unit.completion_percentage == 18.75
-        assert course.completion_percentage == 2.34
+        assert (unit.completed_required_items, unit.total_required_items) == (6, 26)
+        assert unit.completion_percentage == 23.08
+        assert course.completion_percentage == 2.88
 
         connection = database.connect()
         assert connection.execute("SELECT COUNT(*) FROM course_item_progress").fetchone()[0] == 6
@@ -285,7 +285,7 @@ def test_optional_deprecated_new_and_reordered_items_use_current_json(
     database, service = _service(tmp_path / "state", courses_root=courses_root)
     try:
         service.complete_item(COURSE_ID, FIRST_ITEM)
-        assert service.get_course_progress(COURSE_ID).total_required_items == 256
+        assert service.get_course_progress(COURSE_ID).total_required_items == 208
 
         unit_path = _unit_path(courses_root)
         unit = _read_json(unit_path)
@@ -323,9 +323,9 @@ def test_optional_deprecated_new_and_reordered_items_use_current_json(
         )
         current = upgraded.get_course_progress(COURSE_ID)
         historical = upgraded.get_item_progress(COURSE_ID, FIRST_ITEM)
-        assert current.total_required_items == 257
+        assert current.total_required_items == 209
         assert current.completed_required_items == 1
-        assert current.completion_percentage == pytest.approx(0.39)
+        assert current.completion_percentage == pytest.approx(0.48)
         assert historical.status == "completed"
         assert database.connect().execute(
             "SELECT COUNT(*) FROM course_item_progress WHERE item_stable_key = ?",
@@ -340,7 +340,7 @@ def test_optional_deprecated_new_and_reordered_items_use_current_json(
             CourseProgressRepository(database),
         )
         current = deprecated.get_course_progress(COURSE_ID)
-        assert current.total_required_items == 256
+        assert current.total_required_items == 208
         assert current.completed_required_items == 0
         assert deprecated.get_item_progress(COURSE_ID, FIRST_ITEM).status == "completed"
 
@@ -361,7 +361,7 @@ def test_optional_items_and_empty_lessons_have_explicit_behavior(
 
     database, service = _service(tmp_path / "optional", courses_root=courses_root)
     try:
-        assert service.get_course_progress(COURSE_ID).total_required_items == 255
+        assert service.get_course_progress(COURSE_ID).total_required_items == 207
     finally:
         database.close()
 

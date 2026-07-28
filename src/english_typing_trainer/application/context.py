@@ -28,9 +28,6 @@ from english_typing_trainer.database.course_capability_repository import CourseC
 from english_typing_trainer.services.learning_progress import LearningProgressService
 from english_typing_trainer.services.learning_time import LearningTimeTracker
 from english_typing_trainer.services.fsrs_review import FsrsReviewService
-from english_typing_trainer.services.dictation_service import DictationService
-from english_typing_trainer.services.pronunciation_service import PronunciationService as PronunciationAssessmentService
-from english_typing_trainer.services.recording_service import RecordingService
 from english_typing_trainer.services.data_management import DataManagementService
 from english_typing_trainer.courses.repository import CourseRepository
 from english_typing_trainer.services.course_progress import CourseProgressService
@@ -65,10 +62,6 @@ class AppContext:
     learning_progress_service: LearningProgressService
     learning_time_tracker: LearningTimeTracker
     fsrs_review_service: FsrsReviewService
-    dictation_service: DictationService
-    pronunciation_assessment_service: PronunciationAssessmentService
-    recording_service: RecordingService
-    pronunciation_credential_store: CredentialStore
     data_management_service: DataManagementService
     course_repository: CourseRepository
     course_progress_repository: CourseProgressRepository
@@ -83,7 +76,6 @@ def build_app_context(
     data_dir: Path | None = None,
     credential_store: CredentialStore | None = None,
     tts_credential_store: CredentialStore | None = None,
-    pronunciation_credential_store: CredentialStore | None = None,
     courses_root: Path | None = None,
 ) -> AppContext:
     path_service = AppPathService(base_dir=data_dir)
@@ -112,9 +104,6 @@ def build_app_context(
         idle_timeout_seconds=learning_settings.learning_idle_timeout_seconds,
         health_reminders_enabled=learning_settings.health_reminders_enabled)
     fsrs_review_service = FsrsReviewService(database)
-    dictation_service = DictationService(database)
-    pronunciation_assessment_service = PronunciationAssessmentService(database)
-    recording_service = RecordingService(paths.recordings_dir)
     data_management_service = DataManagementService(database, paths.backups_dir, paths.logs_dir)
     course_repository = CourseRepository(courses_root)
     course_progress_repository = CourseProgressRepository(database)
@@ -141,10 +130,6 @@ def build_app_context(
     if tts_credential_store is None:
         tts_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
             WindowsCredentialStore("English Studio/MiniMax TTS", "MiniMax TTS"), WindowsCredentialStore("EnglishTypingTrainer/MiniMax TTS", "MiniMax TTS")
-        )
-    if pronunciation_credential_store is None:
-        pronunciation_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
-            WindowsCredentialStore("English Studio/Azure Speech", "Azure Speech"), WindowsCredentialStore("EnglishTypingTrainer/Azure Speech", "Azure Speech")
         )
     special_practice_service = SpecialPracticeService(
         database,
@@ -176,10 +161,6 @@ def build_app_context(
         learning_progress_service=learning_progress_service,
         learning_time_tracker=learning_time_tracker,
         fsrs_review_service=fsrs_review_service,
-        dictation_service=dictation_service,
-        pronunciation_assessment_service=pronunciation_assessment_service,
-        recording_service=recording_service,
-        pronunciation_credential_store=pronunciation_credential_store,
         data_management_service=data_management_service,
         course_repository=course_repository,
         course_progress_repository=course_progress_repository,

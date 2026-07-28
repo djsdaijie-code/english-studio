@@ -2,8 +2,18 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from PySide6.QtCore import QEvent, QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QTextCharFormat, QTextCursor, QTextOption
+from PySide6.QtCore import QEvent, QRectF, QTimer, Qt, Signal
+from PySide6.QtGui import (
+    QColor,
+    QKeyEvent,
+    QKeySequence,
+    QPainter,
+    QPixmap,
+    QTextCharFormat,
+    QTextCursor,
+    QTextOption,
+)
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication, QFrame, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton,
     QSizePolicy, QSplitter, QTextBrowser, QTextEdit, QVBoxLayout, QWidget,
@@ -12,6 +22,7 @@ from PySide6.QtWidgets import (
 from english_typing_trainer.models.practice import PracticeMaterial
 from english_typing_trainer.models.sentence import ArticleSentence, SentenceTranslation
 from english_typing_trainer.models.settings import AppSettings
+from english_typing_trainer.courses.models import CourseVisualPrompt
 from english_typing_trainer.services.sentence_learning import SentenceLearningSession, SentenceLearningState
 from english_typing_trainer.statistics.metrics import calculate_cpm, calculate_wpm
 from english_typing_trainer.typing_engine.session import TypingSession
@@ -30,10 +41,7 @@ class SentencePracticeView(QWidget):
     content_preparation_requested = Signal(object, float)
     word_collection_requested = Signal(str, int, int)
     learning_activity = Signal(str)
-    course_dictation_requested = Signal()
-    course_pronunciation_requested = Signal()
     course_words_requested = Signal()
-    course_review_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -46,6 +54,10 @@ class SentencePracticeView(QWidget):
         self._course_mode = False
         self._course_translations: tuple[str, ...] = ()
         self._course_activity_types: tuple[tuple[str, ...], ...] = ()
+        self._course_has_vocabulary: tuple[bool, ...] = ()
+        self._course_core_words: tuple[tuple[str, ...], ...] = ()
+        self._course_core_patterns: tuple[tuple[str, ...], ...] = ()
+        self._course_visual_prompts: tuple[CourseVisualPrompt | None, ...] = ()
         self._auto_read_sentence_index = -1
         self._prepared_sentence_index = -1
         self._section_start_offset = 0
@@ -53,7 +65,6 @@ class SentencePracticeView(QWidget):
         self._timer.setInterval(250)
         self._timer.timeout.connect(self._tick)
         self._build_ui()
-        self.installEventFilter(self)
         for widget in self.findChildren(QWidget):
             widget.installEventFilter(self)
 
@@ -86,21 +97,9 @@ class SentencePracticeView(QWidget):
         self.course_actions = QWidget()
         course_actions_layout = QHBoxLayout(self.course_actions)
         course_actions_layout.setContentsMargins(0, 0, 0, 0)
-        self.course_dictation_button = QPushButton("听写")
-        self.course_dictation_button.clicked.connect(self.course_dictation_requested.emit)
-        self.course_speaking_button = QPushButton("跟读")
-        self.course_speaking_button.clicked.connect(self.course_pronunciation_requested.emit)
         self.course_words_button = QPushButton("查看单词")
         self.course_words_button.clicked.connect(self.course_words_requested.emit)
-        self.course_review_button = QPushButton("加入课程复习")
-        self.course_review_button.clicked.connect(self.course_review_requested.emit)
-        for button in (
-            self.course_dictation_button,
-            self.course_speaking_button,
-            self.course_words_button,
-            self.course_review_button,
-        ):
-            course_actions_layout.addWidget(button)
+        course_actions_layout.addWidget(self.course_words_button)
         course_actions_layout.addStretch(1)
         self.course_actions.hide()
         layout.addWidget(self.course_actions)
@@ -118,10 +117,23 @@ class SentencePracticeView(QWidget):
         layout = QVBoxLayout(panel); layout.setContentsMargins(0, 0, 0, 0); layout.setSpacing(12)
         source = QFrame(); source.setObjectName("PracticeSourceCard"); source.setMinimumHeight(180)
         source_layout = QVBoxLayout(source); source_layout.setContentsMargins(20, 16, 20, 18)
-        source_heading = QHBoxLayout(); source_title = QLabel("当前句原文"); source_title.setProperty("role", "section-title")
+        source_heading = QHBoxLayout(); self.source_title = QLabel("当前句原文"); self.source_title.setProperty("role", "section-title")
         from english_typing_trainer.ui.speech_controls import SpeechControls
-        self.speech_controls = SpeechControls(); self.speech_controls.play_requested.connect(self._request_speech)
-        source_heading.addWidget(source_title); source_heading.addStretch(1); source_heading.addWidget(self.speech_controls); source_layout.addLayout(source_heading)
+
+        self.speech_controls = SpeechControls()
+        self.speech_controls.play_requested.connect(self._request_speech)
+        source_heading.addWidget(self.source_title)
+        source_heading.addStretch(1)
+        source_heading.addWidget(self.speech_controls)
+        source_layout.addLayout(source_heading)
+        self.visual_prompt_panel = QFrame(); self.visual_prompt_panel.setObjectName("CourseVisualPrompt")
+        self.visual_prompt_panel.setStyleSheet("#CourseVisualPrompt { background: white; border: 1px solid #d7dde5; border-radius: 10px; }")
+        visual_layout = QVBoxLayout(self.visual_prompt_panel); visual_layout.setContentsMargins(16, 12, 16, 12); visual_layout.setSpacing(8)
+        self.visual_prompt_instruction = QLabel(""); self.visual_prompt_instruction.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.visual_prompt_instruction.setStyleSheet("color: #334155; font-weight: 600;")
+        self.visual_prompt_image = QLabel(""); self.visual_prompt_image.setAlignment(Qt.AlignmentFlag.AlignCenter); self.visual_prompt_image.setMinimumHeight(180)
+        visual_layout.addWidget(self.visual_prompt_instruction); visual_layout.addWidget(self.visual_prompt_image)
+        self.visual_prompt_panel.hide(); source_layout.addWidget(self.visual_prompt_panel)
         self.text_browser = FocusTextBrowser(); self.text_browser.setObjectName("PracticeSource"); self.text_browser.setReadOnly(True)
         self.text_browser.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth); self.text_browser.document().defaultTextOption().setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         self.text_browser.clicked.connect(lambda: QTimer.singleShot(0, self._restore_focus)); source_layout.addWidget(self.text_browser, stretch=1)
@@ -181,9 +193,13 @@ class SentencePracticeView(QWidget):
         self._course_mode = False
         self._course_translations = ()
         self._course_activity_types = ()
+        self._course_has_vocabulary = ()
+        self._course_core_words = ()
+        self._course_core_patterns = ()
+        self._course_visual_prompts = ()
         self.course_actions.hide()
         self.translate_article_button.setVisible(True)
-        self.speech_controls.setVisible(True)
+        self.speech_controls.show()
         self.text_browser.set_word_collection_enabled(True)
         self._start_session(material, sentences, settings)
 
@@ -193,19 +209,27 @@ class SentencePracticeView(QWidget):
         sentences: list[ArticleSentence],
         translations: tuple[str, ...],
         activity_types: tuple[tuple[str, ...], ...],
+        has_vocabulary: tuple[bool, ...],
+        core_words: tuple[tuple[str, ...], ...],
+        core_patterns: tuple[tuple[str, ...], ...],
+        visual_prompts: tuple[CourseVisualPrompt | None, ...],
         settings: AppSettings,
     ) -> None:
         self._course_mode = True
         self._course_translations = translations
         self._course_activity_types = activity_types
+        self._course_has_vocabulary = has_vocabulary
+        self._course_core_words = core_words
+        self._course_core_patterns = core_patterns
+        self._course_visual_prompts = visual_prompts
         self.translate_article_button.setVisible(False)
-        self.speech_controls.setVisible(True)
         self.text_browser.set_word_collection_enabled(True)
         self.course_actions.show()
+        self.speech_controls.show()
         self._start_session(material, sentences, settings)
 
     def _start_session(self, material: PracticeMaterial, sentences: list[ArticleSentence], settings: AppSettings) -> None:
-        self.material = material; self.sentences = sentences; self._emitted_attempts = 0; self._auto_read_sentence_index = -1; self._prepared_sentence_index = -1
+        self.material = material; self.sentences = sentences; self._emitted_attempts = 0; self._prepared_sentence_index = -1; self._auto_read_sentence_index = -1
         leading_whitespace = len(material.section_text) - len(material.section_text.lstrip())
         self._section_start_offset = sentences[0].start_offset - leading_whitespace
         absolute = self._section_start_offset + material.resume_character_index
@@ -228,6 +252,9 @@ class SentencePracticeView(QWidget):
         if event.key() == Qt.Key.Key_Escape: self._toggle_pause(); return
         if self.learning.state == SentenceLearningState.LEARNING_PAUSED:
             self._set_input_active(False)
+            if event.key() == Qt.Key.Key_Space and not event.isAutoRepeat():
+                self._repeat_current_sentence()
+                return
             if event.key() in {Qt.Key.Key_Return, Qt.Key.Key_Enter} and not event.isAutoRepeat(): self._next_sentence()
             return
         if event.matches(QKeySequence.StandardKey.Paste): return
@@ -292,19 +319,23 @@ class SentencePracticeView(QWidget):
             local_start = sentence.start_offset - self._section_start_offset
             self.session.skip_whitespace_to(local_start)
         self.sentence_label.setText(f"第 {self.learning.current_index + 1} / {len(self.sentences)} 句")
-        self.translation_source.setText(sentence.normalized_text); self.translation_status.setText("完成当前句后显示课程译文" if self._course_mode else "完成当前句后显示翻译")
+        prompt = self._current_visual_prompt()
+        self._set_visual_prompt(prompt)
+        self.translation_source.setText(
+            "" if prompt is not None and prompt.hide_answer else sentence.normalized_text
+        ); self.translation_status.setText("完成当前句后显示课程译文" if self._course_mode else "完成当前句后显示翻译")
         self.translation_text.setText("翻译尚未显示"); self.expressions_label.setText("暂无"); self._set_translation_actions(False); self._refresh()
+        self.speech_sentence_changed.emit(sentence.normalized_text)
         if self._course_mode:
             activity_types = (
                 self._course_activity_types[self.learning.current_index]
                 if self.learning.current_index < len(self._course_activity_types)
                 else ()
             )
-            self.course_dictation_button.setVisible("dictation" in activity_types)
-            self.course_speaking_button.setVisible("speaking" in activity_types)
-            self.course_words_button.setVisible(True)
-            self.course_review_button.setVisible("review" in activity_types)
-        self.speech_sentence_changed.emit(sentence.normalized_text)
+            self.course_words_button.setVisible(
+                self.learning.current_index < len(self._course_has_vocabulary)
+                and self._course_has_vocabulary[self.learning.current_index]
+            )
 
     def _request_translation(self, retry: bool) -> None:
         if self._course_mode:
@@ -345,7 +376,14 @@ class SentencePracticeView(QWidget):
         translation = self._course_translations[index] if index < len(self._course_translations) else ""
         self.translation_status.setText("课程译文")
         self.translation_text.setText(translation or "本句暂无中文译文。")
-        self.expressions_label.setText("本阶段未接入课程词汇能力。")
+        if self.current_sentence:
+            self.translation_source.setText(self.current_sentence.normalized_text)
+        words = self._course_core_words[index] if index < len(self._course_core_words) else ()
+        patterns = self._course_core_patterns[index] if index < len(self._course_core_patterns) else ()
+        expressions = [f"• 句型：{pattern}" for pattern in patterns]
+        if words:
+            expressions.append(f"• 核心词：{' · '.join(words)}")
+        self.expressions_label.setText("\n".join(expressions) or "暂无重点表达")
         self.learning_activity.emit("meaning_revealed")
         self._set_translation_actions(True)
 
@@ -353,16 +391,17 @@ class SentencePracticeView(QWidget):
         QApplication.clipboard().setText(self.translation_text.text())
 
     def _request_speech(self, speed: float) -> None:
-        if self._course_mode:
-            QTimer.singleShot(0, self._restore_focus)
-            return
         if self.current_sentence:
             self.learning_activity.emit("audio_started")
-            self.speech_requested.emit(self.current_sentence.normalized_text, speed, self.speech_controls)
+            self.speech_requested.emit(
+                self.current_sentence.normalized_text,
+                speed,
+                self.speech_controls,
+            )
         QTimer.singleShot(0, self._restore_focus)
 
     def _prepare_current_sentence_content(self) -> None:
-        if not self.learning or self._course_mode:
+        if not self.learning:
             return
         sentence_index = self.learning.current_index
         if sentence_index == self._prepared_sentence_index or not self.current_sentence:
@@ -379,15 +418,12 @@ class SentencePracticeView(QWidget):
         self._request_speech(float(self.speech_controls.speed_combo.currentData()))
 
     def eventFilter(self, watched, event) -> bool:  # type: ignore[override]
-        in_this_view = isinstance(watched, QWidget) and (watched is self or self.isAncestorOf(watched))
         should_repeat = (
-            in_this_view
-            and event.type() == QEvent.Type.KeyPress
+            event.type() == QEvent.Type.KeyPress
             and event.key() == Qt.Key.Key_Space
             and not event.isAutoRepeat()
             and bool(self.learning)
             and self.learning.state == SentenceLearningState.LEARNING_PAUSED
-            and not self._course_mode
         )
         if should_repeat:
             self._repeat_current_sentence()
@@ -395,7 +431,7 @@ class SentencePracticeView(QWidget):
         return super().eventFilter(watched, event)
 
     def _auto_read_completed_sentence(self) -> None:
-        if not self.learning or self._course_mode:
+        if not self.learning:
             return
         sentence_index = self.learning.current_index
         if sentence_index == self._auto_read_sentence_index:
@@ -412,7 +448,64 @@ class SentencePracticeView(QWidget):
         if not self.learning or not self.session: return
         current = self.learning.current_session; sentence = self.learning.current_sentence
         self.progress_label.setText(f"进度 {self.session.position} / {len(self.session.content)}")
-        self.text_browser.setPlainText(sentence.text); self._render_source(current); self._render_input(current); self._update_stats()
+        prompt = self._current_visual_prompt()
+        answer_visible = not (
+            prompt is not None and prompt.hide_answer and not current.is_complete
+        )
+        if prompt is None:
+            source_title = "当前句原文"
+        elif not answer_visible:
+            source_title = "识别图片"
+        elif prompt.prompt_type == "illustrated_word":
+            source_title = "品牌名与介绍"
+        else:
+            source_title = "当前答案"
+        self.source_title.setText(source_title)
+        self.text_browser.setVisible(answer_visible)
+        self.text_browser.setPlainText(sentence.text)
+        if answer_visible:
+            self.translation_source.setText(sentence.normalized_text)
+        self._render_source(current); self._render_input(current); self._update_stats()
+
+    def _current_visual_prompt(self) -> CourseVisualPrompt | None:
+        if not self._course_mode or not self.learning:
+            return None
+        index = self.learning.current_index
+        if index >= len(self._course_visual_prompts):
+            return None
+        return self._course_visual_prompts[index]
+
+    def _set_visual_prompt(self, prompt: CourseVisualPrompt | None) -> None:
+        if prompt is None:
+            self.visual_prompt_panel.hide()
+            self.visual_prompt_image.clear()
+            self.visual_prompt_image.setText("")
+            return
+        self.visual_prompt_panel.show()
+        self.visual_prompt_instruction.setText(prompt.instruction_zh)
+        self.visual_prompt_image.setAccessibleDescription(prompt.alt_text)
+        renderer = QSvgRenderer(str(prompt.resolved_asset_path))
+        if not renderer.isValid():
+            self.visual_prompt_image.setPixmap(QPixmap())
+            self.visual_prompt_image.setText("车标素材暂时无法显示")
+            return
+        canvas = QPixmap(420, 190)
+        canvas.fill(Qt.GlobalColor.white)
+        view_box = renderer.viewBoxF()
+        available_width = 360.0
+        available_height = 140.0
+        scale = min(
+            available_width / max(view_box.width(), 1.0),
+            available_height / max(view_box.height(), 1.0),
+        )
+        width = view_box.width() * scale
+        height = view_box.height() * scale
+        target = QRectF((420.0 - width) / 2.0, (190.0 - height) / 2.0, width, height)
+        painter = QPainter(canvas)
+        renderer.render(painter, target)
+        painter.end()
+        self.visual_prompt_image.setText("")
+        self.visual_prompt_image.setPixmap(canvas)
 
     def _render_source(self, current: TypingSession) -> None:
         dark = self.palette().window().color().lightness() < 128

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from time import monotonic
 from typing import Callable
 
@@ -55,6 +55,14 @@ class LearningTimeTracker:
 
     def suspend_for_network(self) -> LearningUpdate:
         return self.stop(count_elapsed=False)
+
+    def pending_effective_seconds(self, target_date: date | None = None) -> float:
+        day = target_date or self.wall_clock().date()
+        return sum(
+            max(0.0, event.active_seconds)
+            for event in self.pending
+            if event.occurred_at.date() == day
+        )
 
     def flush(self) -> LearningUpdate:
         if not self.pending:return LearningUpdate()

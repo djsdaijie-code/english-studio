@@ -1,0 +1,1460 @@
+{
+  "specification_version": "1.1",
+  "content_version": "0.1.1",
+  "unit_id": "car-logo-u01",
+  "stable_key": "global-car-logos-unit-common",
+  "course_id": "global-car-logos",
+  "level_id": "car-logo-l1",
+  "order": 1,
+  "title": "高频汽车品牌与介绍",
+  "description": "借助日常道路、新闻和影视中常见的车标，先学习高频英文汽车品牌名，再跟打一条简短介绍。",
+  "difficulty": "beginner",
+  "estimated_days": 7,
+  "learning_goals": [
+    "借助车标记住英文品牌名",
+    "读懂并准确跟打品牌名及简短英文介绍"
+  ],
+  "core_vocabulary": [
+    "car logo",
+    "automotive brand",
+    "brand name",
+    "spelling"
+  ],
+  "core_patterns": [
+    "Brand name. This [nationality] brand...",
+    "Brand name. This company...",
+    "Brand name. The ... logo..."
+  ],
+  "learning_plan_override": null,
+  "lessons": [
+    {
+      "lesson_id": "car-logo-u01-d01",
+      "stable_key": "global-car-logos-u01-day-01",
+      "unit_id": "car-logo-u01",
+      "day": 1,
+      "order": 1,
+      "title": "学习第 1 组品牌与介绍",
+      "lesson_type": "new_content",
+      "description": "先读可见的英文品牌名，再跟打一条简短介绍；车标同时作为视觉记忆线索。",
+      "learning_goals": [
+        "学习 5 个汽车品牌名和英文介绍",
+        "准确输入品牌名、标点和完整描述句"
+      ],
+      "new_sentence_ids": [
+        "car-logo-u01-s01",
+        "car-logo-u01-s02",
+        "car-logo-u01-s03",
+        "car-logo-u01-s04",
+        "car-logo-u01-s05"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "reinforcement",
+          "sentence_ids": [
+            "car-logo-u01-s01",
+            "car-logo-u01-s02",
+            "car-logo-u01-s03",
+            "car-logo-u01-s04",
+            "car-logo-u01-s05"
+          ],
+          "required": true
+        },
+
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "car-logo-u01-s01",
+            "car-logo-u01-s02",
+            "car-logo-u01-s03",
+            "car-logo-u01-s04",
+            "car-logo-u01-s05"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.1",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "car-logo-u01-d02",
+      "stable_key": "global-car-logos-u01-day-02",
+      "unit_id": "car-logo-u01",
+      "day": 2,
+      "order": 2,
+      "title": "学习第 2 组品牌与介绍",
+      "lesson_type": "new_content",
+      "description": "先读可见的英文品牌名，再跟打一条简短介绍；车标同时作为视觉记忆线索。",
+      "learning_goals": [
+        "学习 5 个汽车品牌名和英文介绍",
+        "准确输入品牌名、标点和完整描述句"
+      ],
+      "new_sentence_ids": [
+        "car-logo-u01-s06",
+        "car-logo-u01-s07",
+        "car-logo-u01-s08",
+        "car-logo-u01-s09",
+        "car-logo-u01-s10"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "car-logo-u01-s06",
+            "car-logo-u01-s07",
+            "car-logo-u01-s08",
+            "car-logo-u01-s09",
+            "car-logo-u01-s10"
+          ],
+          "required": true
+        },
+
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "car-logo-u01-s06",
+            "car-logo-u01-s07",
+            "car-logo-u01-s08",
+            "car-logo-u01-s09",
+            "car-logo-u01-s10"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.1",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "car-logo-u01-d03",
+      "stable_key": "global-car-logos-u01-day-03",
+      "unit_id": "car-logo-u01",
+      "day": 3,
+      "order": 3,
+      "title": "学习第 3 组品牌与介绍",
+      "lesson_type": "new_content",
+      "description": "先读可见的英文品牌名，再跟打一条简短介绍；车标同时作为视觉记忆线索。",
+      "learning_goals": [
+        "学习 5 个汽车品牌名和英文介绍",
+        "准确输入品牌名、标点和完整描述句"
+      ],
+      "new_sentence_ids": [
+        "car-logo-u01-s11",
+        "car-logo-u01-s12",
+        "car-logo-u01-s13",
+        "car-logo-u01-s14",
+        "car-logo-u01-s15"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "car-logo-u01-s11",
+            "car-logo-u01-s12",
+            "car-logo-u01-s13",
+            "car-logo-u01-s14",
+            "car-logo-u01-s15"
+          ],
+          "required": true
+        },
+
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "car-logo-u01-s11",
+            "car-logo-u01-s12",
+            "car-logo-u01-s13",
+            "car-logo-u01-s14",
+            "car-logo-u01-s15"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.1",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "car-logo-u01-d04",
+      "stable_key": "global-car-logos-u01-day-04",
+      "unit_id": "car-logo-u01",
+      "day": 4,
+      "order": 4,
+      "title": "学习第 4 组品牌与介绍",
+      "lesson_type": "new_content",
+      "description": "先读可见的英文品牌名，再跟打一条简短介绍；车标同时作为视觉记忆线索。",
+      "learning_goals": [
+        "学习 5 个汽车品牌名和英文介绍",
+        "准确输入品牌名、标点和完整描述句"
+      ],
+      "new_sentence_ids": [
+        "car-logo-u01-s16",
+        "car-logo-u01-s17",
+        "car-logo-u01-s18",
+        "car-logo-u01-s19",
+        "car-logo-u01-s20"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "car-logo-u01-s16",
+            "car-logo-u01-s17",
+            "car-logo-u01-s18",
+            "car-logo-u01-s19",
+            "car-logo-u01-s20"
+          ],
+          "required": true
+        },
+
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "car-logo-u01-s16",
+            "car-logo-u01-s17",
+            "car-logo-u01-s18",
+            "car-logo-u01-s19",
+            "car-logo-u01-s20"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.1",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "car-logo-u01-d05",
+      "stable_key": "global-car-logos-u01-day-05",
+      "unit_id": "car-logo-u01",
+      "day": 5,
+      "order": 5,
+      "title": "易错品牌与介绍复习",
+      "lesson_type": "mixed_practice",
+      "description": "结合车标复习易混品牌名，并再次跟打对应的简短介绍。",
+      "learning_goals": [
+        "复习易混或易错的英文品牌名",
+        "巩固品牌拼写和介绍句中的高频表达"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "car-logo-u01-s02",
+        "car-logo-u01-s04",
+        "car-logo-u01-s05",
+        "car-logo-u01-s06",
+        "car-logo-u01-s08",
+        "car-logo-u01-s09",
+        "car-logo-u01-s11",
+        "car-logo-u01-s12",
+        "car-logo-u01-s13",
+        "car-logo-u01-s15"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "car-logo-u01-s02",
+            "car-logo-u01-s04",
+            "car-logo-u01-s05",
+            "car-logo-u01-s06",
+            "car-logo-u01-s08",
+            "car-logo-u01-s09",
+            "car-logo-u01-s11",
+            "car-logo-u01-s12",
+            "car-logo-u01-s13",
+            "car-logo-u01-s15"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "car-logo-u01-s02",
+            "car-logo-u01-s04",
+            "car-logo-u01-s05",
+            "car-logo-u01-s06",
+            "car-logo-u01-s08",
+            "car-logo-u01-s09",
+            "car-logo-u01-s11",
+            "car-logo-u01-s12",
+            "car-logo-u01-s13",
+            "car-logo-u01-s15"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.1",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "car-logo-u01-d06",
+      "stable_key": "global-car-logos-u01-day-06",
+      "unit_id": "car-logo-u01",
+      "day": 6,
+      "order": 6,
+      "title": "品牌介绍巩固",
+      "lesson_type": "review",
+      "description": "通过重复输入巩固品牌名、介绍句和高频汽车英语。",
+      "learning_goals": [
+        "熟练输入品牌名与完整介绍句",
+        "巩固品牌名和高频汽车英语"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "car-logo-u01-s01",
+        "car-logo-u01-s02",
+        "car-logo-u01-s06",
+        "car-logo-u01-s09",
+        "car-logo-u01-s10",
+        "car-logo-u01-s11",
+        "car-logo-u01-s13",
+        "car-logo-u01-s14",
+        "car-logo-u01-s15",
+        "car-logo-u01-s20"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "car-logo-u01-s01",
+            "car-logo-u01-s02",
+            "car-logo-u01-s06",
+            "car-logo-u01-s09",
+            "car-logo-u01-s10",
+            "car-logo-u01-s11",
+            "car-logo-u01-s13",
+            "car-logo-u01-s14",
+            "car-logo-u01-s15",
+            "car-logo-u01-s20"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.1",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "car-logo-u01-d07",
+      "stable_key": "global-car-logos-u01-day-07",
+      "unit_id": "car-logo-u01",
+      "day": 7,
+      "order": 7,
+      "title": "全单元品牌与介绍综合复习",
+      "lesson_type": "review",
+      "description": "重看本单元全部品牌名、简短介绍与车标，完成一轮准确跟打。",
+      "learning_goals": [
+        "复习本单元 20 个品牌名与英文介绍",
+        "检查品牌拼写、标点和描述句完整性"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "car-logo-u01-s01",
+        "car-logo-u01-s02",
+        "car-logo-u01-s03",
+        "car-logo-u01-s04",
+        "car-logo-u01-s05",
+        "car-logo-u01-s06",
+        "car-logo-u01-s07",
+        "car-logo-u01-s08",
+        "car-logo-u01-s09",
+        "car-logo-u01-s10",
+        "car-logo-u01-s11",
+        "car-logo-u01-s12",
+        "car-logo-u01-s13",
+        "car-logo-u01-s14",
+        "car-logo-u01-s15",
+        "car-logo-u01-s16",
+        "car-logo-u01-s17",
+        "car-logo-u01-s18",
+        "car-logo-u01-s19",
+        "car-logo-u01-s20"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "car-logo-u01-s01",
+            "car-logo-u01-s02",
+            "car-logo-u01-s03",
+            "car-logo-u01-s04",
+            "car-logo-u01-s05",
+            "car-logo-u01-s06",
+            "car-logo-u01-s07",
+            "car-logo-u01-s08",
+            "car-logo-u01-s09",
+            "car-logo-u01-s10",
+            "car-logo-u01-s11",
+            "car-logo-u01-s12",
+            "car-logo-u01-s13",
+            "car-logo-u01-s14",
+            "car-logo-u01-s15",
+            "car-logo-u01-s16",
+            "car-logo-u01-s17",
+            "car-logo-u01-s18",
+            "car-logo-u01-s19",
+            "car-logo-u01-s20"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "car-logo-u01-s01",
+            "car-logo-u01-s02",
+            "car-logo-u01-s03",
+            "car-logo-u01-s04",
+            "car-logo-u01-s05",
+            "car-logo-u01-s06",
+            "car-logo-u01-s07",
+            "car-logo-u01-s08",
+            "car-logo-u01-s09",
+            "car-logo-u01-s10",
+            "car-logo-u01-s11",
+            "car-logo-u01-s12",
+            "car-logo-u01-s13",
+            "car-logo-u01-s14",
+            "car-logo-u01-s15",
+            "car-logo-u01-s16",
+            "car-logo-u01-s17",
+            "car-logo-u01-s18",
+            "car-logo-u01-s19",
+            "car-logo-u01-s20"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.1",
+      "status": "draft"
+    }
+  ],
+  "sentences": [
+    {
+      "sentence_id": "car-logo-u01-s01",
+      "stable_key": "global-car-logos-brand-toyota",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d01",
+      "day": 1,
+      "order": 1,
+      "english": "Toyota. This Japanese brand makes cars, SUVs, and hybrid vehicles.",
+      "chinese": "丰田。这个日本品牌生产轿车、SUV 和混合动力汽车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Toyata",
+          "explanation_zh": "品牌名应写作 Toyota；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Toyota"
+        ],
+        "pause_after": [
+          "Toyota"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/toyota.svg",
+        "alt_text": "Toyota 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.toyota.com/brandguidelines/logo/",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s02",
+      "stable_key": "global-car-logos-brand-volkswagen",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d01",
+      "day": 1,
+      "order": 2,
+      "english": "Volkswagen. This German brand produces cars, SUVs, and electric vehicles.",
+      "chinese": "大众。这个德国品牌生产轿车、SUV 和电动汽车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Volkswagon",
+          "explanation_zh": "品牌名应写作 Volkswagen；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Volkswagen"
+        ],
+        "pause_after": [
+          "Volkswagen"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/volkswagen.svg",
+        "alt_text": "Volkswagen 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.vw.com",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s03",
+      "stable_key": "global-car-logos-brand-ford",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d01",
+      "day": 1,
+      "order": 3,
+      "english": "Ford. This American brand makes cars, pickup trucks, and SUVs.",
+      "chinese": "福特。这个美国品牌生产轿车、皮卡和 SUV。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Frod",
+          "explanation_zh": "品牌名应写作 Ford；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Ford"
+        ],
+        "pause_after": [
+          "Ford"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/ford.svg",
+        "alt_text": "Ford 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://secure.ford.com/brochures/",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s04",
+      "stable_key": "global-car-logos-brand-honda",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d01",
+      "day": 1,
+      "order": 4,
+      "english": "Honda. This Japanese company makes both cars and motorcycles.",
+      "chinese": "本田。这家日本公司同时生产汽车和摩托车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Hunda",
+          "explanation_zh": "品牌名应写作 Honda；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Honda"
+        ],
+        "pause_after": [
+          "Honda"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/honda.svg",
+        "alt_text": "Honda 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.honda.ie",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s05",
+      "stable_key": "global-car-logos-brand-bmw",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d01",
+      "day": 1,
+      "order": 5,
+      "english": "BMW. This German brand makes premium cars and motorcycles.",
+      "chinese": "宝马。这个德国品牌生产高端汽车和摩托车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Bmw",
+          "explanation_zh": "品牌名应写作 BMW；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "BMW"
+        ],
+        "pause_after": [
+          "BMW"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/bmw.svg",
+        "alt_text": "BMW 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://bmw.com",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s06",
+      "stable_key": "global-car-logos-brand-mercedesbenz",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d02",
+      "day": 2,
+      "order": 1,
+      "english": "Mercedes-Benz. This German brand is known for luxury cars.",
+      "chinese": "梅赛德斯-奔驰。这个德国品牌以豪华汽车闻名。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Mercedes Benz",
+          "explanation_zh": "品牌名应写作 Mercedes-Benz；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Mercedes-Benz"
+        ],
+        "pause_after": [
+          "Mercedes-Benz"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/mercedesbenz.svg",
+        "alt_text": "Mercedes-Benz 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_free_logo.svg",
+        "rights_note": "Wikimedia Commons marks this simple text/logo as public domain for copyright-threshold purposes; trademark rights may still apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s07",
+      "stable_key": "global-car-logos-brand-audi",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d02",
+      "day": 2,
+      "order": 2,
+      "english": "Audi. The four rings identify this German premium car brand.",
+      "chinese": "奥迪。四环标志代表这个德国高端汽车品牌。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Audie",
+          "explanation_zh": "品牌名应写作 Audi；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Audi"
+        ],
+        "pause_after": [
+          "Audi"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/audi.svg",
+        "alt_text": "Audi 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.audi.com/ci/en/intro/basics/rings.html",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s08",
+      "stable_key": "global-car-logos-brand-tesla",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d02",
+      "day": 2,
+      "order": 3,
+      "english": "Tesla. This American company focuses on electric vehicles.",
+      "chinese": "特斯拉。这家美国公司专注于电动汽车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Tesler",
+          "explanation_zh": "品牌名应写作 Tesla；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Tesla"
+        ],
+        "pause_after": [
+          "Tesla"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/tesla.svg",
+        "alt_text": "Tesla 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.tesla.com/tesla-gallery",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s09",
+      "stable_key": "global-car-logos-brand-nissan",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d02",
+      "day": 2,
+      "order": 4,
+      "english": "Nissan. This Japanese brand makes cars, SUVs, and electric vehicles.",
+      "chinese": "日产。这个日本品牌生产轿车、SUV 和电动汽车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Nisan",
+          "explanation_zh": "品牌名应写作 Nissan；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Nissan"
+        ],
+        "pause_after": [
+          "Nissan"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/nissan.svg",
+        "alt_text": "Nissan 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.nissan.ie",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s10",
+      "stable_key": "global-car-logos-brand-hyundai",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d02",
+      "day": 2,
+      "order": 5,
+      "english": "Hyundai. This South Korean brand offers cars, SUVs, and electric vehicles.",
+      "chinese": "现代。这个韩国品牌提供轿车、SUV 和电动汽车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Hyndai",
+          "explanation_zh": "品牌名应写作 Hyundai；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Hyundai"
+        ],
+        "pause_after": [
+          "Hyundai"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/hyundai.svg",
+        "alt_text": "Hyundai 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.hyundai.com",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s11",
+      "stable_key": "global-car-logos-brand-kia",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d03",
+      "day": 3,
+      "order": 1,
+      "english": "Kia. This South Korean brand makes cars for markets around the world.",
+      "chinese": "起亚。这个韩国品牌为全球多个市场生产汽车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "KIA",
+          "explanation_zh": "品牌名应写作 Kia；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Kia"
+        ],
+        "pause_after": [
+          "Kia"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/kia.svg",
+        "alt_text": "Kia 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.kia.com",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s12",
+      "stable_key": "global-car-logos-brand-chevrolet",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d03",
+      "day": 3,
+      "order": 2,
+      "english": "Chevrolet. This American brand offers cars, pickup trucks, and SUVs.",
+      "chinese": "雪佛兰。这个美国品牌提供轿车、皮卡和 SUV。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Cheverolet",
+          "explanation_zh": "品牌名应写作 Chevrolet；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Chevrolet"
+        ],
+        "pause_after": [
+          "Chevrolet"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/chevrolet.svg",
+        "alt_text": "Chevrolet 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.chevrolet.com/content/dam/chevrolet/na/us/english/index/shopping-tools/download-catalog/02-pdf/2019-chevrolet-corvette-catalog.pdf",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s13",
+      "stable_key": "global-car-logos-brand-byd",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d03",
+      "day": 3,
+      "order": 3,
+      "english": "BYD. This Chinese brand makes electric and plug-in hybrid vehicles.",
+      "chinese": "比亚迪。这个中国品牌生产纯电动和插电式混合动力汽车。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Byd",
+          "explanation_zh": "品牌名应写作 BYD；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "BYD"
+        ],
+        "pause_after": [
+          "BYD"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/byd.svg",
+        "alt_text": "BYD 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://commons.wikimedia.org/wiki/File:BYD_Auto_2022_logo.svg",
+        "rights_note": "Wikimedia Commons marks this simple text/logo as public domain for copyright-threshold purposes; trademark rights may still apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s14",
+      "stable_key": "global-car-logos-brand-porsche",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d03",
+      "day": 3,
+      "order": 4,
+      "english": "Porsche. This German brand makes sports cars, SUVs, and electric models.",
+      "chinese": "保时捷。这个德国品牌生产跑车、SUV 和电动车型。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Porshe",
+          "explanation_zh": "品牌名应写作 Porsche；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Porsche"
+        ],
+        "pause_after": [
+          "Porsche"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/porsche.svg",
+        "alt_text": "Porsche 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.porsche.com",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s15",
+      "stable_key": "global-car-logos-brand-ferrari",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d03",
+      "day": 3,
+      "order": 5,
+      "english": "Ferrari. This Italian brand is famous for racing and sports cars.",
+      "chinese": "法拉利。这个意大利品牌以赛车和跑车闻名。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Ferarri",
+          "explanation_zh": "品牌名应写作 Ferrari；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Ferrari"
+        ],
+        "pause_after": [
+          "Ferrari"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/ferrari.svg",
+        "alt_text": "Ferrari 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.ferrari.com",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s16",
+      "stable_key": "global-car-logos-brand-lamborghini",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d04",
+      "day": 4,
+      "order": 1,
+      "english": "Lamborghini. This Italian brand makes high-performance sports cars and SUVs.",
+      "chinese": "兰博基尼。这个意大利品牌生产高性能跑车和 SUV。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Lamborgini",
+          "explanation_zh": "品牌名应写作 Lamborghini；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Lamborghini"
+        ],
+        "pause_after": [
+          "Lamborghini"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/lamborghini.svg",
+        "alt_text": "Lamborghini 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.lamborghini.com",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s17",
+      "stable_key": "global-car-logos-brand-volvo",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d04",
+      "day": 4,
+      "order": 2,
+      "english": "Volvo. This Swedish brand has a long history of safety innovation.",
+      "chinese": "沃尔沃。这个瑞典品牌拥有悠久的汽车安全创新历史。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Volovo",
+          "explanation_zh": "品牌名应写作 Volvo；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Volvo"
+        ],
+        "pause_after": [
+          "Volvo"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/volvo.svg",
+        "alt_text": "Volvo 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.media.volvocars.com/global/en-gb/logos",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s18",
+      "stable_key": "global-car-logos-brand-mazda",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d04",
+      "day": 4,
+      "order": 3,
+      "english": "Mazda. This Japanese carmaker has its headquarters in Hiroshima.",
+      "chinese": "马自达。这家日本汽车制造商的总部位于广岛。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Masda",
+          "explanation_zh": "品牌名应写作 Mazda；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Mazda"
+        ],
+        "pause_after": [
+          "Mazda"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/mazda.svg",
+        "alt_text": "Mazda 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://www.mazda.com/en/about/profile/library/",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s19",
+      "stable_key": "global-car-logos-brand-subaru",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d04",
+      "day": 4,
+      "order": 4,
+      "english": "Subaru. Most Subaru models use an all-wheel-drive system.",
+      "chinese": "斯巴鲁。大多数斯巴鲁车型使用全轮驱动系统。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Suburu",
+          "explanation_zh": "品牌名应写作 Subaru；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Subaru"
+        ],
+        "pause_after": [
+          "Subaru"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/subaru.svg",
+        "alt_text": "Subaru 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Subaru_logo.svg",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    },
+    {
+      "sentence_id": "car-logo-u01-s20",
+      "stable_key": "global-car-logos-brand-jeep",
+      "unit_id": "car-logo-u01",
+      "lesson_id": "car-logo-u01-d04",
+      "day": 4,
+      "order": 5,
+      "english": "Jeep. This American brand is closely linked with SUVs and off-road driving.",
+      "chinese": "吉普。这个美国品牌与 SUV 和越野驾驶紧密相关。",
+      "scene": "illustrated-brand-profile",
+      "difficulty": "beginner",
+      "core_words": [],
+      "core_patterns": [
+        "Brand name. This [nationality] brand...",
+        "Brand name. This company..."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "JEEP",
+          "explanation_zh": "品牌名应写作 Jeep；随后描述句也要完整输入。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "listening",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": {
+        "stress_words": [
+          "Jeep"
+        ],
+        "pause_after": [
+          "Jeep"
+        ],
+        "note_zh": "先清楚说出品牌名，短暂停顿后再聆听描述句。"
+      },
+      "review_group": "car-logo-u01",
+      "content_version": "0.1.1",
+      "status": "draft",
+      "visual_prompt": {
+        "prompt_type": "illustrated_word",
+        "asset_path": "assets/logos/jeep.svg",
+        "alt_text": "Jeep 汽车品牌车标",
+        "instruction_zh": "先读品牌名，再跟打一条简短介绍；车标用于辅助记忆。",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Jeep_logo.svg",
+        "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+        "hide_answer": false
+      }
+    }
+  ],
+  "status": "draft"
+}

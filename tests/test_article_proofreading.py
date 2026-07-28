@@ -113,37 +113,37 @@ def test_applying_proofreading_updates_article_transactionally_and_keeps_history
         )
 
         assert updated.full_text == "This article is correct.\n\nAnother sentence follows."
+        updated_sections = context.article_library.get_sections(article.id)
+        assert len(updated_sections) == 1
+        assert updated_sections[0].text == updated.full_text
         assert updated.current_character_index == 0
         assert updated.completed_section_count == 0
         assert context.database.connect().execute("SELECT is_active FROM article_sections WHERE id = ?", (old_section_id,)).fetchone()[0] == 0
         assert context.database.connect().execute("SELECT COUNT(*) FROM practice_sessions").fetchone()[0] == session_count
-        assert context.article_word_index_service.list_words(article.id)
+        assert context.article_word_index_service.list_words(article.id) == []
     finally:
         context.database.close()
 
 
-def test_applying_proofreading_rolls_back_if_word_index_update_fails(tmp_path: Path, monkeypatch) -> None:
+def test_applying_proofreading_does_not_trigger_word_index_refresh(tmp_path: Path, monkeypatch) -> None:
     context = build_app_context(data_dir=tmp_path / "data")
     try:
         source = tmp_path / "rollback.txt"
         source.write_text("Original article text.", encoding="utf-8")
         article = context.article_library.import_txt_file(source, 500).article
-        original_sections = context.article_library.get_sections(article.id)
+        calls = []
 
         def fail(*_args, **_kwargs):
+            calls.append(True)
             raise RuntimeError("index failed")
 
         monkeypatch.setattr(context.article_word_index_service, "replace_in_transaction", fail)
-        try:
-            context.article_library.replace_article_content(article.id, "Corrected article text.", 500)
-        except RuntimeError as exc:
-            assert str(exc) == "index failed"
-        else:
-            raise AssertionError("expected transaction failure")
-
-        unchanged = context.article_library.get_article(article.id)
-        assert unchanged.full_text == "Original article text."
-        assert [item.id for item in context.article_library.get_sections(article.id)] == [item.id for item in original_sections]
+        updated = context.article_library.replace_article_content(
+            article.id, "Corrected article text.", 500
+        )
+        assert updated.full_text == "Corrected article text."
+        assert calls == []
+        assert context.article_word_index_service.list_words(article.id) == []
     finally:
         context.database.close()
 

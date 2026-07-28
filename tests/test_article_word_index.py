@@ -11,12 +11,17 @@ from english_typing_trainer.services.word_normalization import WordNormalization
 from english_typing_trainer.services.article_word_index import ArticleWordIndexService
 
 
-def test_new_article_is_indexed_with_offsets_duplicates_and_no_external_calls(tmp_path:Path,monkeypatch):
+def test_new_article_is_not_indexed_until_explicit_rebuild(tmp_path:Path):
     context=build_app_context(data_dir=tmp_path/"data")
     try:
         text="English learning isn't hard. I'm learning with a well-known teacher. learning 123 https://bad.example/path user@example.com"
         source=tmp_path/"article.txt"; source.write_text(text,encoding="utf-8")
         article=context.article_library.import_txt_file(source,500).article
+        assert context.database.connect().execute(
+            "SELECT COUNT(*) FROM article_word_occurrences WHERE article_id=?",
+            (article.id,),
+        ).fetchone()[0] == 0
+        context.article_word_index_service.rebuild(article.id)
         rows=context.database.connect().execute("SELECT * FROM article_word_occurrences WHERE article_id=? ORDER BY occurrence_index",(article.id,)).fetchall()
         words=[row["normalized_word"] for row in rows]
         assert "english" in words and "isn't" in words and "i'm" in words and "well-known" in words
@@ -44,7 +49,8 @@ def test_article_word_aggregation_scopes_and_mastered_filter(tmp_path:Path):
     try:
         article_ids=[]
         for index,text in enumerate(("Run run learn.","Learn English.")):
-            path=tmp_path/f"{index}.txt"; path.write_text(text,encoding="utf-8"); article_ids.append(context.article_library.import_txt_file(path,500).article.id)
+            path=tmp_path/f"{index}.txt"; path.write_text(text,encoding="utf-8"); article=context.article_library.import_txt_file(path,500).article
+            article_ids.append(article.id); context.article_word_index_service.rebuild(article.id)
         rows=context.article_word_index_service.list_words(article_ids[0])
         assert {row["normalized_word"]:row["occurrence_count"] for row in rows}["run"]==2
         all_rows=context.article_word_index_service.list_words(); learn=next(row for row in all_rows if row["normalized_word"]=="learn")

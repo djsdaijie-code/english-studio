@@ -7,6 +7,7 @@ from pathlib import Path
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.database.repositories import ArticleRepository
 from english_typing_trainer.models.article import Article
+from english_typing_trainer.models.section import ArticleSection
 from english_typing_trainer.services.sectioning import SectioningService
 from english_typing_trainer.services.text_importer import normalize_text, read_text_file
 
@@ -29,6 +30,7 @@ class ArticleLibraryService:
         return self._repository.list_articles(search=search)
 
     def import_txt_file(self, file_path: str | Path, target_characters: int) -> ArticleImportResult:
+        del target_characters  # Retained in the public signature for existing callers.
         imported = read_text_file(file_path)
         if not imported.content.strip():
             return ArticleImportResult("error", None, "所选 TXT 在规范化后为空，无法导入。")
@@ -44,7 +46,7 @@ class ArticleLibraryService:
             restored = self._repository.get_article(existing.id, include_deleted=False)
             return ArticleImportResult("restored", restored, "这篇文章已从已删除列表中恢复。")
 
-        sections = self._sectioning.split_into_sections(imported.content, target_characters)
+        sections = self._single_section(imported.content)
         article = Article(
             title=imported.title,
             original_filename=imported.original_filename,
@@ -58,8 +60,6 @@ class ArticleLibraryService:
 
         with self._database.transaction() as connection:
             created = self._repository.insert_article(connection, article, sections)
-        if self._word_index and created.id is not None:
-            self._word_index.rebuild(created.id)
 
         return ArticleImportResult("imported", created, "文章导入成功。")
 
@@ -92,6 +92,7 @@ class ArticleLibraryService:
         corrected_text: str,
         target_characters: int,
     ) -> Article:
+        del target_characters  # Proofreading updates also preserve one complete section.
         article = self._repository.get_article(article_id, include_deleted=True)
         if article is None:
             raise ValueError("未找到文章。")
@@ -105,8 +106,7 @@ class ArticleLibraryService:
         if content == article.full_text:
             return article
 
-        sections = self._sectioning.split_into_sections(content, target_characters)
-        occurrences = self._word_index.extract(content) if self._word_index else []
+        sections = self._single_section(content)
         with self._database.transaction() as connection:
             self._repository.update_article_content(
                 connection,
@@ -119,8 +119,6 @@ class ArticleLibraryService:
             self._repository.deactivate_active_sections(connection, article_id)
             self._repository.insert_sections(connection, article_id, sections)
             self._repository.reset_progress(connection, article_id)
-            if self._word_index:
-                self._word_index.replace_in_transaction(connection, article_id, occurrences)
         updated = self._repository.get_article(article_id, include_deleted=True)
         if updated is None:
             raise ValueError("应用建议后无法重新载入文章。")
@@ -131,3 +129,14 @@ class ArticleLibraryService:
 
     def get_sections(self, article_id: int):
         return self._repository.get_active_sections(article_id)
+
+    @staticmethod
+    def _single_section(text: str) -> list[ArticleSection]:
+        return [
+            ArticleSection(
+                section_index=0,
+                text=text,
+                start_offset=0,
+                end_offset=len(text),
+            )
+        ]

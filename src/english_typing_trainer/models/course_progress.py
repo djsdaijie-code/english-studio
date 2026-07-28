@@ -7,7 +7,7 @@ from typing import Literal
 
 EnrollmentStatus = Literal["active", "paused", "completed", "archived"]
 ItemProgressStatus = Literal["not_started", "in_progress", "completed", "skipped"]
-CourseActivityType = Literal["typing", "dictation", "speaking", "vocabulary", "review"]
+CourseActivityType = Literal["typing", "speaking", "vocabulary", "review"]
 CourseActivityStatus = Literal[
     "not_started", "in_progress", "completed", "skipped", "failed"
 ]

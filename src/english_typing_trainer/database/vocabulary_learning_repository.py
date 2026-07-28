@@ -137,7 +137,13 @@ class VocabularyLearningRepository:
     def mark_ai_failed(self, connection: sqlite3.Connection, context_id: int) -> None:
         connection.execute("UPDATE vocabulary_contexts SET ai_status='failed', updated_at=? WHERE id=?", (now_iso(), context_id))
 
-    def list_entries(self, *, search: str = "", status: str = "all") -> list[sqlite3.Row]:
+    def list_entries(
+        self,
+        *,
+        search: str = "",
+        status: str = "all",
+        article_id: int | None = None,
+    ) -> list[sqlite3.Row]:
         sql = """SELECT e.*, s.status, s.typing_target_count, s.typing_completed_count,
                  s.last_practiced_at, s.next_review_at,
                  COALESCE((SELECT contextual_meaning_zh FROM vocabulary_contexts c
@@ -152,6 +158,12 @@ class VocabularyLearningRepository:
             params += [f"%{search.strip()}%", f"%{search.strip()}%"]
         if status != "all":
             sql += " AND s.status=?"; params.append(status)
+        if article_id is not None:
+            sql += (
+                " AND EXISTS (SELECT 1 FROM vocabulary_contexts scoped_context "
+                "WHERE scoped_context.vocabulary_entry_id=e.id AND scoped_context.article_id=?)"
+            )
+            params.append(article_id)
         sql += " ORDER BY s.next_review_at IS NULL, s.next_review_at, e.updated_at DESC"
         return self._connection_provider().execute(sql, params).fetchall()
 

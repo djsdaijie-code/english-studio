@@ -66,8 +66,6 @@ from english_typing_trainer.ui.theme import apply_theme
 from english_typing_trainer.ui.vocabulary_page import VocabularyPage
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
 from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
-from english_typing_trainer.ui.dictation_page import DictationPage
-from english_typing_trainer.ui.pronunciation_page import PronunciationPage
 from english_typing_trainer.ui.course_page import CoursePage
 from english_typing_trainer.ui.course_vocabulary_dialog import CourseVocabularyDialog
 from english_typing_trainer.ui.home_page import HomePage
@@ -76,21 +74,21 @@ from english_typing_trainer.ui.vocabulary_tasks import VocabularyTask
 from english_typing_trainer.services.dictionary_provider import FreeDictionaryProvider
 from english_typing_trainer.services.word_explanation_provider import DeepSeekWordExplanationProvider
 from english_typing_trainer.models.vocabulary import VocabularyAttempt
-from english_typing_trainer.models.pronunciation import PronunciationRequest
-from english_typing_trainer.models.pronunciation import PronunciationResult
 from english_typing_trainer.models.learning_content import (
     CourseCapabilityItem,
     LearningContentRef,
 )
-from english_typing_trainer.services.pronunciation_provider import AzurePronunciationAssessmentProvider
 from english_typing_trainer.services.course_learning import CourseLearningSession
 from english_typing_trainer.services.sentence_learning import SentenceLearningState
+from english_typing_trainer.services.sentence_segmentation import SentenceSegmentationService
 from english_typing_trainer.services.article_proofreading import (
     ArticleProofreadingError,
     DeepSeekArticleProofreadingProvider,
 )
 from english_typing_trainer.ui.article_proofreading_dialog import ArticleProofreadingDialog
 from english_typing_trainer.ui.article_proofreading_tasks import ArticleProofreadingWorker
+from english_typing_trainer.ui.vocabulary_quick_access import VocabularyQuickAccess
+from english_typing_trainer.ui.today_learning_time import TodayLearningTimeBar
 
 
 class MetricCard(QFrame):
@@ -169,7 +167,7 @@ class SettingsPage(QWidget):
         self.target_accuracy_spin.setRange(50.0, 100.0)
         self.target_accuracy_spin.setDecimals(1)
         self.target_accuracy_spin.setSingleStep(0.5)
-        practice_form.addRow("默认分段字数", self.section_target_combo)
+        practice_form.addRow("手动分段字数", self.section_target_combo)
         practice_form.addRow("输入规则", self.case_sensitive_checkbox)
         practice_form.addRow("实时统计", self.live_stats_checkbox)
         practice_form.addRow("目标速度", self.target_wpm_spin)
@@ -269,7 +267,6 @@ class MainWindow(QMainWindow):
         self.current_course_session: CourseLearningSession | None = None
         self.current_course_capability_item: CourseCapabilityItem | None = None
         self.current_course_return: tuple[str, str] | None = None
-        self.course_review_queue_active = False
         self.current_practice_saved = True
         self.preview_special_material: PracticeMaterial | None = None
         self._logger = logging.getLogger(__name__)
@@ -294,7 +291,9 @@ class MainWindow(QMainWindow):
         self.sentence_practice_view.translate_article_requested.connect(self._translate_current_article)
         self.sentence_practice_view.speech_requested.connect(self._request_speech)
         self.sentence_practice_view.speech_sentence_changed.connect(self._speech_sentence_changed)
-        self.sentence_practice_view.content_preparation_requested.connect(self._prepare_sentence_content)
+        self.sentence_practice_view.content_preparation_requested.connect(
+            self._prepare_sentence_content
+        )
         self.sentence_practice_view.word_collection_requested.connect(self._collect_selected_word)
         self.sentence_practice_view.learning_activity.connect(self._track_learning_activity)
         self._sentence_attempts = SentenceAttemptRepository(self.context.database.connect)
@@ -328,8 +327,6 @@ class MainWindow(QMainWindow):
         self.settings_page.delete_tts_key_button.clicked.connect(self._delete_tts_key)
         self.settings_page.test_tts_button.clicked.connect(self._test_tts_connection)
         self.settings_page.clear_tts_cache_button.clicked.connect(self._clear_tts_cache)
-        self.settings_page.save_pronunciation_key_button.clicked.connect(self._save_pronunciation_key)
-        self.settings_page.delete_pronunciation_key_button.clicked.connect(self._delete_pronunciation_key)
         self.history_page = HistoryPage()
         self.history_page.view_detail_requested.connect(self._show_session_detail)
         self.history_page.delete_session_requested.connect(self._delete_session)
@@ -340,7 +337,6 @@ class MainWindow(QMainWindow):
         )
         self.course_page.lesson_start_requested.connect(self._start_course_lesson)
         self.course_page.capability_requested.connect(self._start_course_capability)
-        self.course_page.due_review_requested.connect(self._start_course_due_review)
         self.special_practice_page = SpecialPracticePage()
         self.special_practice_page.generate_requested.connect(self._generate_special_preview)
         self.special_practice_page.start_preview_requested.connect(self._start_preview_special_practice)
@@ -356,18 +352,20 @@ class MainWindow(QMainWindow):
         self.vocabulary_page.review_requested.connect(self._open_word_learning)
         self.vocabulary_page.open_learning_requested.connect(self._open_word_learning)
         self.vocabulary_page.play_requested.connect(self._play_vocabulary_word)
-        self.vocabulary_page.pronunciation_requested.connect(self._start_pronunciation)
         self.vocabulary_page.delete_requested.connect(self._delete_vocabulary_entry)
         self.vocabulary_page.row_learning_requested.connect(self._start_vocabulary_row)
         self.vocabulary_page.scope_changed.connect(lambda _scope:self._refresh_vocabulary_page())
         self.vocabulary_page.today_review_requested.connect(self._start_fsrs_review)
-        self.vocabulary_page.dictation_requested.connect(self._start_dictation)
         self.current_vocabulary_article_id = None
         self.word_learning_page = WordLearningPage()
         self.word_learning_page.back_requested.connect(self._leave_word_learning)
         self.word_learning_page.attempt_completed.connect(self._record_vocabulary_attempt)
         self.word_learning_page.play_word_requested.connect(self._play_word_from_learning)
-        self.word_learning_page.play_sentence_requested.connect(lambda text:self._request_speech(text,self.settings.tts_speed,self.practice_view.speech_controls) if text else None)
+        self.word_learning_page.play_sentence_requested.connect(
+            lambda text: self._request_speech(
+                text, self.settings.tts_speed, self.practice_view.speech_controls
+            ) if text else None
+        )
         self.word_learning_page.current_entry_changed.connect(self._ensure_current_word_enrichment)
         self.word_learning_page.context_changed.connect(self._ensure_current_context_enrichment)
         self.word_learning_page.retry_enrichment_requested.connect(self._retry_current_word_enrichment)
@@ -377,31 +375,7 @@ class MainWindow(QMainWindow):
         self.fsrs_review_page.rating_requested.connect(self._rate_fsrs_card)
         self.fsrs_review_page.defer_requested.connect(self._defer_fsrs_card)
         self.fsrs_review_page.learning_activity.connect(self._track_fsrs_learning_activity)
-        self.fsrs_review_page.dictation_requested.connect(self._start_dictation)
-        self.dictation_page = DictationPage(self.context.dictation_service)
-        self.dictation_page.back_requested.connect(self._leave_dictation)
-        self.dictation_page.audio_requested.connect(self._play_dictation_audio)
-        self.dictation_page.attempt_completed.connect(self._save_dictation_attempt)
-        self.dictation_page.rating_requested.connect(self._rate_dictation_card)
-        self.dictation_page.learning_activity.connect(self._track_dictation_learning_activity)
-        self.dictation_page.course_audio_requested.connect(self._play_course_dictation_audio)
-        self.dictation_page.course_attempt_completed.connect(self._save_course_dictation_attempt)
-        self.dictation_page.course_rating_requested.connect(self._rate_course_dictation_card)
-        self.dictation_page.course_review_rating_requested.connect(self._rate_course_review_card)
-        self.pronunciation_page = PronunciationPage()
-        self.pronunciation_page.back_requested.connect(self._leave_pronunciation)
-        self.pronunciation_page.standard_audio_requested.connect(self._play_pronunciation_reference)
-        self.pronunciation_page.record_requested.connect(self._start_pronunciation_recording)
-        self.pronunciation_page.stop_requested.connect(self._stop_pronunciation_recording)
-        self.pronunciation_page.cancel_requested.connect(self._cancel_pronunciation_recording)
-        self.pronunciation_page.playback_requested.connect(self._play_pronunciation_recording)
-        self.pronunciation_page.assess_requested.connect(self._assess_pronunciation)
-        self.sentence_practice_view.course_dictation_requested.connect(self._start_current_course_dictation)
-        self.sentence_practice_view.course_pronunciation_requested.connect(self._start_current_course_pronunciation)
         self.sentence_practice_view.course_words_requested.connect(self._show_current_course_words)
-        self.sentence_practice_view.course_review_requested.connect(self._add_current_course_review)
-        self.context.recording_service.state_changed.connect(self._pronunciation_recording_state)
-        self.context.recording_service.failed.connect(lambda message: self.pronunciation_page.status.setText(message))
         self._vocabulary_workers: set[VocabularyTask] = set()
         self._enrichment_loading: set[tuple[int,str]] = set()
         self._enrichment_errors: dict[tuple[int,str],str] = {}
@@ -433,7 +407,7 @@ class MainWindow(QMainWindow):
 
         app_title = QLabel("English Studio")
         app_title.setProperty("role", "app-title")
-        app_subtitle = QLabel("通过阅读、打字、听写和复习学习英语")
+        app_subtitle = QLabel("通过阅读、打字、AI 朗读和复习学习英语")
         app_subtitle.setProperty("role", "subtitle")
         sidebar_layout.addWidget(app_title)
         sidebar_layout.addWidget(app_subtitle)
@@ -445,6 +419,9 @@ class MainWindow(QMainWindow):
         self.home_page.courses_requested.connect(self._show_courses)
         self.home_page.special_practice_requested.connect(self._show_special_practice)
         self.home_page.vocabulary_requested.connect(self._show_vocabulary)
+        self.home_page.fsrs_review_requested.connect(self._start_fsrs_review)
+        self.home_page.history_requested.connect(self._show_history)
+        self.home_page.statistics_requested.connect(self._show_statistics)
         self.daily_learning_card = self.home_page.daily_learning_card
         self.daily_learning_card.review_requested.connect(self._start_fsrs_review)
         self.library_page = self._build_library_page()
@@ -461,8 +438,6 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.sentence_practice_view)
         self.stack.addWidget(self.word_learning_page)
         self.stack.addWidget(self.fsrs_review_page)
-        self.stack.addWidget(self.dictation_page)
-        self.stack.addWidget(self.pronunciation_page)
 
         self.nav_buttons: dict[int, QPushButton] = {}
         nav_specs = [
@@ -491,11 +466,23 @@ class MainWindow(QMainWindow):
         content.setObjectName("ContentArea")
         content_layout = QVBoxLayout(content)
         content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
+        self.today_learning_time_bar = TodayLearningTimeBar()
+        content_layout.addWidget(self.today_learning_time_bar)
         content_layout.addWidget(self.stack)
 
         shell.addWidget(self.sidebar)
         shell.addWidget(content, stretch=1)
         self.setCentralWidget(root)
+
+        self._root_shell = root
+        self.vocabulary_quick_access = VocabularyQuickAccess(root)
+        self.vocabulary_quick_access.open_requested.connect(self._show_vocabulary)
+        self.vocabulary_quick_access.geometry_changed.connect(
+            lambda: QTimer.singleShot(0, self._position_vocabulary_quick_access)
+        )
+        self.vocabulary_quick_access.show()
+        self.vocabulary_quick_access.raise_()
 
         self._switch_page(self.PAGE_HOME)
         self.history_page.refresh_button.clicked.connect(self._refresh_history)
@@ -553,7 +540,7 @@ class MainWindow(QMainWindow):
 
         self.empty_state = EmptyStateCard(
             "还没有导入文章",
-            "1. 导入一篇英文 TXT。2. 选择逐句学习或连续练习。3. 翻译、语音和跟读服务均可稍后在设置中按需配置。",
+            "1. 导入一篇英文 TXT。2. 选择逐句学习或连续练习。3. 翻译和 AI 语音均可稍后在设置中按需配置。",
             "导入第一篇文章",
         )
         self.empty_state.action_button.clicked.connect(self._import_articles)
@@ -640,21 +627,42 @@ class MainWindow(QMainWindow):
     def _switch_page(self, index: int) -> None:
         self.stack.setCurrentIndex(index)
         self.sidebar.setVisible(self.stack.currentWidget() not in {self.practice_view, self.sentence_practice_view})
+        self._update_vocabulary_quick_access_visibility()
+        if self.stack.currentWidget() is self.home_page:
+            self._refresh_home_content()
+            self._refresh_daily_learning()
         if (
             self.stack.currentWidget() is self.learning_content_page
             and self.learning_content_page.current_section() == "courses"
         ):
             self.course_page.reload()
-            self._refresh_course_review_count()
         for button_index, button in self.nav_buttons.items():
             button.setProperty("active", "true" if button_index == index else "false")
             button.style().unpolish(button)
             button.style().polish(button)
 
     def _learning_page_changed(self, _index:int) -> None:
-        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page,self.dictation_page}:
+        self._update_vocabulary_quick_access_visibility()
+        self._update_learning_time_visibility_control()
+        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page}:
             self._handle_learning_update(self.context.learning_time_tracker.stop())
             self._refresh_daily_learning()
+
+    def _update_learning_time_visibility_control(self) -> None:
+        if not hasattr(self, "today_learning_time_bar"):
+            return
+        self.today_learning_time_bar.set_hide_control_visible(
+            self.stack.currentWidget() in {self.practice_view, self.sentence_practice_view}
+        )
+
+    def _update_vocabulary_quick_access_visibility(self) -> None:
+        if not hasattr(self,"vocabulary_quick_access"):
+            return
+        focus_pages={self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page}
+        self.vocabulary_quick_access.set_shortcut_visible(
+            self.stack.currentWidget() not in focus_pages
+        )
+        QTimer.singleShot(0,self._position_vocabulary_quick_access)
 
     def _track_learning_activity(self,event_type:str) -> None:
         if self.current_course_session is not None and self.stack.currentWidget() is self.sentence_practice_view:
@@ -689,20 +697,6 @@ class MainWindow(QMainWindow):
         self._handle_learning_update(update)
         self._refresh_daily_learning()
 
-    def _track_dictation_learning_activity(self, event_type: str, vocabulary_id: object) -> None:
-        item = self.dictation_page.current
-        if getattr(self.dictation_page, "_course_mode", False):
-            update = self.context.learning_time_tracker.activity(
-                f"course_dictation_{event_type}"
-            )
-            self._handle_learning_update(update)
-            self._refresh_daily_learning()
-            return
-        article_id = item.context.article_id if item and item.context else None
-        update = self.context.learning_time_tracker.activity(event_type, related_article_id=article_id, related_vocabulary_id=int(vocabulary_id) if vocabulary_id else None)
-        self._handle_learning_update(update)
-        self._refresh_daily_learning()
-
     def _tick_learning_time(self) -> None:
         self._handle_learning_update(self.context.learning_time_tracker.tick())
         self._refresh_daily_learning()
@@ -721,7 +715,78 @@ class MainWindow(QMainWindow):
     def _refresh_daily_learning(self) -> None:
         if not hasattr(self,"daily_learning_card"):return
         dashboard=self.context.learning_repository.dashboard()
-        self.daily_learning_card.update_dashboard(dashboard,self.settings.daily_learning_goal_minutes,reduce_motion=self.settings.reduce_motion)
+        if hasattr(self, "today_learning_time_bar"):
+            pending = self.context.learning_time_tracker.pending_effective_seconds()
+            self.today_learning_time_bar.set_seconds(dashboard.effective_seconds + pending)
+        weekly_seconds=self.context.learning_repository.weekly_effective_seconds()
+        self.home_page.update_dashboard(dashboard,self.settings.daily_learning_goal_minutes,weekly_seconds)
+
+    def _refresh_home_content(self) -> None:
+        if not hasattr(self, "home_page"):
+            return
+        course_data = None
+        try:
+            courses = list(self.context.course_repository.list_courses())
+            selected_course = courses[0] if courses else None
+            enrolled = []
+            for course in courses:
+                enrollment = self.context.course_progress_service.get_enrollment(course.course_id)
+                if enrollment is not None:
+                    enrolled.append((enrollment.last_studied_at or enrollment.enrolled_at, course))
+            if enrolled:
+                selected_course = max(enrolled, key=lambda item: item[0])[1]
+            if selected_course is not None:
+                progress = self.context.course_progress_service.get_course_progress(selected_course.course_id)
+                lesson = self.context.course_progress_service.get_next_lesson(selected_course.course_id)
+                level_title = "课程"
+                unit_title = ""
+                if lesson is not None:
+                    for level in selected_course.levels:
+                        for unit in level.units:
+                            if any(candidate.stable_key == lesson.stable_key for candidate in unit.lessons):
+                                level_title = level.title
+                                unit_title = unit.title
+                                break
+                        if unit_title:
+                            break
+                course_data = {
+                    "course_title": selected_course.title,
+                    "level": level_title,
+                    "unit": unit_title,
+                    "day": lesson.day if lesson is not None else None,
+                    "lesson_title": lesson.title if lesson is not None else "课程已完成",
+                    "progress": progress.completion_percentage,
+                    "remaining_items": max(0, progress.total_required_items - progress.completed_required_items),
+                }
+        except Exception as exc:
+            self._logger.warning("home course summary unavailable reason=%s", exc)
+        self.home_page.update_course(course_data)
+
+        try:
+            summary = self.context.special_practice_service.due_summary()
+            due_words = int(summary.get("due_count", 0))
+            due_errors = int(summary.get("overdue_count", 0))
+        except Exception as exc:
+            self._logger.warning("home task summary unavailable reason=%s", exc)
+            due_words = 0
+            due_errors = 0
+        self.home_page.update_tasks(due_words=due_words, due_errors=due_errors)
+
+        recent = []
+        recent_articles = sorted(
+            (article for article in self.articles if article.last_practiced_at is not None),
+            key=lambda article: article.last_practiced_at,
+            reverse=True,
+        )[:3]
+        for article in recent_articles:
+            total = max(1, article.section_count)
+            progress = min(100, int(article.completed_section_count * 100 / total))
+            recent.append({
+                "title": article.title,
+                "meta": f"文章练习 · {article.last_practiced_at.strftime('%m-%d %H:%M')}",
+                "progress": progress,
+            })
+        self.home_page.update_recent(recent)
 
     def eventFilter(self, watched, event) -> bool:
         if watched is self.preview_content.viewport() and event.type()==QEvent.Type.ContextMenu:
@@ -763,34 +828,8 @@ class MainWindow(QMainWindow):
     def _learning_content_section_changed(self, section: str) -> None:
         if section == "courses":
             self.course_page.reload()
-            self._refresh_course_review_count()
         else:
             self._reload_articles()
-
-    def _refresh_course_review_count(self) -> None:
-        try:
-            count = len(self.context.course_capability_service.due_sentence_reviews())
-        except Exception as exc:
-            self._logger.error("course review count failed reason=%s", exc)
-            count = 0
-        self.course_page.set_due_review_count(count)
-
-    def _start_course_due_review(self) -> None:
-        try:
-            reviews = self.context.course_capability_service.due_sentence_reviews()
-        except Exception as exc:
-            self._logger.error("course due review queue failed reason=%s", exc)
-            QMessageBox.warning(self, "课程复习不可用", f"暂时无法读取课程复习队列：{exc}")
-            return
-        if not reviews:
-            QMessageBox.information(self, "课程复习", "当前没有已到期的课程复习卡。")
-            return
-        self.course_review_queue_active = True
-        self.current_course_return = None
-        self.current_course_capability_item = reviews[0].item
-        self.dictation_page.load_course_reviews(list(reviews))
-        self.stack.setCurrentWidget(self.dictation_page)
-        self.sidebar.hide()
 
     def _show_vocabulary(self) -> None:
         self._switch_page(self.PAGE_VOCABULARY)
@@ -821,245 +860,6 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.fsrs_review_page)
         self.sidebar.hide()
 
-    def _start_dictation(self) -> None:
-        queue = self.context.fsrs_review_service.build_today_queue(
-            new_limit=self.settings.fsrs_new_cards_per_day,
-            soft_limit=self.settings.fsrs_review_soft_limit,
-        )
-        items = []
-        seen: set[int] = set()
-        for item in queue.items:
-            if item.entry.id and item.entry.id not in seen:
-                seen.add(item.entry.id)
-                items.append(item)
-        if not items:
-            QMessageBox.information(self, "听写练习", "请先在单词本添加单词，或等待今日复习队列生成。")
-            return
-        self.dictation_page.load_queue(items)
-        self.stack.setCurrentWidget(self.dictation_page)
-        self.sidebar.hide()
-
-    def _start_pronunciation(self, entry_id: int) -> None:
-        entry, contexts, _state = self.context.vocabulary_learning_service.detail(entry_id)
-        if entry is None:
-            QMessageBox.information(self, "跟读练习", "该单词已不存在或无法读取。")
-            return
-        self.pronunciation_page.load_target(entry, contexts[0] if contexts else None)
-        self.stack.setCurrentWidget(self.pronunciation_page)
-        self.sidebar.hide()
-
-    def _leave_pronunciation(self) -> None:
-        self._cancel_pronunciation_recording()
-        if self.pronunciation_page.course_item is not None:
-            self.pronunciation_page.course_item = None
-            self.current_course_capability_item = None
-            if self.current_course_session is not None:
-                self.stack.setCurrentWidget(self.sentence_practice_view)
-                self.sidebar.hide()
-                return
-            if self.current_course_return is not None:
-                course_id, lesson_id = self.current_course_return
-                self.current_course_return = None
-                self._show_courses()
-                self.course_page.show_lesson(course_id, lesson_id)
-                return
-        self._show_vocabulary()
-
-    def _play_pronunciation_reference(self, text: str, speed: float) -> None:
-        item = self.pronunciation_page
-        if item.course_item is not None:
-            self._request_course_speech(text, speed, item.course_item.ref)
-            return
-        if item.target_type.currentData() == "word" and item.entry is not None:
-            self._play_word_from_learning(item.entry, item.context, focus_widget=self.pronunciation_page)
-        else:
-            self._request_speech(text, speed)
-
-    def _start_pronunciation_recording(self) -> None:
-        path = self.context.recording_service.start()
-        if path:
-            self.pronunciation_page.status.setText("正在录音。完成后点击“停止录音”。")
-
-    def _stop_pronunciation_recording(self) -> None:
-        self.pronunciation_page.set_recorded(self.context.recording_service.stop())
-
-    def _cancel_pronunciation_recording(self) -> None:
-        self.context.recording_service.cancel()
-        self.pronunciation_page.audio_path = None
-
-    def _pronunciation_recording_state(self, state: str) -> None:
-        self.pronunciation_page.set_recording_state(state)
-
-    def _play_pronunciation_recording(self, path) -> None:
-        if path is None or not path.exists():
-            self.pronunciation_page.status.setText("录音文件尚未准备完成或已被清理。")
-            return
-        self.audio_playback.toggle(path)
-
-    def _assess_pronunciation(self, target_type: str, path, _unused_keep: bool) -> None:
-        page = self.pronunciation_page
-        if path is None or not path.exists():
-            page.status.setText("请先完成一段录音后再评分。")
-            return
-        key = self.context.pronunciation_credential_store.get() or ""
-        provider = AzurePronunciationAssessmentProvider(key, self.settings.pronunciation_region)
-        request = PronunciationRequest(page.reference_text(), self.settings.pronunciation_locale, path)
-        entry_id = page.entry.id if page.entry else None
-        context_id = page.context.id if page.context else None
-        course_item = page.course_item
-        if not key or not self.settings.pronunciation_region:
-            if course_item is not None:
-                result = provider.assess(request)
-                self._course_pronunciation_result_ready(
-                    result, None, request, course_item
-                )
-            else:
-                attempt = self.context.pronunciation_assessment_service.assess(
-                    request, provider, target_type=target_type, entry_id=entry_id, context_id=context_id,
-                    keep_audio=self.settings.pronunciation_keep_recordings,
-                )
-                self._pronunciation_assessed(attempt, None)
-            return
-        page.status.setText("正在准备评分请求……")
-        task = VocabularyTask(lambda: provider.assess(request))
-        self._vocabulary_workers.add(task)
-        if course_item is not None:
-            task.signals.completed.connect(lambda result, worker=task, req=request, item=course_item: self._course_pronunciation_result_ready(result, worker, req, item))
-            task.signals.failed.connect(lambda error, worker=task, req=request, item=course_item: self._course_pronunciation_failed(str(error), worker, req, item))
-        else:
-            task.signals.completed.connect(lambda result, worker=task, req=request, target=target_type, entry=entry_id, context=context_id: self._pronunciation_result_ready(result, worker, req, target, entry, context))
-            task.signals.failed.connect(lambda error, worker=task: self._pronunciation_assessment_failed(str(error), worker))
-        self._thread_pool.start(task)
-
-    def _pronunciation_assessed(self, attempt, worker) -> None:
-        if worker is not None:
-            self._vocabulary_workers.discard(worker)
-        self.pronunciation_page.show_attempt(attempt)
-        if not self.settings.pronunciation_keep_recordings:
-            self.pronunciation_page.audio_path = None
-
-    def _pronunciation_result_ready(self, result, worker, request, target_type: str, entry_id: int | None, context_id: int | None) -> None:
-        attempt = self.context.pronunciation_assessment_service.save_result(
-            request, result, target_type=target_type, entry_id=entry_id, context_id=context_id,
-            keep_audio=self.settings.pronunciation_keep_recordings,
-        )
-        self._pronunciation_assessed(attempt, worker)
-
-    def _course_pronunciation_result_ready(
-        self, result, worker, request, item: CourseCapabilityItem
-    ) -> None:
-        if worker is not None:
-            self._vocabulary_workers.discard(worker)
-        try:
-            self.context.course_capability_service.record_speaking(item.ref, result)
-            self.pronunciation_page.show_result(result)
-            if self.current_course_return:
-                self.course_page.show_lesson(*self.current_course_return)
-        except Exception as exc:
-            self._logger.error(
-                "course speaking save failed item_stable_key=%s reason=%s",
-                item.ref.item_stable_key,
-                exc,
-            )
-            self.pronunciation_page.status.setText(f"评分结果暂时无法保存：{exc}")
-        finally:
-            if not self.settings.pronunciation_keep_recordings:
-                request.audio_path.unlink(missing_ok=True)
-                self.pronunciation_page.audio_path = None
-
-    def _course_pronunciation_failed(
-        self, message: str, worker, request, item: CourseCapabilityItem
-    ) -> None:
-        result = PronunciationResult(
-            status="failed",
-            provider="azure",
-            error_code="request_failed",
-            message=message,
-        )
-        self._course_pronunciation_result_ready(result, worker, request, item)
-
-    def _pronunciation_assessment_failed(self, message: str, worker) -> None:
-        self._vocabulary_workers.discard(worker)
-        self.pronunciation_page.status.setText(f"评分失败：{message}")
-
-    def _save_dictation_attempt(self, attempt) -> None:
-        self.context.dictation_service.save(attempt)
-
-    def _save_course_dictation_attempt(self, item, payload) -> None:
-        try:
-            self.context.course_capability_service.record_dictation(
-                item.ref,
-                score=payload.get("score"),
-                error_count=int(payload.get("error_count", 0)),
-                omitted_count=int(payload.get("omitted_count", 0)),
-                inserted_count=int(payload.get("inserted_count", 0)),
-                replay_count=int(payload.get("replay_count", 0)),
-                duration_ms=int(payload.get("duration_ms", 0)),
-            )
-            if self.current_course_return:
-                self.course_page.show_lesson(*self.current_course_return)
-        except Exception as exc:
-            self._logger.error(
-                "course dictation save failed item_stable_key=%s reason=%s",
-                item.ref.item_stable_key,
-                exc,
-            )
-            self.dictation_page.feedback.setText(f"课程听写结果暂时无法保存：{exc}")
-
-    def _rate_course_dictation_card(self, content_ref, rating: str) -> None:
-        try:
-            self.context.course_capability_service.rate_existing_sentence_review(
-                content_ref,
-                rating,
-            )
-        except Exception as exc:
-            self._logger.error(
-                "course dictation rating failed item_stable_key=%s reason=%s",
-                content_ref.item_stable_key,
-                exc,
-            )
-
-    def _rate_course_review_card(self, card_id: int, rating: str) -> None:
-        try:
-            self.context.course_capability_service.rate_sentence_review(
-                card_id, rating
-            )
-            self._refresh_course_review_count()
-            self.dictation_page.accept_course_review_rating()
-        except Exception as exc:
-            self._logger.error(
-                "course review rating failed card_id=%s reason=%s",
-                card_id,
-                exc,
-            )
-            self.dictation_page.show_course_review_rating_error(
-                f"课程复习评分暂时无法保存：{exc}"
-            )
-
-    def _leave_dictation(self) -> None:
-        self.audio_playback.stop()
-        self.current_course_capability_item = None
-        if self.course_review_queue_active:
-            self.course_review_queue_active = False
-            self._show_courses()
-            return
-        if self.current_course_session is not None:
-            self.stack.setCurrentWidget(self.sentence_practice_view)
-            self.sidebar.hide()
-            return
-        if self.current_course_return is not None:
-            course_id, lesson_id = self.current_course_return
-            self.current_course_return = None
-            self._show_courses()
-            self.course_page.show_lesson(course_id, lesson_id)
-            return
-        self._show_vocabulary()
-
-    def _rate_dictation_card(self, entry_id: int, rating: str) -> None:
-        card = self.context.fsrs_review_service.ensure_listening_card(entry_id)
-        self.context.fsrs_review_service.rate(card.id or 0, rating)
-        self._refresh_overview()
-
     def _rate_fsrs_card(self, card_id: int, rating: str) -> None:
         self.context.fsrs_review_service.rate(card_id, rating)
         self._refresh_overview()
@@ -1085,10 +885,6 @@ class MainWindow(QMainWindow):
             self.settings_page.set_tts_api_key_status(mask_secret(self.context.tts_credential_store.get()))
         except Exception:
             self.settings_page.set_tts_api_key_status("读取失败")
-        try:
-            self.settings_page.set_pronunciation_key_status(mask_secret(self.context.pronunciation_credential_store.get()))
-        except Exception:
-            self.settings_page.set_pronunciation_key_status("读取失败")
         stats=self.context.tts_service.stats(); self.settings_page.set_tts_cache_stats(stats.file_count,stats.total_size_bytes)
         self._switch_page(self.PAGE_SETTINGS)
 
@@ -1118,6 +914,7 @@ class MainWindow(QMainWindow):
             self._update_preview(-1)
         self.history_page.populate_articles(self.articles)
         self._refresh_overview()
+        self._refresh_home_content()
 
     def _set_content_layout_visible(self, visible: bool) -> None:
         for index in range(self.content_split.count()):
@@ -1173,21 +970,30 @@ class MainWindow(QMainWindow):
 
     def _refresh_vocabulary_page(self) -> None:
         scope=str(self.vocabulary_page.scope_combo.currentData())
-        if scope in {"article","all"}:
-            article_id=self.current_vocabulary_article_id if scope=="article" else None
-            if scope=="article" and article_id is None:
-                self.vocabulary_page.populate_items([]); self.vocabulary_page.set_status_message("请先在文章库选择一篇文章。"); return
-            if article_id is not None:self.context.article_word_index_service.ensure(article_id)
-            items=self.context.article_word_index_service.list_words(article_id,search=self.vocabulary_page.search_input.text(),sort=str(self.vocabulary_page.sort_combo.currentData()),hide_mastered=self.vocabulary_page.hide_mastered_checkbox.isChecked())
-            rows=[]
-            for item in items:
-                row=dict(item); row["id"]=row.pop("vocabulary_entry_id"); row.update({"phonetic":"","meaning_zh":"","primary_part_of_speech":"","article_title":self.preview_title.text() if article_id else f"{row['article_count']} 篇文章","last_practiced_at":"","is_archived":False,"meaning":"","note":"","mastery_level":0})
-                if row["id"]:
-                    entry,contexts,state=self.context.vocabulary_learning_service.detail(row["id"]); row.update({"phonetic":entry.phonetic,"primary_part_of_speech":entry.primary_part_of_speech,"meaning_zh":contexts[0].contextual_meaning_zh if contexts else "","status":state.status})
-                rows.append(row)
-        else:
-            items=self.context.vocabulary_learning_service.list_entries(search=self.vocabulary_page.search_input.text(),status=str(self.vocabulary_page.status_combo.currentData()))
-            rows=[dict(item) | {"occurrence_count":"-","is_archived":False,"meaning":"","note":"","mastery_level":0} for item in items if item["status"]!="mastered"]
+        article_id=self.current_vocabulary_article_id if scope=="article" else None
+        if scope=="article" and article_id is None:
+            self.vocabulary_page.populate_items([])
+            self.vocabulary_page.set_status_message("请先在文章库选择一篇文章。")
+            return
+        items=self.context.vocabulary_learning_service.list_entries(
+            search=self.vocabulary_page.search_input.text(),
+            status=str(self.vocabulary_page.status_combo.currentData()),
+            article_id=article_id,
+        )
+        rows=[]
+        for item in items:
+            if scope=="learning" and item["status"]=="mastered":
+                continue
+            row=dict(item) | {
+                "occurrence_count":"-",
+                "is_archived":False,
+                "meaning":"",
+                "note":"",
+                "mastery_level":0,
+            }
+            if article_id is not None:
+                row["article_title"]=self.preview_title.text()
+            rows.append(row)
         self.vocabulary_page.set_status_message("")
         self.vocabulary_page.populate_items(rows)
 
@@ -1223,42 +1029,60 @@ class MainWindow(QMainWindow):
         proofreading = article.id in self._proofreading_article_ids
         self.proofread_button.setText("检测中…" if proofreading else "重新检测")
         self.proofread_button.setEnabled(not proofreading)
-        if article.id is not None:self.context.article_word_index_service.ensure(article.id)
 
     def _show_article_preview_menu(self,position) -> None:
         if self.current_vocabulary_article_id is None:return
-        menu,view_action,rebuild_action=self._build_article_preview_menu()
+        menu,add_action=self._build_article_preview_menu()
         selected=menu.exec(self.preview_content.viewport().mapToGlobal(position))
-        if selected is view_action:
-            self._show_current_article_words()
-        elif selected is rebuild_action:
-            self._rebuild_current_article_words()
+        if selected is add_action:
+            self._collect_preview_selected_word()
 
     def _build_article_preview_menu(self):
         menu=self.preview_content.createStandardContextMenu()
         if menu.actions():menu.addSeparator()
-        view_action=menu.addAction("查看当前文章单词")
-        rebuild_action=menu.addAction("重新提取文章单词")
-        return menu,view_action,rebuild_action
+        add_action=menu.addAction("加入单词本")
+        add_action.setEnabled(bool(self.preview_content.textCursor().selectedText().strip()))
+        return menu,add_action
 
     def _show_current_article_words(self) -> None:
         if self.current_vocabulary_article_id is None:return
-        self.context.article_word_index_service.ensure(self.current_vocabulary_article_id)
         index=self.vocabulary_page.scope_combo.findData("article")
         self.vocabulary_page.scope_combo.setCurrentIndex(index)
         self._show_vocabulary()
 
-    def _rebuild_current_article_words(self) -> None:
+    def _collect_preview_selected_word(self) -> None:
         article_id=self.current_vocabulary_article_id
-        if article_id is None:return
-        if QMessageBox.question(self,"重新提取文章单词","将重新分析当前文章中的单词，不会删除已收藏单词、来源语境或学习记录。") != QMessageBox.StandardButton.Yes:return
-        try:
-            count=self.context.article_word_index_service.rebuild(article_id)
-        except Exception as exc:
-            QMessageBox.warning(self,"提取失败",f"无法重新提取文章单词：{exc}")
+        cursor=self.preview_content.textCursor()
+        selected=cursor.selectedText().replace("\u2029","\n").strip()
+        if article_id is None or not selected:
             return
-        if str(self.vocabulary_page.scope_combo.currentData())=="article":self._refresh_vocabulary_page()
-        QMessageBox.information(self,"提取完成",f"已记录 {count} 个单词位置。")
+        article=self.context.article_library.get_article(article_id)
+        if article is None:
+            return
+        start=cursor.selectionStart(); end=cursor.selectionEnd()
+        sentence=""; local_start=start
+        for segment in SentenceSegmentationService().split(article.full_text):
+            if segment.start_offset<=start<segment.end_offset:
+                sentence=segment.normalized_text
+                local_start=start-segment.start_offset
+                break
+        try:
+            result=self.context.vocabulary_learning_service.collect(
+                selected,
+                sentence=sentence,
+                article_id=article_id,
+                start_offset=local_start,
+                end_offset=local_start+len(selected),
+                typing_target_count=self.settings.vocabulary_typing_count,
+            )
+        except ValueError as exc:
+            QMessageBox.information(self,"收藏单词",str(exc))
+            return
+        message=self._vocabulary_collection_message(result)
+        self._show_vocabulary_added(result.entry.display_word,message)
+        self._refresh_vocabulary_page()
+        if result.entry.id and self.settings.vocabulary_auto_enrich:
+            self._start_vocabulary_enrichment(result.entry.id,result.context.id)
 
     def _start_vocabulary_row(self,row) -> None:
         entry_id=row.get("id")
@@ -1362,7 +1186,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "应用建议失败", str(exc))
             return
         self._reload_articles(preferred_article_id=article_id)
-        QMessageBox.information(self, "文章已更新", "已应用建议并重新分段；本文进度已重置，历史练习记录仍然保留。")
+        QMessageBox.information(self, "文章已更新", "已应用建议并保留完整文章；本文进度已重置，历史练习记录仍然保留。")
 
     def _article_proofreading_failed(self, article_id: int, error: Exception, worker: ArticleProofreadingWorker) -> None:
         self._finish_article_proofreading(article_id, worker)
@@ -1414,7 +1238,11 @@ class MainWindow(QMainWindow):
                     hints.append((sentence.start_offset - section_start, sentence.end_offset - section_start, translation))
                     speech_segments.append((sentence.start_offset - section_start, sentence.end_offset - section_start, sentence.normalized_text))
             self.practice_view.set_translation_hints(hints, visible=show_translation_panel)
-            self.practice_view.set_speech_segments(speech_segments, visible=show_translation_panel, speed=self.settings.tts_speed)
+            self.practice_view.set_speech_segments(
+                speech_segments,
+                visible=show_translation_panel,
+                speed=self.settings.tts_speed,
+            )
             self.practice_view.start_practice(material, self.settings)
             self.stack.setCurrentWidget(self.practice_view)
         self.sidebar.hide()
@@ -1472,6 +1300,10 @@ class MainWindow(QMainWindow):
             list(course_session.typing_sentences),
             course_session.chinese_translations,
             course_session.activity_types_by_item,
+            course_session.has_vocabulary_by_item,
+            course_session.core_words_by_item,
+            course_session.core_patterns_by_item,
+            course_session.visual_prompts,
             self.settings,
         )
         self.stack.setCurrentWidget(self.sentence_practice_view)
@@ -1488,16 +1320,13 @@ class MainWindow(QMainWindow):
             items = self.context.course_capability_service.lesson_items(
                 course_id,
                 lesson_id,
-                capability if capability in {"dictation", "speaking"} else None,
+                None,
             )
             if not items:
                 raise ValueError("本 Day 没有可用的课程句子。")
             self.current_course_return = (course_id, lesson_id)
             if capability == "tts":
-                listening = self.context.course_capability_service.lesson_items(
-                    course_id, lesson_id, "review"
-                )
-                item = (listening or items)[0]
+                item = items[0]
                 self._request_course_speech(
                     item.text,
                     self.settings.tts_speed,
@@ -1505,24 +1334,11 @@ class MainWindow(QMainWindow):
                     mark_listening=True,
                 )
                 return
-            if capability == "dictation":
-                self._open_course_dictation(items)
-                return
-            if capability == "speaking":
-                self._open_course_pronunciation(items[0])
-                return
             if capability == "vocabulary":
                 words = self.context.course_capability_service.lesson_words(
                     course_id, lesson_id
                 )
                 self._open_course_vocabulary(words)
-                return
-            if capability == "review":
-                for item in items:
-                    self.context.course_capability_service.ensure_sentence_review(
-                        item.ref, "sentence_listening"
-                    )
-                self._open_course_dictation(items)
                 return
             raise ValueError(f"不支持的课程能力：{capability}")
         except Exception as exc:
@@ -1552,24 +1368,6 @@ class MainWindow(QMainWindow):
             self._handle_course_state_error("课程内容已刷新", stable_key, exc)
             return None
 
-    def _start_current_course_dictation(self) -> None:
-        item = self._current_course_capability_item()
-        if item is not None:
-            self.current_course_return = (
-                self.current_course_session.course_id,
-                self.current_course_session.lesson_id,
-            ) if self.current_course_session else self.current_course_return
-            self._open_course_dictation((item,))
-
-    def _start_current_course_pronunciation(self) -> None:
-        item = self._current_course_capability_item()
-        if item is not None:
-            self.current_course_return = (
-                self.current_course_session.course_id,
-                self.current_course_session.lesson_id,
-            ) if self.current_course_session else self.current_course_return
-            self._open_course_pronunciation(item)
-
     def _show_current_course_words(self) -> None:
         item = self._current_course_capability_item()
         if item is not None:
@@ -1580,31 +1378,6 @@ class MainWindow(QMainWindow):
                 )
             )
             self._open_course_vocabulary(words)
-
-    def _add_current_course_review(self) -> None:
-        item = self._current_course_capability_item()
-        if item is None:
-            return
-        try:
-            self.context.course_capability_service.ensure_sentence_review(item.ref)
-            QMessageBox.information(self, "课程复习", "该句已加入课程 FSRS 复习。")
-        except Exception as exc:
-            QMessageBox.warning(self, "无法加入复习", str(exc))
-
-    def _open_course_dictation(
-        self, items: tuple[CourseCapabilityItem, ...]
-    ) -> None:
-        self.course_review_queue_active = False
-        self.current_course_capability_item = items[0] if items else None
-        self.dictation_page.load_course_items(list(items))
-        self.stack.setCurrentWidget(self.dictation_page)
-        self.sidebar.hide()
-
-    def _open_course_pronunciation(self, item: CourseCapabilityItem) -> None:
-        self.current_course_capability_item = item
-        self.pronunciation_page.load_course_target(item)
-        self.stack.setCurrentWidget(self.pronunciation_page)
-        self.sidebar.hide()
 
     def _open_course_vocabulary(self, words) -> None:
         dialog = CourseVocabularyDialog(tuple(words), self)
@@ -1643,7 +1416,7 @@ class MainWindow(QMainWindow):
             item = self._current_course_capability_item()
             content_ref = item.ref if item is not None else None
             mark_listening = bool(
-                item is not None and "review" in item.activity_types
+                item is not None and "listening" in item.activity_types
             )
         self._request_speech_internal(
             text,
@@ -1686,9 +1459,7 @@ class MainWindow(QMainWindow):
         self._active_speech_control = controls
         self._active_speech_text = text
         self._active_speech_ref = content_ref
-        self._active_course_activity_ref = (
-            content_ref if mark_listening else None
-        )
+        self._active_course_activity_ref = content_ref if mark_listening else None
         if self._active_course_activity_ref is not None:
             try:
                 self.context.course_capability_service.start_listening(
@@ -1718,17 +1489,6 @@ class MainWindow(QMainWindow):
                 controls.set_state("error", message)
             else:
                 QMessageBox.warning(self, "语音不可用", message)
-            if self._active_course_activity_ref is not None:
-                failed_ref = self._active_course_activity_ref
-                self._active_course_activity_ref = None
-                try:
-                    self.context.course_capability_service.fail_listening(failed_ref)
-                except Exception as save_exc:
-                    self._logger.error(
-                        "course listening cache failure save failed item_stable_key=%s reason=%s",
-                        failed_ref.item_stable_key,
-                        save_exc,
-                    )
             return
         if cached:
             self.context.tts_service.mark_played(cached.cache_key)
@@ -1747,19 +1507,9 @@ class MainWindow(QMainWindow):
                 controls.set_state("error", message)
             else:
                 QMessageBox.information(self, "语音不可用", message)
-            if self._active_course_activity_ref is not None:
-                failed_ref = self._active_course_activity_ref
-                self._active_course_activity_ref = None
-                try:
-                    self.context.course_capability_service.fail_listening(failed_ref)
-                except Exception as save_exc:
-                    self._logger.error(
-                        "course listening credential failure save failed item_stable_key=%s reason=%s",
-                        failed_ref.item_stable_key,
-                        save_exc,
-                    )
             return
-        if controls: controls.set_state("loading", "生成中")
+        if controls:
+            controls.set_state("loading", "正在准备语音")
         worker = TTSWorker(
             self.context.tts_service, provider, request, content_ref=content_ref
         )
@@ -1782,22 +1532,14 @@ class MainWindow(QMainWindow):
         if request.text == self._active_speech_text and content_ref == self._active_speech_ref:
             if self._active_speech_control:
                 self._active_speech_control.set_state("error", str(error))
-            elif content_ref is not None:
+            else:
                 QMessageBox.warning(self, "语音生成失败", str(error))
-        if (
-            request.text == self._active_speech_text
-            and content_ref == self._active_course_activity_ref
-            and content_ref is not None
-        ):
+        if content_ref is not None and content_ref == self._active_course_activity_ref:
             self._active_course_activity_ref = None
             try:
                 self.context.course_capability_service.fail_listening(content_ref)
             except Exception as exc:
-                self._logger.error(
-                    "course listening generation failure save failed item_stable_key=%s reason=%s",
-                    content_ref.item_stable_key,
-                    exc,
-                )
+                self._logger.error("course listening failure save failed reason=%s", exc)
 
     def _speech_sentence_changed(self, text: str) -> None:
         if text != self._active_speech_text:
@@ -1807,11 +1549,25 @@ class MainWindow(QMainWindow):
             self._active_speech_text = text
 
     def _prepare_sentence_content(self, sentence: ArticleSentence, speed: float) -> None:
-        if self.settings.show_translation_after_sentence and self.settings.translation_auto_on_demand:
+        if (
+            self.current_course_session is None
+            and self.settings.show_translation_after_sentence
+            and self.settings.translation_auto_on_demand
+        ):
             self._request_sentence_translation(sentence, prefetch=True)
-        self._prefetch_sentence_speech(sentence.normalized_text, speed)
+        item = self._current_course_capability_item() if self.current_course_session else None
+        self._prefetch_sentence_speech(
+            sentence.normalized_text,
+            speed,
+            item.ref if item is not None else None,
+        )
 
-    def _prefetch_sentence_speech(self, text: str, speed: float) -> None:
+    def _prefetch_sentence_speech(
+        self,
+        text: str,
+        speed: float,
+        content_ref: LearningContentRef | None = None,
+    ) -> None:
         request = TTSRequest(
             text=text,
             content_type="sentence",
@@ -1820,14 +1576,26 @@ class MainWindow(QMainWindow):
             speed=speed,
         )
         try:
-            if self.context.tts_service.get_cached(request):
+            cached = (
+                self.context.tts_service.get_cached_course(content_ref, request)
+                if content_ref is not None
+                else self.context.tts_service.get_cached(request)
+            )
+            if cached:
                 return
             key = self.context.tts_credential_store.get()
             provider = MiniMaxTTSProvider(key or "", timeout=15.0)
         except Exception as exc:
-            self._logger.info("sentence speech prefetch skipped reason=%s", type(exc).__name__)
+            self._logger.info(
+                "sentence speech prefetch skipped reason=%s", type(exc).__name__
+            )
             return
-        worker = TTSWorker(self.context.tts_service, provider, request)
+        worker = TTSWorker(
+            self.context.tts_service,
+            provider,
+            request,
+            content_ref=content_ref,
+        )
         self._tts_workers.add(worker)
         worker.signals.completed.connect(
             lambda _request, _audio, w=worker: self._speech_prefetch_finished(w)
@@ -1842,7 +1610,9 @@ class MainWindow(QMainWindow):
 
     def _speech_prefetch_failed(self, error: Exception, worker: TTSWorker) -> None:
         self._tts_workers.discard(worker)
-        self._logger.info("sentence speech prefetch failed reason=%s", type(error).__name__)
+        self._logger.info(
+            "sentence speech prefetch failed reason=%s", type(error).__name__
+        )
 
     def _speech_playback_state_changed(self, state: str) -> None:
         if self._active_speech_control:
@@ -1855,34 +1625,19 @@ class MainWindow(QMainWindow):
                 if self.current_course_return:
                     self.course_page.show_lesson(*self.current_course_return)
             except Exception as exc:
-                self._logger.error(
-                    "course listening completion failed item_stable_key=%s reason=%s",
-                    content_ref.item_stable_key,
-                    exc,
-                )
+                self._logger.error("course listening completion failed reason=%s", exc)
         if state in {"stopped","finished"} and self.stack.currentWidget() in {self.practice_view,self.sentence_practice_view,self.word_learning_page}:
             self._track_learning_activity("audio_finished")
 
     def _speech_playback_failed(self, message: str) -> None:
         if self._active_speech_control:
             self._active_speech_control.set_state("error", message or "音频播放失败。")
-        elif self._active_speech_ref is not None:
+        else:
             QMessageBox.warning(
                 self,
                 "音频播放失败",
                 message or "音频播放失败，请检查播放设备。",
             )
-        if self._active_course_activity_ref is not None:
-            content_ref = self._active_course_activity_ref
-            self._active_course_activity_ref = None
-            try:
-                self.context.course_capability_service.fail_listening(content_ref)
-            except Exception as exc:
-                self._logger.error(
-                    "course listening failure save failed item_stable_key=%s reason=%s",
-                    content_ref.item_stable_key,
-                    exc,
-                )
 
     def _active_snapshot(self):
         view = self._active_practice_view()
@@ -1899,6 +1654,16 @@ class MainWindow(QMainWindow):
                         self.current_course_session.course_id,
                         item_stable_key,
                     )
+                    current_index = self.current_course_session.current_index
+                    activity_types = self.current_course_session.activity_types_by_item[
+                        current_index
+                    ]
+                    if "reinforcement" in activity_types:
+                        self.context.course_progress_service.complete_activity(
+                            self.current_course_session.course_id,
+                            item_stable_key,
+                            "review",
+                        )
                 except Exception as exc:
                     self._handle_course_state_error("保存课程进度失败", item_stable_key, exc)
             return
@@ -2081,27 +1846,6 @@ class MainWindow(QMainWindow):
         try:
             self.context.tts_credential_store.delete(); self.settings_page.tts_api_key_input.clear(); self.settings_page.set_tts_api_key_status("未保存")
         except Exception as exc: QMessageBox.critical(self,"删除失败",f"无法删除 MiniMax API Key：{exc}")
-
-    def _save_pronunciation_key(self) -> None:
-        key = self.settings_page.pronunciation_key_input.text().strip()
-        if not key:
-            QMessageBox.information(self, "未输入 Key", "请输入 Azure Speech Key。")
-            return
-        try:
-            self.context.pronunciation_credential_store.set(key)
-            self.settings_page.pronunciation_key_input.clear()
-            self.settings_page.set_pronunciation_key_status(mask_secret(key))
-            QMessageBox.information(self, "保存成功", "Azure Speech Key 已保存到 Windows 凭据管理器。")
-        except Exception as exc:
-            QMessageBox.critical(self, "保存失败", f"无法保存 Azure Speech Key：{exc}")
-
-    def _delete_pronunciation_key(self) -> None:
-        try:
-            self.context.pronunciation_credential_store.delete()
-            self.settings_page.pronunciation_key_input.clear()
-            self.settings_page.set_pronunciation_key_status("未保存")
-        except Exception as exc:
-            QMessageBox.critical(self, "删除失败", f"无法删除 Azure Speech Key：{exc}")
 
     def _test_tts_connection(self) -> None:
         try:
@@ -2312,8 +2056,8 @@ class MainWindow(QMainWindow):
         QMessageBox.information(
             self,
             "关于 English Studio",
-            "English Studio\n通过阅读、打字、听写和复习学习英语\n\n"
-            "本程序默认把学习数据保存在本机。在线翻译、语音和发音评分仅在你主动配置对应服务后使用。\n\n"
+            "English Studio\n通过阅读、打字、AI 朗读和复习学习英语\n\n"
+            "本程序默认把学习数据保存在本机。在线翻译和 AI 语音仅在你主动配置对应服务后使用。\n\n"
             "版本信息与隐私说明请查看项目 README、PRIVACY.md 和 THIRD_PARTY_NOTICES.md。",
         )
 
@@ -2620,7 +2364,9 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "无效单词", str(exc))
             return
         self._refresh_vocabulary_page()
-        self.vocabulary_page.set_status_message("已加入单词本。" if result.entry_created else "该单词已收藏。")
+        message=self._vocabulary_collection_message(result)
+        self.vocabulary_page.set_status_message(message)
+        self._show_vocabulary_added(result.entry.display_word,message)
         if result.entry.id and self.settings.vocabulary_auto_enrich: self._start_vocabulary_enrichment(result.entry.id,result.context.id)
 
     def _save_vocabulary_item(self, item_id: int, meaning: str, note: str) -> None:
@@ -2653,7 +2399,8 @@ class MainWindow(QMainWindow):
                     end_offset=end,
                     typing_target_count=self.settings.vocabulary_typing_count,
                 )
-                QMessageBox.information(self, "课程词汇", "已收藏该课程语境中的单词。")
+                message=self._vocabulary_collection_message(result)
+                self._show_vocabulary_added(result.entry.display_word,message)
                 self._refresh_vocabulary_page()
                 if result.entry.id and self.settings.vocabulary_auto_enrich:
                     self._start_vocabulary_enrichment(
@@ -2682,9 +2429,38 @@ class MainWindow(QMainWindow):
                 typing_target_count=self.settings.vocabulary_typing_count)
         except ValueError as exc:
             QMessageBox.information(self,"收藏单词",str(exc)); view._restore_focus(); return
-        message="已加入新的来源句。" if not result.entry_created and result.context_created else "该单词已收藏。" if not result.context_created else "已加入单词本。"
-        QMessageBox.information(self,"收藏单词",message); view._restore_focus(); self._refresh_vocabulary_page()
+        message=self._vocabulary_collection_message(result)
+        self._show_vocabulary_added(result.entry.display_word,message)
+        view._restore_focus(); self._refresh_vocabulary_page()
         if result.entry.id and self.settings.vocabulary_auto_enrich:self._start_vocabulary_enrichment(result.entry.id,result.context.id)
+
+    @staticmethod
+    def _vocabulary_collection_message(result) -> str:
+        if result.entry_created:
+            return "已加入单词本。"
+        if result.context_created:
+            return "已加入新的来源句。"
+        return "该单词已收藏。"
+
+    def _show_vocabulary_added(self, word: str, message: str) -> None:
+        self.vocabulary_quick_access.show_added(word,message)
+        self._position_vocabulary_quick_access()
+
+    def _position_vocabulary_quick_access(self) -> None:
+        if not hasattr(self,"vocabulary_quick_access"):
+            return
+        widget=self.vocabulary_quick_access
+        widget.adjustSize()
+        margin=24
+        widget.move(
+            max(margin,self._root_shell.width()-widget.width()-margin),
+            max(margin,self._root_shell.height()-widget.height()-margin),
+        )
+        widget.raise_()
+
+    def resizeEvent(self,event) -> None:  # type: ignore[override]
+        super().resizeEvent(event)
+        self._position_vocabulary_quick_access()
 
     def _start_vocabulary_enrichment(self, entry_id: int, context_id: int | None, *, force: bool=False) -> None:
         entry=self.context.vocabulary_learning_service.repository.get_entry(entry_id)
@@ -2816,20 +2592,6 @@ class MainWindow(QMainWindow):
         entry,contexts,_=self.context.vocabulary_learning_service.detail(entry_id)
         if entry:self._play_word_from_learning(entry,contexts[0] if contexts else None)
 
-    def _play_dictation_audio(self, text: str, speed: float) -> None:
-        """Prefer the cached dictionary recording for a word, otherwise use cached/generated TTS."""
-        item = self.dictation_page.current
-        if item and self.dictation_page.kind.currentData() == "word":
-            self._play_word_from_learning(item.entry, item.context, focus_widget=self.dictation_page.input, speed=speed)
-            return
-        self._request_speech(text, speed)
-
-    def _play_course_dictation_audio(
-        self, item: CourseCapabilityItem, speed: float
-    ) -> None:
-        self.current_course_capability_item = item
-        self._request_course_speech(item.text, speed, item.ref)
-
     def _play_word_from_learning(self,entry,context,focus_widget=None,speed=None):
         from english_typing_trainer.services.dictionary_provider import parse_dictionary_payload
         audio_url=""
@@ -2883,7 +2645,6 @@ class MainWindow(QMainWindow):
             event.ignore()
             return
         self.audio_playback.stop()
-        self.context.recording_service.cancel()
         self._handle_learning_update(self.context.learning_time_tracker.stop())
         for worker in self._tts_workers:
             worker.cancel()

@@ -2,7 +2,7 @@
 
 Phase 4 在只读 `CourseRepository` 和 schema 12 `CourseProgressService` 之上提供第一版课程浏览与 Sentence Item 打字流程。课程 JSON 仍是正文和层级的唯一来源；UI 只读取领域对象，SQLite 只保存 enrollment、稀疏 Item 状态和不含正文的学习事件。
 
-本文保留 Phase 4 的基础 UI 设计记录。Phase 5 已接入课程朗读、听写、跟读、词汇和 FSRS；当前能力边界与 schema 13 设计见 `docs/course-capabilities.md`。
+本文保留 Phase 4 的基础 UI 设计记录。当前课程页提供跟读和词汇入口；朗读与听写入口已移除。能力边界与 schema 13 设计见 `docs/course-capabilities.md`。
 
 ## 页面与入口
 
@@ -39,7 +39,7 @@ session_mode: recommended | manual | review
 
 - 中文区显示课程 JSON 已提供的译文，不调用 AI 翻译，也不写翻译缓存；
 - 课程模式关闭文章级翻译、人工编辑和单词收藏入口；
-- Phase 5 已通过 stable key、内容版本和音频参数建立课程 TTS 缓存键，课程缓存的正文预览为空；课程模式现可复用朗读、暂停、重放和错误降级；
+- Phase 5 已通过 stable key、内容版本和音频参数建立课程跟读标准音频缓存键，课程缓存的正文预览为空；
 - 学习事件使用 `course_` 前缀，且不附带文章或文章句子 ID，以区分课程来源；
 - 不生成临时文章，不调用文章编辑、删除或分段服务。
 

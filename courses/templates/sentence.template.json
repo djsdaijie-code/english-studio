@@ -18,5 +18,6 @@
   "audio_hint": null,
   "review_group": "",
   "content_version": "0.1.0",
-  "status": "draft"
+  "status": "draft",
+  "visual_prompt": null
 }

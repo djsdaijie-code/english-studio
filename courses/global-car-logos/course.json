@@ -1,0 +1,71 @@
+{
+  "specification_version": "1.1",
+  "course_id": "global-car-logos",
+  "stable_key": "global-car-logos",
+  "version": "0.1.1",
+  "content_version": "0.1.1",
+  "title": "全球汽车品牌与车标英语",
+  "subtitle": "先读品牌名，再跟打简短英文介绍",
+  "description": "通过 40 个常见乘用车品牌的车标辅助记忆，先学习英文品牌名，再跟打一条简短、稳定的事实介绍。MVP 不是全球品牌穷举。",
+  "language": "en",
+  "target_level": "mixed",
+  "topics": [
+    "car logos",
+    "automotive brands",
+    "visual vocabulary",
+    "short brand descriptions"
+  ],
+  "estimated_days": 14,
+  "estimated_sentences": 40,
+  "prerequisites": [
+    "能输入基础英文单词和短句",
+    "了解车标只作为品牌内容的辅助记忆线索"
+  ],
+  "learning_goals": [
+    "学习并准确拼写 40 个常见汽车品牌英文名",
+    "读懂并跟打每个品牌的一条简短英文介绍",
+    "借助车标建立品牌名与介绍的视觉记忆",
+    "使用聆听和 FSRS 进行可选巩固"
+  ],
+  "default_learning_plan": {
+    "new_sentences_per_day": 5,
+    "unit_days": 7,
+    "review_day": 5,
+    "assessment_day": 7
+  },
+  "levels": [
+    {
+      "level_id": "car-logo-l1",
+      "stable_key": "global-car-logos-level-foundations",
+      "order": 1,
+      "title": "汽车品牌名与简短介绍",
+      "description": "从高频品牌进入，再扩展到地区、豪华和新兴电动车品牌；每项先读品牌名，再学习一句介绍。",
+      "difficulty": "beginner",
+      "learning_goals": [
+        "学习 40 个常见汽车品牌的英文名称",
+        "读懂并准确跟打 40 条简短品牌介绍"
+      ],
+      "units": [
+        {
+          "unit_id": "car-logo-u01",
+          "stable_key": "global-car-logos-unit-common",
+          "order": 1,
+          "title": "高频汽车品牌与介绍",
+          "status": "draft",
+          "content_path": "units/unit-01.json"
+        },
+        {
+          "unit_id": "car-logo-u02",
+          "stable_key": "global-car-logos-unit-regional-premium",
+          "order": 2,
+          "title": "地区与进阶品牌介绍",
+          "status": "draft",
+          "content_path": "units/unit-02.json"
+        }
+      ]
+    }
+  ],
+  "status": "draft",
+  "built_in": true,
+  "read_only": true
+}

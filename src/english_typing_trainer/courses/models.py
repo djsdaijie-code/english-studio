@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from english_typing_trainer.courses.errors import CourseLoadFailure
 
@@ -10,7 +11,6 @@ class CourseLearningPlan:
     new_sentences_per_day: int | None = None
     unit_days: int | None = None
     review_day: int | None = None
-    dictation_day: int | None = None
     assessment_day: int | None = None
 
 
@@ -48,6 +48,18 @@ class CourseAudioHint:
 
 
 @dataclass(frozen=True, slots=True)
+class CourseVisualPrompt:
+    prompt_type: str
+    asset_path: str
+    resolved_asset_path: Path
+    alt_text: str
+    instruction_zh: str
+    source_url: str
+    rights_note: str
+    hide_answer: bool
+
+
+@dataclass(frozen=True, slots=True)
 class CourseSentence:
     sentence_id: str
     stable_key: str
@@ -70,6 +82,7 @@ class CourseSentence:
     content_version: str
     status: str
     replacement_stable_keys: tuple[str, ...] = ()
+    visual_prompt: CourseVisualPrompt | None = None
 
 
 @dataclass(frozen=True, slots=True)

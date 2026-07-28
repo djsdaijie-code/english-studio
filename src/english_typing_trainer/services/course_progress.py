@@ -30,7 +30,7 @@ ENROLLMENT_STATUSES: frozenset[EnrollmentStatus] = frozenset(
     {"active", "paused", "completed", "archived"}
 )
 COURSE_ACTIVITY_TYPES: frozenset[CourseActivityType] = frozenset(
-    {"typing", "dictation", "speaking", "vocabulary", "review"}
+    {"typing", "vocabulary", "review"}
 )
 
 
@@ -728,12 +728,11 @@ class CourseProgressService:
     def _progress_activity_type(activity_type: str) -> CourseActivityType:
         direct = {
             "typing": "typing",
-            "dictation": "dictation",
-            "speaking": "speaking",
+            "listening": "review",
+            "reinforcement": "review",
             "vocabulary": "vocabulary",
             "review": "review",
             "fsrs": "review",
-            "listening": "review",
             "reading": "typing",
             "translation": "typing",
             "self_test": "typing",

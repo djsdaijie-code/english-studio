@@ -1,0 +1,1162 @@
+{
+  "specification_version": "1.0",
+  "content_version": "0.1.0",
+  "unit_id": "crypto-l1-u02",
+  "stable_key": "crypto-blockchain-english-unit-defi-markets",
+  "course_id": "crypto-blockchain-english",
+  "level_id": "crypto-l1",
+  "order": 2,
+  "title": "DeFi、市场指标与风险",
+  "description": "学习 DeFi 机制、TVL 和估值指标，以及质押、跨链、杠杆和合约风险英语。",
+  "difficulty": "intermediate",
+  "estimated_days": 7,
+  "learning_goals": [
+    "准确理解 TVL、market capitalization、FDV 和 trading volume",
+    "看懂 DeFi、跨链、Layer 2、清算和合约安全提示"
+  ],
+  "core_vocabulary": [
+    "DeFi",
+    "liquidity pool",
+    "liquidity provider",
+    "impermanent loss",
+    "yield",
+    "TVL",
+    "Total Value Locked",
+    "market capitalization",
+    "circulating supply",
+    "fully diluted valuation",
+    "trading volume",
+    "staking",
+    "validator",
+    "oracle",
+    "bridge",
+    "Layer 2",
+    "stablecoin",
+    "leverage",
+    "liquidation",
+    "audit"
+  ],
+  "core_patterns": [
+    "An abbreviation stands for + full term.",
+    "A equals B multiplied by C.",
+    "A can occur when + clause.",
+    "A reduces B but cannot guarantee C."
+  ],
+  "learning_plan_override": null,
+  "lessons": [
+    {
+      "lesson_id": "crypto-l1-u02-d01",
+      "stable_key": "crypto-blockchain-english-u02-day-01",
+      "unit_id": "crypto-l1-u02",
+      "day": 1,
+      "order": 1,
+      "title": "DeFi、流动性池与收益",
+      "lesson_type": "new_content",
+      "description": "理解 DeFi、流动性提供、无常损失和 yield。",
+      "learning_goals": [
+        "理解 DeFi、流动性提供、无常损失和 yield。"
+      ],
+      "new_sentence_ids": [
+        "crypto-s0021",
+        "crypto-s0022",
+        "crypto-s0023",
+        "crypto-s0024",
+        "crypto-s0025"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0021",
+            "crypto-s0022",
+            "crypto-s0023",
+            "crypto-s0024",
+            "crypto-s0025"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u02-d02",
+      "stable_key": "crypto-blockchain-english-u02-day-02",
+      "unit_id": "crypto-l1-u02",
+      "day": 2,
+      "order": 2,
+      "title": "TVL、市值与交易量",
+      "lesson_type": "new_content",
+      "description": "区分 TVL、market capitalization、FDV 和 trading volume。",
+      "learning_goals": [
+        "区分 TVL、market capitalization、FDV 和 trading volume。"
+      ],
+      "new_sentence_ids": [
+        "crypto-s0026",
+        "crypto-s0027",
+        "crypto-s0028",
+        "crypto-s0029",
+        "crypto-s0030"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0026",
+            "crypto-s0027",
+            "crypto-s0028",
+            "crypto-s0029",
+            "crypto-s0030"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u02-d03",
+      "stable_key": "crypto-blockchain-english-u02-day-03",
+      "unit_id": "crypto-l1-u02",
+      "day": 3,
+      "order": 3,
+      "title": "质押、预言机、跨链与 Layer 2",
+      "lesson_type": "new_content",
+      "description": "看懂网络角色、外部数据、跨链和扩容说明。",
+      "learning_goals": [
+        "看懂网络角色、外部数据、跨链和扩容说明。"
+      ],
+      "new_sentence_ids": [
+        "crypto-s0031",
+        "crypto-s0032",
+        "crypto-s0033",
+        "crypto-s0034",
+        "crypto-s0035"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0031",
+            "crypto-s0032",
+            "crypto-s0033",
+            "crypto-s0034",
+            "crypto-s0035"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u02-d04",
+      "stable_key": "crypto-blockchain-english-u02-day-04",
+      "unit_id": "crypto-l1-u02",
+      "day": 4,
+      "order": 4,
+      "title": "稳定币、杠杆与合约风险",
+      "lesson_type": "new_content",
+      "description": "学习稳定币、清算、审计和收益风险表达。",
+      "learning_goals": [
+        "学习稳定币、清算、审计和收益风险表达。"
+      ],
+      "new_sentence_ids": [
+        "crypto-s0036",
+        "crypto-s0037",
+        "crypto-s0038",
+        "crypto-s0039",
+        "crypto-s0040"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0036",
+            "crypto-s0037",
+            "crypto-s0038",
+            "crypto-s0039",
+            "crypto-s0040"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u02-d05",
+      "stable_key": "crypto-blockchain-english-u02-day-05",
+      "unit_id": "crypto-l1-u02",
+      "day": 5,
+      "order": 5,
+      "title": "综合场景：阅读 DeFi 项目概况",
+      "lesson_type": "scenario",
+      "description": "组合阅读协议资产、收益、数据来源和安全提示。",
+      "learning_goals": [
+        "组合阅读协议资产、收益、数据来源和安全提示。"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "crypto-s0021",
+        "crypto-s0022",
+        "crypto-s0023",
+        "crypto-s0025",
+        "crypto-s0026",
+        "crypto-s0027",
+        "crypto-s0033",
+        "crypto-s0039",
+        "crypto-s0040"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0021",
+            "crypto-s0022",
+            "crypto-s0023",
+            "crypto-s0025",
+            "crypto-s0026",
+            "crypto-s0027",
+            "crypto-s0033",
+            "crypto-s0039",
+            "crypto-s0040"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u02-d06",
+      "stable_key": "crypto-blockchain-english-u02-day-06",
+      "unit_id": "crypto-l1-u02",
+      "day": 6,
+      "order": 6,
+      "title": "术语辨析：指标、网络与风险",
+      "lesson_type": "mixed_practice",
+      "description": "比较容易混淆的链上指标、网络角色和风险术语。",
+      "learning_goals": [
+        "比较容易混淆的链上指标、网络角色和风险术语。"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "crypto-s0024",
+        "crypto-s0026",
+        "crypto-s0027",
+        "crypto-s0028",
+        "crypto-s0029",
+        "crypto-s0030",
+        "crypto-s0031",
+        "crypto-s0034",
+        "crypto-s0035",
+        "crypto-s0038"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0024",
+            "crypto-s0026",
+            "crypto-s0027",
+            "crypto-s0028",
+            "crypto-s0029",
+            "crypto-s0030",
+            "crypto-s0031",
+            "crypto-s0034",
+            "crypto-s0035",
+            "crypto-s0038"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u02-d07",
+      "stable_key": "crypto-blockchain-english-u02-day-07",
+      "unit_id": "crypto-l1-u02",
+      "day": 7,
+      "order": 7,
+      "title": "全单元复习",
+      "lesson_type": "review",
+      "description": "复习 20 条 DeFi、链上指标和风险表达。",
+      "learning_goals": [
+        "复习 20 条 DeFi、链上指标和风险表达。"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "crypto-s0021",
+        "crypto-s0022",
+        "crypto-s0023",
+        "crypto-s0024",
+        "crypto-s0025",
+        "crypto-s0026",
+        "crypto-s0027",
+        "crypto-s0028",
+        "crypto-s0029",
+        "crypto-s0030",
+        "crypto-s0031",
+        "crypto-s0032",
+        "crypto-s0033",
+        "crypto-s0034",
+        "crypto-s0035",
+        "crypto-s0036",
+        "crypto-s0037",
+        "crypto-s0038",
+        "crypto-s0039",
+        "crypto-s0040"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0021",
+            "crypto-s0022",
+            "crypto-s0023",
+            "crypto-s0024",
+            "crypto-s0025",
+            "crypto-s0026",
+            "crypto-s0027",
+            "crypto-s0028",
+            "crypto-s0029",
+            "crypto-s0030",
+            "crypto-s0031",
+            "crypto-s0032",
+            "crypto-s0033",
+            "crypto-s0034",
+            "crypto-s0035",
+            "crypto-s0036",
+            "crypto-s0037",
+            "crypto-s0038",
+            "crypto-s0039",
+            "crypto-s0040"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "crypto-s0021",
+            "crypto-s0022",
+            "crypto-s0023",
+            "crypto-s0024",
+            "crypto-s0025",
+            "crypto-s0026",
+            "crypto-s0027",
+            "crypto-s0028",
+            "crypto-s0029",
+            "crypto-s0030",
+            "crypto-s0031",
+            "crypto-s0032",
+            "crypto-s0033",
+            "crypto-s0034",
+            "crypto-s0035",
+            "crypto-s0036",
+            "crypto-s0037",
+            "crypto-s0038",
+            "crypto-s0039",
+            "crypto-s0040"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    }
+  ],
+  "sentences": [
+    {
+      "sentence_id": "crypto-s0021",
+      "stable_key": "crypto-blockchain-english-sentence-0021",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d01",
+      "day": 1,
+      "order": 1,
+      "english": "DeFi refers to financial applications built with blockchain smart contracts.",
+      "chinese": "DeFi 指使用区块链智能合约构建的金融应用。",
+      "scene": "理解 DeFi 定义",
+      "difficulty": "intermediate",
+      "core_words": [
+        "DeFi",
+        "financial application",
+        "blockchain",
+        "smart contract"
+      ],
+      "core_patterns": [
+        "A refers to + noun phrase."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "DeFi means every service offered by a crypto exchange.",
+          "explanation_zh": "DeFi 强调通过区块链和智能合约运行的金融应用，并非所有交易所服务。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0022",
+      "stable_key": "crypto-blockchain-english-sentence-0022",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d01",
+      "day": 1,
+      "order": 2,
+      "english": "A liquidity pool holds assets that support decentralized trading.",
+      "chinese": "流动性池持有用于支持去中心化交易的资产。",
+      "scene": "阅读 DEX 机制说明",
+      "difficulty": "intermediate",
+      "core_words": [
+        "liquidity pool",
+        "hold",
+        "asset",
+        "decentralized trading"
+      ],
+      "core_patterns": [
+        "A + noun + holds + object + that + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A liquidity pool is a list of recent trades.",
+          "explanation_zh": "流动性池由智能合约中的资产构成，不是交易记录列表。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0023",
+      "stable_key": "crypto-blockchain-english-sentence-0023",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d01",
+      "day": 1,
+      "order": 3,
+      "english": "Liquidity providers deposit assets into pools and accept specific risks.",
+      "chinese": "流动性提供者把资产存入池中，并承担相应风险。",
+      "scene": "理解流动性提供",
+      "difficulty": "intermediate",
+      "core_words": [
+        "liquidity provider",
+        "deposit",
+        "pool",
+        "risk"
+      ],
+      "core_patterns": [
+        "A + person + verbs + and accepts + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Liquidity providers receive returns without taking any risk.",
+          "explanation_zh": "提供流动性可能获得回报，也会承担价格变化和合约等风险。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0024",
+      "stable_key": "crypto-blockchain-english-sentence-0024",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d01",
+      "day": 1,
+      "order": 4,
+      "english": "Impermanent loss can occur when pooled asset prices move apart.",
+      "chinese": "当池中资产价格走势分化时，可能出现无常损失。",
+      "scene": "理解流动性风险",
+      "difficulty": "intermediate",
+      "core_words": [
+        "impermanent loss",
+        "occur",
+        "pooled asset",
+        "move apart"
+      ],
+      "core_patterns": [
+        "A can occur when + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Impermanent loss is another name for a network fee.",
+          "explanation_zh": "无常损失与池中资产的相对价格变化有关，不是网络费。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0025",
+      "stable_key": "crypto-blockchain-english-sentence-0025",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d01",
+      "day": 1,
+      "order": 5,
+      "english": "Yield describes returns from lending, staking, or providing liquidity.",
+      "chinese": "收益率描述借贷、质押或提供流动性获得的回报。",
+      "scene": "阅读收益说明",
+      "difficulty": "intermediate",
+      "core_words": [
+        "yield",
+        "return",
+        "lending",
+        "staking",
+        "providing liquidity"
+      ],
+      "core_patterns": [
+        "A describes returns from + list."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Yield always means guaranteed profit.",
+          "explanation_zh": "yield 描述回报，不代表回报有保证，也不说明具体风险。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0026",
+      "stable_key": "crypto-blockchain-english-sentence-0026",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d02",
+      "day": 2,
+      "order": 1,
+      "english": "TVL stands for Total Value Locked in DeFi.",
+      "chinese": "TVL 指 DeFi 中的总锁定价值（Total Value Locked）。",
+      "scene": "看懂 DeFi 数据面板",
+      "difficulty": "intermediate",
+      "core_words": [
+        "TVL",
+        "Total Value Locked",
+        "DeFi"
+      ],
+      "core_patterns": [
+        "An abbreviation stands for + full term."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "TVL stands for Total Volume Listed.",
+          "explanation_zh": "TVL 的完整写法是 Total Value Locked，即总锁定价值。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0027",
+      "stable_key": "crypto-blockchain-english-sentence-0027",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d02",
+      "day": 2,
+      "order": 2,
+      "english": "TVL measures assets deposited in a protocol's smart contracts.",
+      "chinese": "TVL 衡量存入某个协议智能合约的资产价值。",
+      "scene": "理解 TVL 指标",
+      "difficulty": "intermediate",
+      "core_words": [
+        "TVL",
+        "measure",
+        "deposit",
+        "protocol"
+      ],
+      "core_patterns": [
+        "A measures + object + past participle phrase."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "TVL always equals a token's market capitalization.",
+          "explanation_zh": "TVL 衡量协议中的存入资产，与代币市值是不同指标。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0028",
+      "stable_key": "crypto-blockchain-english-sentence-0028",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d02",
+      "day": 2,
+      "order": 3,
+      "english": "Market capitalization equals token price multiplied by circulating supply.",
+      "chinese": "市值等于代币价格乘以流通供应量。",
+      "scene": "阅读市场数据",
+      "difficulty": "intermediate",
+      "core_words": [
+        "market capitalization",
+        "token price",
+        "circulating supply"
+      ],
+      "core_patterns": [
+        "A equals B multiplied by C."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Market capitalization uses only the maximum token supply.",
+          "explanation_zh": "市值通常使用流通供应量，而不是最大供应量。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0029",
+      "stable_key": "crypto-blockchain-english-sentence-0029",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d02",
+      "day": 2,
+      "order": 4,
+      "english": "Fully diluted valuation estimates value using the total token supply.",
+      "chinese": "完全稀释估值使用代币总供应量估算价值。",
+      "scene": "区分 FDV 与市值",
+      "difficulty": "intermediate",
+      "core_words": [
+        "fully diluted valuation",
+        "estimate",
+        "total supply"
+      ],
+      "core_patterns": [
+        "A estimates value using + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Fully diluted valuation only counts circulating tokens.",
+          "explanation_zh": "完全稀释估值着眼于总供应量，而市值通常使用流通供应量。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0030",
+      "stable_key": "crypto-blockchain-english-sentence-0030",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d02",
+      "day": 2,
+      "order": 5,
+      "english": "Trading volume measures how much of an asset changes hands.",
+      "chinese": "交易量衡量某种资产在一定范围内的成交规模。",
+      "scene": "阅读成交数据",
+      "difficulty": "intermediate",
+      "core_words": [
+        "trading volume",
+        "measure",
+        "asset",
+        "change hands"
+      ],
+      "core_patterns": [
+        "A measures how much + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Trading volume is the same as market capitalization.",
+          "explanation_zh": "交易量描述成交活动，市值描述价格与供应量形成的估值。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0031",
+      "stable_key": "crypto-blockchain-english-sentence-0031",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d03",
+      "day": 3,
+      "order": 1,
+      "english": "Staking commits assets to help secure a proof-of-stake network.",
+      "chinese": "质押投入资产以帮助保护权益证明网络。",
+      "scene": "理解质押机制",
+      "difficulty": "intermediate",
+      "core_words": [
+        "staking",
+        "commit",
+        "secure",
+        "proof-of-stake"
+      ],
+      "core_patterns": [
+        "A commits + object + to help + verb."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Staking and ordinary wallet holding always mean the same thing.",
+          "explanation_zh": "质押需要把资产投入或委托给特定机制，不等同于普通持有。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0032",
+      "stable_key": "crypto-blockchain-english-sentence-0032",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d03",
+      "day": 3,
+      "order": 2,
+      "english": "Validators check blocks and help maintain network consensus.",
+      "chinese": "验证者检查区块并帮助维持网络共识。",
+      "scene": "阅读网络角色说明",
+      "difficulty": "intermediate",
+      "core_words": [
+        "validator",
+        "block",
+        "maintain",
+        "consensus"
+      ],
+      "core_patterns": [
+        "A + role + verbs + and helps + verb."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Validators set the market price of every token.",
+          "explanation_zh": "验证者参与网络共识和区块验证，并不负责设定代币市场价格。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0033",
+      "stable_key": "crypto-blockchain-english-sentence-0033",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d03",
+      "day": 3,
+      "order": 3,
+      "english": "An oracle delivers external data to blockchain applications.",
+      "chinese": "预言机向区块链应用提供外部数据。",
+      "scene": "理解链上数据来源",
+      "difficulty": "intermediate",
+      "core_words": [
+        "oracle",
+        "deliver",
+        "external data",
+        "blockchain application"
+      ],
+      "core_patterns": [
+        "A + noun + delivers + object + to + recipient."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "An oracle creates every smart contract on the blockchain.",
+          "explanation_zh": "预言机主要把链外或外部数据提供给链上应用，不负责创建所有合约。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0034",
+      "stable_key": "crypto-blockchain-english-sentence-0034",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d03",
+      "day": 3,
+      "order": 4,
+      "english": "A bridge transfers assets or messages between blockchain networks.",
+      "chinese": "跨链桥在不同区块链网络之间传递资产或消息。",
+      "scene": "理解跨链操作",
+      "difficulty": "intermediate",
+      "core_words": [
+        "bridge",
+        "transfer",
+        "asset",
+        "message",
+        "blockchain network"
+      ],
+      "core_patterns": [
+        "A + noun + transfers + object + between + places."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A bridge removes every risk from cross-chain transfers.",
+          "explanation_zh": "跨链桥提供网络间连接，但仍存在合约、验证和对手方等风险。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0035",
+      "stable_key": "crypto-blockchain-english-sentence-0035",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d03",
+      "day": 3,
+      "order": 5,
+      "english": "A Layer 2 network scales another blockchain under specific trust assumptions.",
+      "chinese": "Layer 2 网络在特定信任假设下为另一条区块链扩容。",
+      "scene": "阅读扩容网络说明",
+      "difficulty": "intermediate",
+      "core_words": [
+        "Layer 2",
+        "scale",
+        "blockchain",
+        "trust assumption"
+      ],
+      "core_patterns": [
+        "A + noun + verbs + under + condition."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Every sidechain is automatically a Layer 2 network.",
+          "explanation_zh": "Layer 2、侧链和其他扩容方案具有不同的安全与信任假设。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0036",
+      "stable_key": "crypto-blockchain-english-sentence-0036",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d04",
+      "day": 4,
+      "order": 1,
+      "english": "A stablecoin aims to track the value of another asset.",
+      "chinese": "稳定币旨在跟踪另一种资产的价值。",
+      "scene": "理解稳定币目标",
+      "difficulty": "intermediate",
+      "core_words": [
+        "stablecoin",
+        "aim",
+        "track",
+        "asset"
+      ],
+      "core_patterns": [
+        "A + noun + aims to + verb + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Every stablecoin is guaranteed to keep a fixed price.",
+          "explanation_zh": "稳定币以价格稳定为目标，但不同机制仍可能面临脱锚风险。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0037",
+      "stable_key": "crypto-blockchain-english-sentence-0037",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d04",
+      "day": 4,
+      "order": 2,
+      "english": "Leverage increases both potential gains and potential losses.",
+      "chinese": "杠杆会同时放大潜在收益和潜在损失。",
+      "scene": "阅读杠杆风险提示",
+      "difficulty": "intermediate",
+      "core_words": [
+        "leverage",
+        "increase",
+        "potential gain",
+        "potential loss"
+      ],
+      "core_patterns": [
+        "A increases both B and C."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Leverage only increases potential gains.",
+          "explanation_zh": "杠杆会双向放大结果，不能只描述潜在收益。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0038",
+      "stable_key": "crypto-blockchain-english-sentence-0038",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d04",
+      "day": 4,
+      "order": 3,
+      "english": "Liquidation can close a position when its collateral becomes insufficient.",
+      "chinese": "当抵押品不足时，清算可能会关闭仓位。",
+      "scene": "理解清算提示",
+      "difficulty": "intermediate",
+      "core_words": [
+        "liquidation",
+        "close a position",
+        "collateral",
+        "insufficient"
+      ],
+      "core_patterns": [
+        "A can + verb + object + when + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Liquidation always means a trader chose to close the position.",
+          "explanation_zh": "清算通常由风险机制触发，不等同于交易者主动平仓。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0039",
+      "stable_key": "crypto-blockchain-english-sentence-0039",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d04",
+      "day": 4,
+      "order": 4,
+      "english": "An audit reduces risk but cannot guarantee a contract is safe.",
+      "chinese": "审计可以降低风险，但不能保证合约绝对安全。",
+      "scene": "阅读合约安全说明",
+      "difficulty": "intermediate",
+      "core_words": [
+        "audit",
+        "reduce risk",
+        "guarantee",
+        "contract"
+      ],
+      "core_patterns": [
+        "A reduces B but cannot guarantee C."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "An audited contract cannot contain any bugs.",
+          "explanation_zh": "审计能增加发现问题的机会，但无法保证找出所有缺陷。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0040",
+      "stable_key": "crypto-blockchain-english-sentence-0040",
+      "unit_id": "crypto-l1-u02",
+      "lesson_id": "crypto-l1-u02-d04",
+      "day": 4,
+      "order": 5,
+      "english": "High yields often come with additional risks and trade-offs.",
+      "chinese": "高收益通常伴随着额外风险和权衡。",
+      "scene": "评估收益宣传",
+      "difficulty": "intermediate",
+      "core_words": [
+        "high yield",
+        "additional risk",
+        "trade-off"
+      ],
+      "core_patterns": [
+        "A often comes with B and C."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "High yields always come without additional risk.",
+          "explanation_zh": "收益水平不能脱离合约、市场、流动性和对手方风险单独判断。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-defi-markets",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    }
+  ],
+  "status": "draft"
+}

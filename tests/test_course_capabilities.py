@@ -11,7 +11,6 @@ import pytest
 from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.database.migrations import MigrationRunner
-from english_typing_trainer.models.pronunciation import PronunciationResult
 from english_typing_trainer.models.tts import TTSAudioResult, TTSRequest
 from english_typing_trainer.services.course_capabilities import (
     CourseCapabilityContentError,
@@ -291,7 +290,7 @@ def test_schema_13_failure_rolls_back_all_ddl_to_schema_12(
     connection.close()
 
 
-def test_course_tts_uses_stable_versioned_cache_without_body_preview(
+def test_course_pronunciation_audio_uses_stable_versioned_cache_without_body_preview(
     tmp_path: Path,
 ) -> None:
     context = build_app_context(data_dir=tmp_path / "data")
@@ -312,14 +311,6 @@ def test_course_tts_uses_stable_versioned_cache_without_body_preview(
             (first.cache_key,),
         ).fetchone()
         assert row[0] == ""
-        context.course_capability_service.start_listening(item.ref)
-        assert context.course_progress_service.get_activity_progress(
-            COURSE_ID, FIRST_ITEM, "review"
-        ).status == "in_progress"
-        context.course_capability_service.complete_listening(item.ref)
-        assert context.course_progress_service.get_activity_progress(
-            COURSE_ID, FIRST_ITEM, "review"
-        ).status == "completed"
 
         newer_ref = replace(item.ref, content_version="0.1.1")
         assert context.tts_service.course_cache_key(newer_ref, request) != first.cache_key
@@ -334,69 +325,6 @@ def test_course_tts_uses_stable_versioned_cache_without_body_preview(
         ).fetchone()[0]
         assert ordinary_preview == ordinary.text
         assert context.database.connect().execute("SELECT COUNT(*) FROM articles").fetchone()[0] == 0
-    finally:
-        context.database.close()
-
-
-def test_course_dictation_and_speaking_use_independent_state_and_history(
-    tmp_path: Path,
-) -> None:
-    context = build_app_context(data_dir=tmp_path / "data")
-    try:
-        item = context.course_capability_service.item(COURSE_ID, FIRST_ITEM)
-        first = context.course_capability_service.record_dictation(
-            item.ref,
-            score=0.0,
-            error_count=4,
-            omitted_count=2,
-            inserted_count=1,
-            replay_count=3,
-            duration_ms=1500,
-        )
-        completed_at = context.course_progress_service.get_activity_progress(
-            COURSE_ID, FIRST_ITEM, "dictation"
-        ).completed_at
-        context.course_capability_service.record_dictation(
-            item.ref,
-            score=92.0,
-            error_count=1,
-            omitted_count=0,
-            inserted_count=0,
-            replay_count=1,
-            duration_ms=700,
-        )
-        speaking = context.course_capability_service.record_speaking(
-            item.ref,
-            PronunciationResult(
-                status="completed",
-                provider="fake-speech",
-                overall_score=61.0,
-                accuracy_score=60.0,
-                fluency_score=62.0,
-                completeness_score=100.0,
-                prosody_score=58.0,
-            ),
-            duration_ms=1200,
-        )
-        dictation_state = context.course_progress_service.get_activity_progress(
-            COURSE_ID, FIRST_ITEM, "dictation"
-        )
-        speaking_state = context.course_progress_service.get_activity_progress(
-            COURSE_ID, FIRST_ITEM, "speaking"
-        )
-        assert first.score == 0.0
-        assert speaking.provider == "fake-speech"
-        assert dictation_state.status == speaking_state.status == "completed"
-        assert dictation_state.attempt_count == 2
-        assert dictation_state.best_score == 92.0
-        assert dictation_state.completed_at == completed_at
-        connection = context.database.connect()
-        assert connection.execute("SELECT COUNT(*) FROM course_capability_attempts").fetchone()[0] == 3
-        assert connection.execute("SELECT COUNT(*) FROM dictation_attempts").fetchone()[0] == 0
-        assert connection.execute("SELECT COUNT(*) FROM pronunciation_attempts").fetchone()[0] == 0
-        assert connection.execute("SELECT COUNT(*) FROM articles").fetchone()[0] == 0
-        columns = _columns(connection, "course_capability_attempts")
-        assert not {"expected_text", "user_input", "reference_text", "source_sentence"} & columns
     finally:
         context.database.close()
 
@@ -544,14 +472,9 @@ def test_required_activities_drive_progress_without_score_threshold(
             "required": True,
         },
         {
-            "activity_type": "dictation",
+            "activity_type": "listening",
             "sentence_ids": ["ai-s0008"],
             "required": True,
-        },
-        {
-            "activity_type": "speaking",
-            "sentence_ids": ["ai-s0009"],
-            "required": False,
         },
     ]
     _write_unit(courses_root, payload)
@@ -564,7 +487,7 @@ def test_required_activities_drive_progress_without_score_threshold(
             COURSE_ID,
             "ai-large-models-sentence-0007",
         )
-        dictation = context.course_capability_service.content_ref(
+        listening = context.course_capability_service.content_ref(
             COURSE_ID,
             "ai-large-models-sentence-0008",
         )
@@ -577,15 +500,8 @@ def test_required_activities_drive_progress_without_score_threshold(
             DAY_TWO,
         )
         assert (partial.completed_required_items, partial.total_required_items) == (1, 2)
-        context.course_capability_service.record_dictation(
-            dictation,
-            score=0.0,
-            error_count=99,
-            omitted_count=5,
-            inserted_count=4,
-            replay_count=0,
-            duration_ms=100,
-        )
+        context.course_capability_service.start_listening(listening)
+        context.course_capability_service.complete_listening(listening)
         completed = context.course_progress_service.get_lesson_progress(
             COURSE_ID,
             DAY_TWO,
@@ -593,28 +509,16 @@ def test_required_activities_drive_progress_without_score_threshold(
         assert completed.is_completed
         original_time = context.course_progress_service.get_activity_progress(
             COURSE_ID,
-            dictation.item_stable_key,
-            "dictation",
+            listening.item_stable_key,
+            "review",
         ).completed_at
-        context.course_capability_service.record_dictation(
-            dictation,
-            score=100.0,
-            error_count=0,
-            omitted_count=0,
-            inserted_count=0,
-            replay_count=0,
-            duration_ms=100,
-        )
+        context.course_capability_service.start_listening(listening)
+        context.course_capability_service.complete_listening(listening)
         repeated = context.course_progress_service.get_activity_progress(
             COURSE_ID,
-            dictation.item_stable_key,
-            "dictation",
+            listening.item_stable_key,
+            "review",
         )
         assert repeated.completed_at == original_time
-        assert context.course_progress_service.get_activity_progress(
-            COURSE_ID,
-            "ai-large-models-sentence-0009",
-            "speaking",
-        ).status == "not_started"
     finally:
         context.database.close()

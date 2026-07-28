@@ -100,9 +100,11 @@ def test_continuous_practice_collects_selected_word_without_losing_focus(tmp_pat
         article=context.article_library.import_txt_file(source,500).article
         settings=context.settings_service.get_settings(); settings.sentence_learning_enabled=False; settings.vocabulary_auto_enrich=False; context.settings_service.save_settings(settings)
         window=MainWindow(context); window.show(); window._start_selected_article("start_over"); application.processEvents()
-        monkeypatch.setattr(QMessageBox,"information",lambda *_a,**_k:QMessageBox.StandardButton.Ok)
         start=window.current_material.section_text.index("program"); window._collect_selected_word("program",start,start+7); application.processEvents()
         assert context.vocabulary_learning_service.repository.get_by_word("program") is not None
+        assert window.vocabulary_quick_access.added_popup.isVisibleTo(window)
+        assert window.vocabulary_quick_access.word_label.text()=="program"
+        assert not window.vocabulary_quick_access.book_button.isVisible()
         assert window.practice_view.input_edit.hasFocus()
         window.current_practice_saved=True; window.close()
     finally:context.database.close()

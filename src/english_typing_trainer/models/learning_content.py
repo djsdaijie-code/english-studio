@@ -7,7 +7,7 @@ from typing import Literal
 from english_typing_trainer.models.course_progress import CourseActivityType
 
 
-CourseCapabilityType = Literal["dictation", "speaking"]
+CourseCapabilityType = Literal["speaking"]
 CourseCapabilityStatus = Literal[
     "completed", "failed", "cancelled", "not_configured"
 ]

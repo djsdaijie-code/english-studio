@@ -1,0 +1,407 @@
+{
+  "manifest_version": "1.0.1",
+  "generated_at": "2026-07-24",
+  "trademark_notice": "All brand names and logos remain trademarks of their respective owners. Assets are included only for identification and educational practice.",
+  "assets": [
+    {
+      "path": "assets/logos/astonmartin.svg",
+      "brand": "Aston Martin",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.astonmartin.com",
+      "source_file": "simple-icons@16.21.0/icons/astonmartin.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "c6423d510896fb31d55f51b48c26ca0f3849d4fe107c576a1c50153314bd86de"
+    },
+    {
+      "path": "assets/logos/audi.svg",
+      "brand": "Audi",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.audi.com/ci/en/intro/basics/rings.html",
+      "source_file": "simple-icons@16.21.0/icons/audi.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "daebead0fb61bc8cd88e90adabca5161a9b52a8d4202ce89c18daeab6bd70d7e"
+    },
+    {
+      "path": "assets/logos/bentley.svg",
+      "brand": "Bentley",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://en.wikipedia.org/wiki/File:Bentley_logo_2.svg",
+      "source_file": "simple-icons@16.21.0/icons/bentley.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "1f07419b93ca531876dcdddae4627e3b0588e2a05479b7cf57bb1419603b80f4"
+    },
+    {
+      "path": "assets/logos/bmw.svg",
+      "brand": "BMW",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://bmw.com",
+      "source_file": "simple-icons@16.21.0/icons/bmw.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "d2a396f98f388b06861ed887a0d9830ed5e32224726c2acf000250e6ef289dcf"
+    },
+    {
+      "path": "assets/logos/byd.svg",
+      "brand": "BYD",
+      "provider": "Wikimedia Commons",
+      "provider_version": "retrieved-2026-07-24",
+      "source_url": "https://commons.wikimedia.org/wiki/File:BYD_Auto_2022_logo.svg",
+      "source_file": "https://upload.wikimedia.org/wikipedia/commons/e/e2/BYD_Auto_2022_logo.svg",
+      "rights_note": "Wikimedia Commons marks this simple text/logo as public domain for copyright-threshold purposes; trademark rights may still apply.",
+      "sha256": "4b8609a2c81991b6a3c4ef1540a50b19aa10d167b23941b916af316dd652ad89"
+    },
+    {
+      "path": "assets/logos/cadillac.svg",
+      "brand": "Cadillac",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.cadillac.com",
+      "source_file": "simple-icons@16.21.0/icons/cadillac.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "aec91d6dba7fd61378188bd74672909a9695d02b933f15580a7fe9620216fe70"
+    },
+    {
+      "path": "assets/logos/chevrolet.svg",
+      "brand": "Chevrolet",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.chevrolet.com/content/dam/chevrolet/na/us/english/index/shopping-tools/download-catalog/02-pdf/2019-chevrolet-corvette-catalog.pdf",
+      "source_file": "simple-icons@16.21.0/icons/chevrolet.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "c656f8d607bc0230a7a239981b24d79cb7a1550d43c476ff486cf8aa360646f6"
+    },
+    {
+      "path": "assets/logos/ferrari.svg",
+      "brand": "Ferrari",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.ferrari.com",
+      "source_file": "simple-icons@16.21.0/icons/ferrari.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "583319b753b043bcfd0a06c3d5889cfe36c30d81262635ed5d24e14f31fa9735"
+    },
+    {
+      "path": "assets/logos/fiat.svg",
+      "brand": "Fiat",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.fcaci.com/x/FIATv15",
+      "source_file": "simple-icons@16.21.0/icons/fiat.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "73801d77295b1e306a53e98137051c06feb74f6a2c15bf90f7c982d28b295292"
+    },
+    {
+      "path": "assets/logos/ford.svg",
+      "brand": "Ford",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://secure.ford.com/brochures/",
+      "source_file": "simple-icons@16.21.0/icons/ford.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "933a0ad57caec864d69c4afb43c316018ebc54bd8e76244ffe545197236299c1"
+    },
+    {
+      "path": "assets/logos/geely.svg",
+      "brand": "Geely",
+      "provider": "Wikimedia Commons",
+      "provider_version": "retrieved-2026-07-24",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Geely_Auto_2023.svg",
+      "source_file": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Geely_Auto_2023.svg",
+      "rights_note": "Wikimedia Commons marks this simple text/logo as public domain for copyright-threshold purposes; trademark rights may still apply.",
+      "sha256": "5aeb2adcc2c7af981b3d2326b33b2e8825472c80ccec694c4c810037b1d4f1a7"
+    },
+    {
+      "path": "assets/logos/honda.svg",
+      "brand": "Honda",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.honda.ie",
+      "source_file": "simple-icons@16.21.0/icons/honda.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "ae97b9478f29718f95fc7956a3971456a8a458e9ff48f24b903ef1d6b68f2de1"
+    },
+    {
+      "path": "assets/logos/hyundai.svg",
+      "brand": "Hyundai",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.hyundai.com",
+      "source_file": "simple-icons@16.21.0/icons/hyundai.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "dcd2d6c20e7c4bc431f7c3a1108c4493b007f978b8ee6f48b007406cc8435937"
+    },
+    {
+      "path": "assets/logos/infiniti.svg",
+      "brand": "Infiniti",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.infiniti.com",
+      "source_file": "simple-icons@16.21.0/icons/infiniti.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "f88f745ff6fd051f1186c17864520ebd41cdd4175ee4dd99e20d673928eae097"
+    },
+    {
+      "path": "assets/logos/jeep.svg",
+      "brand": "Jeep",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Jeep_logo.svg",
+      "source_file": "simple-icons@16.21.0/icons/jeep.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "b06a5248c18bf0c0b3181dc52f20558f8e85d6952424f52e7b285410bfd47864"
+    },
+    {
+      "path": "assets/logos/kia.svg",
+      "brand": "Kia",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.kia.com",
+      "source_file": "simple-icons@16.21.0/icons/kia.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "bbdeeab899331fc6181949c2b31686208a88d7afc69d182b54dccc138b8e4843"
+    },
+    {
+      "path": "assets/logos/lamborghini.svg",
+      "brand": "Lamborghini",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.lamborghini.com",
+      "source_file": "simple-icons@16.21.0/icons/lamborghini.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "c1c5fed94cf25f0855b05853fcaebdfb640899b34c733376a1c486196bd7e5e7"
+    },
+    {
+      "path": "assets/logos/landrover.svg",
+      "brand": "Land Rover",
+      "provider": "Wikimedia Commons",
+      "provider_version": "retrieved-2026-07-24",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Land_Rover_2023.svg",
+      "source_file": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Land_Rover_2023.svg",
+      "rights_note": "Wikimedia Commons marks this simple text/logo as public domain for copyright-threshold purposes; trademark rights may still apply.",
+      "sha256": "6b7b49cfadac56a16a7ba139aff897fba045b9f8e2cb7078b7b353e38296e20f"
+    },
+    {
+      "path": "assets/logos/lexus.svg",
+      "brand": "Lexus",
+      "provider": "Wikimedia Commons",
+      "provider_version": "retrieved-2026-07-24",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Lexus.svg",
+      "source_file": "https://upload.wikimedia.org/wikipedia/commons/7/75/Lexus.svg",
+      "rights_note": "Wikimedia Commons marks this simple text/logo as public domain for copyright-threshold purposes; trademark rights may still apply.",
+      "sha256": "1f622365774aed0e7047ff3a97b9e57481e486fcc72c29f2c400fd3af1d4124a"
+    },
+    {
+      "path": "assets/logos/maserati.svg",
+      "brand": "Maserati",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.stellantis.com/en/brands/maserati",
+      "source_file": "simple-icons@16.21.0/icons/maserati.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "be4ff671866eb694fa6f5756a5ffdef5b9694c4b3c895ff01427b9d98d144b91"
+    },
+    {
+      "path": "assets/logos/mazda.svg",
+      "brand": "Mazda",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.mazda.com/en/about/profile/library/",
+      "source_file": "simple-icons@16.21.0/icons/mazda.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "e25b1b282b433e90afb5a8053f50dd69c83e786d08794516136adeb60a0f1bb9"
+    },
+    {
+      "path": "assets/logos/mclaren.svg",
+      "brand": "McLaren",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://cars.mclaren.com",
+      "source_file": "simple-icons@16.21.0/icons/mclaren.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "f53570a9dde333b4f55211831baa3cad69d6c8b01681405a232e97a883506a26"
+    },
+    {
+      "path": "assets/logos/mercedesbenz.svg",
+      "brand": "Mercedes-Benz",
+      "provider": "Wikimedia Commons",
+      "provider_version": "retrieved-2026-07-24",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_free_logo.svg",
+      "source_file": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Mercedes-Benz_free_logo.svg",
+      "rights_note": "Wikimedia Commons marks this simple text/logo as public domain for copyright-threshold purposes; trademark rights may still apply.",
+      "sha256": "53812b85c60c10e14c4362638ec96b43b50ed91f3661d7d58f8edf344ee69008"
+    },
+    {
+      "path": "assets/logos/mg.svg",
+      "brand": "MG",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.mg.co.uk/themes/custom/mg/assets/images/svg/mg-logo-desktop.svg",
+      "source_file": "simple-icons@16.21.0/icons/mg.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "51b79569d32c05fb19e99f03c8ff8edd90a445b3d8f732a9e8bd8899e7a2a350"
+    },
+    {
+      "path": "assets/logos/mini.svg",
+      "brand": "MINI",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://mini.com",
+      "source_file": "simple-icons@16.21.0/icons/mini.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "b6a2b61d674bf15ef45a468962eca1faac42234ff24b13812c4a16bbc71fcb77"
+    },
+    {
+      "path": "assets/logos/mitsubishi.svg",
+      "brand": "Mitsubishi",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.mitsubishi.com",
+      "source_file": "simple-icons@16.21.0/icons/mitsubishi.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "d855e4d9d41f87287c917b1e6bb4baaf868957466a9ae1f64db34a1bdf7255c3"
+    },
+    {
+      "path": "assets/logos/nissan.svg",
+      "brand": "Nissan",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.nissan.ie",
+      "source_file": "simple-icons@16.21.0/icons/nissan.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "97980fa3135dfeffb72a9acdf3ee23b21bf9a53b8475e7b5cff9ce6df645cf5c"
+    },
+    {
+      "path": "assets/logos/peugeot.svg",
+      "brand": "Peugeot",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.peugeot.co.uk",
+      "source_file": "simple-icons@16.21.0/icons/peugeot.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "52eac20d95c797916ee5ce7344a0e2a647472a9e560af2f2e1e4f45f0de7edf3"
+    },
+    {
+      "path": "assets/logos/porsche.svg",
+      "brand": "Porsche",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.porsche.com",
+      "source_file": "simple-icons@16.21.0/icons/porsche.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "cc78f5661cf80886fa5d94bd13a0f32eca0ba39716dd8154f454bb992c8864a0"
+    },
+    {
+      "path": "assets/logos/renault.svg",
+      "brand": "Renault",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://media.renaultgroup.com",
+      "source_file": "simple-icons@16.21.0/icons/renault.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "59a8b5df584c85f680e2f81b8255a3bbf562ce291c5a9db6a78f393c4ecad7d6"
+    },
+    {
+      "path": "assets/logos/rollsroyce.svg",
+      "brand": "Rolls-Royce",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.rolls-roycemotorcars.com",
+      "source_file": "simple-icons@16.21.0/icons/rollsroyce.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "08b4e1fec2499029d9ec3e8d76d59857b5ae22856261096cdde07cdc5424e0b0"
+    },
+    {
+      "path": "assets/logos/seat.svg",
+      "brand": "SEAT",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.seat.es",
+      "source_file": "simple-icons@16.21.0/icons/seat.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "662eff13aa274b786e3231e72ca7d65ae9edcfcd5937ca4efab487f2d3825e13"
+    },
+    {
+      "path": "assets/logos/subaru.svg",
+      "brand": "Subaru",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Subaru_logo.svg",
+      "source_file": "simple-icons@16.21.0/icons/subaru.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "ce64a04d98a02272319baf0fb03576fea64878a40aff5eb36d137e23127109c3"
+    },
+    {
+      "path": "assets/logos/suzuki.svg",
+      "brand": "Suzuki",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.suzuki.ie",
+      "source_file": "simple-icons@16.21.0/icons/suzuki.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "3ef67701d67dcb096645dbaf16cf5cad9dc9f04826d394b471a9f43aee4a2596"
+    },
+    {
+      "path": "assets/logos/tata.svg",
+      "brand": "Tata",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.tatasteel.com/media/media-kit/logos-usage-guidelines",
+      "source_file": "simple-icons@16.21.0/icons/tata.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "ba567bbb17d49ca56a154e545ca2041e172b2f640738eea3c038c9bca91db002"
+    },
+    {
+      "path": "assets/logos/tesla.svg",
+      "brand": "Tesla",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.tesla.com/tesla-gallery",
+      "source_file": "simple-icons@16.21.0/icons/tesla.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "4b94d9eaf23849d6feec7a9c819e3699a35cbb76045ba7d482d17cbcc97414a5"
+    },
+    {
+      "path": "assets/logos/toyota.svg",
+      "brand": "Toyota",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.toyota.com/brandguidelines/logo/",
+      "source_file": "simple-icons@16.21.0/icons/toyota.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "70a20e8335255cff3311314636ab15dbc0c5941a52d1ae5ea3471e85f40e7507"
+    },
+    {
+      "path": "assets/logos/volkswagen.svg",
+      "brand": "Volkswagen",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.vw.com",
+      "source_file": "simple-icons@16.21.0/icons/volkswagen.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "de8379968dc31340ab9a06fd54f01d59be56f9846bc07938b9da5bd24407034f"
+    },
+    {
+      "path": "assets/logos/volvo.svg",
+      "brand": "Volvo",
+      "provider": "Simple Icons",
+      "provider_version": "16.21.0",
+      "source_url": "https://www.media.volvocars.com/global/en-gb/logos",
+      "source_file": "simple-icons@16.21.0/icons/volvo.svg",
+      "rights_note": "Source artwork distributed by Simple Icons 16.21.0; no individual license metadata is declared for this icon and trademark rights may apply.",
+      "sha256": "3323cdf4d0f8aabe89f1ecd6d8169aacbd2e3a54a9791d75918ade418f538f19"
+    },
+    {
+      "path": "assets/logos/xpeng.svg",
+      "brand": "XPENG",
+      "provider": "Wikimedia Commons",
+      "provider_version": "retrieved-2026-07-24",
+      "source_url": "https://commons.wikimedia.org/wiki/File:XPeng_logo.svg",
+      "source_file": "https://upload.wikimedia.org/wikipedia/commons/c/ca/XPeng_logo.svg",
+      "rights_note": "Wikimedia Commons marks this simple text/logo as public domain for copyright-threshold purposes; trademark rights may still apply.",
+      "sha256": "e61c71cc54e8062b767822a53f02e96adb08e254dca6b5b342921220034cbad7"
+    }
+  ]
+}

@@ -33,7 +33,7 @@ class ArticleProofreadingDialog(QDialog):
         summary = f"发现 {len(result.issues)} 处可能问题" if result.issues else "检测到建议修改"
         title = QLabel(f"《{article_title}》{summary}")
         title.setProperty("role", "page-title")
-        subtitle = QLabel("请核对 AI 建议。应用后会重新分段并重置本文进度，历史练习记录仍会保留。")
+        subtitle = QLabel("请核对 AI 建议。应用后会保留完整文章并重置本文进度，历史练习记录仍会保留。")
         subtitle.setProperty("role", "subtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(title)

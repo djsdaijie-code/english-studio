@@ -2,12 +2,12 @@
 
 ## Product
 
-English Studio helps learners build English ability through reading, typing, dictation and spaced review.
+English Studio helps learners build English ability through reading, typing, pronunciation and spaced review.
 
 ## Key features
 
 - Import local English TXT articles and practise continuously or sentence by sentence.
-- Cached translation, standard pronunciation, vocabulary learning, dictation and FSRS review.
+- Cached translation, standard pronunciation, vocabulary learning and FSRS review.
 - Daily learning progress and local-first privacy.
 - Optional Azure pronunciation scoring Beta with safe no-key fallback.
 

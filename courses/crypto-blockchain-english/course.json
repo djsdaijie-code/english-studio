@@ -1,0 +1,72 @@
+{
+  "specification_version": "1.0",
+  "course_id": "crypto-blockchain-english",
+  "stable_key": "crypto-blockchain-english-course",
+  "version": "0.1.0",
+  "content_version": "0.1.0",
+  "title": "币圈与区块链英语",
+  "subtitle": "读懂钱包、交易、DeFi 与链上风险",
+  "description": "通过真实、稳定的加密行业表达学习钱包、交易、DeFi、链上指标和风险英语。本课程只教授语言与概念，不提供投资建议。",
+  "language": "en",
+  "target_level": "intermediate",
+  "topics": [
+    "crypto vocabulary",
+    "wallet security",
+    "blockchain transactions",
+    "trading",
+    "DeFi",
+    "risk awareness"
+  ],
+  "estimated_days": 14,
+  "estimated_sentences": 40,
+  "prerequisites": [
+    "能理解基础英文陈述句",
+    "了解课程内容不构成投资建议"
+  ],
+  "learning_goals": [
+    "看懂钱包、转账和交易界面的高频英语",
+    "准确理解 DeFi 与链上指标的核心术语",
+    "使用英语表达常见安全检查和风险提示"
+  ],
+  "default_learning_plan": {
+    "new_sentences_per_day": 5,
+    "unit_days": 7,
+    "review_day": 7,
+    "assessment_day": 7
+  },
+  "levels": [
+    {
+      "level_id": "crypto-l1",
+      "stable_key": "crypto-blockchain-english-level-practical-basics",
+      "order": 1,
+      "title": "实用币圈英语基础",
+      "description": "从钱包和交易安全进入，再学习 DeFi、链上指标与风险表达。",
+      "difficulty": "intermediate",
+      "learning_goals": [
+        "掌握 40 条高频币圈英文表达",
+        "区分容易混淆的链上、交易和 DeFi 术语"
+      ],
+      "units": [
+        {
+          "unit_id": "crypto-l1-u01",
+          "stable_key": "crypto-blockchain-english-unit-wallets-transactions",
+          "order": 1,
+          "title": "钱包、交易与链上安全",
+          "status": "draft",
+          "content_path": "units/unit-01-wallets-transactions.json"
+        },
+        {
+          "unit_id": "crypto-l1-u02",
+          "stable_key": "crypto-blockchain-english-unit-defi-markets",
+          "order": 2,
+          "title": "DeFi、市场指标与风险",
+          "status": "draft",
+          "content_path": "units/unit-02-defi-markets.json"
+        }
+      ]
+    }
+  ],
+  "status": "draft",
+  "built_in": true,
+  "read_only": true
+}

@@ -18,7 +18,6 @@
     "new_sentences_per_day": 6,
     "unit_days": 7,
     "review_day": 7,
-    "dictation_day": 6,
     "assessment_day": 7
   },
   "levels": [

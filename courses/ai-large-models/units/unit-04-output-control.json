@@ -71,16 +71,7 @@
           ],
           "required": true
         },
-        {
-          "activity_type": "listening",
-          "sentence_ids": [
-            "ai-s0067",
-            "ai-s0069",
-            "ai-s0070",
-            "ai-s0072"
-          ],
-          "required": false
-        },
+
         {
           "activity_type": "fsrs",
           "sentence_ids": [
@@ -137,15 +128,7 @@
           ],
           "required": true
         },
-        {
-          "activity_type": "listening",
-          "sentence_ids": [
-            "ai-s0073",
-            "ai-s0074",
-            "ai-s0078"
-          ],
-          "required": false
-        },
+
         {
           "activity_type": "translation",
           "sentence_ids": [
@@ -197,17 +180,9 @@
           ],
           "required": true
         },
+
         {
           "activity_type": "listening",
-          "sentence_ids": [
-            "ai-s0079",
-            "ai-s0080",
-            "ai-s0081"
-          ],
-          "required": false
-        },
-        {
-          "activity_type": "speaking",
           "sentence_ids": [
             "ai-s0080",
             "ai-s0082",
@@ -257,15 +232,7 @@
           ],
           "required": true
         },
-        {
-          "activity_type": "listening",
-          "sentence_ids": [
-            "ai-s0085",
-            "ai-s0086",
-            "ai-s0088"
-          ],
-          "required": false
-        },
+
         {
           "activity_type": "translation",
           "sentence_ids": [
@@ -361,12 +328,12 @@
       "unit_id": "ai-l2-u04",
       "day": 6,
       "order": 6,
-      "title": "听写与跟读",
-      "lesson_type": "dictation",
-      "description": "听写格式与限制指令，跟读条件和回答前检查句。",
+      "title": "重点句巩固",
+      "lesson_type": "review",
+      "description": "通过重复输入巩固格式、限制、条件和回答前检查句。",
       "learning_goals": [
-        "听辨 include、keep 与 remove",
-        "朗读带条件和转折的约束句"
+        "熟练输入 include、keep 与 remove",
+        "巩固带条件和转折的约束句"
       ],
       "new_sentence_ids": [],
       "review_sentence_ids": [
@@ -382,19 +349,7 @@
       ],
       "activities": [
         {
-          "activity_type": "dictation",
-          "sentence_ids": [
-            "ai-s0067",
-            "ai-s0068",
-            "ai-s0073",
-            "ai-s0075",
-            "ai-s0080",
-            "ai-s0081"
-          ],
-          "required": true
-        },
-        {
-          "activity_type": "speaking",
+          "activity_type": "reinforcement",
           "sentence_ids": [
             "ai-s0084",
             "ai-s0085",
@@ -402,21 +357,6 @@
             "ai-s0088"
           ],
           "required": true
-        },
-        {
-          "activity_type": "listening",
-          "sentence_ids": [
-            "ai-s0067",
-            "ai-s0068",
-            "ai-s0073",
-            "ai-s0075",
-            "ai-s0080",
-            "ai-s0081",
-            "ai-s0084",
-            "ai-s0085",
-            "ai-s0088"
-          ],
-          "required": false
         }
       ],
       "assessment": null,
@@ -563,8 +503,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -607,8 +545,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -648,8 +584,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -688,8 +622,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -727,8 +659,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -768,8 +698,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -808,8 +736,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -854,8 +780,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -900,8 +824,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "reading",
         "fsrs",
         "translation"
@@ -942,8 +864,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "reading",
         "fsrs",
         "translation"
@@ -984,8 +904,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "reading",
         "fsrs",
         "translation"
@@ -1020,8 +938,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -1061,8 +977,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -1106,8 +1020,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -1146,8 +1058,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -1187,8 +1097,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -1223,8 +1131,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],
@@ -1259,8 +1165,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "reading",
         "fsrs",
         "translation"
@@ -1301,8 +1205,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "reading",
         "fsrs",
         "translation"
@@ -1342,8 +1244,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "reading",
         "fsrs",
         "translation"
@@ -1389,8 +1289,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "reading",
         "fsrs",
         "translation"
@@ -1436,8 +1334,6 @@
       "skill_tags": [
         "typing",
         "listening",
-        "dictation",
-        "speaking",
         "fsrs",
         "translation"
       ],

@@ -36,6 +36,16 @@ def test_ai_course_candidate_has_complete_reviewed_shape() -> None:
     assert all(unit["status"] == "reviewed" for unit in unit_documents)
     assert all(len(unit["lessons"]) == 7 for unit in unit_documents)
     assert all(len(unit["sentences"]) == 22 for unit in unit_documents)
+    day_six_lessons = [unit["lessons"][5] for unit in unit_documents]
+    assert all(lesson["lesson_type"] == "review" for lesson in day_six_lessons)
+    assert all("朗读" not in lesson["title"] for lesson in day_six_lessons)
+    assert all(
+        any(
+            activity["activity_type"] == "reinforcement" and activity["required"]
+            for activity in lesson["activities"]
+        )
+        for lesson in day_six_lessons
+    )
 
 
 def test_original_foundations_samples_and_stable_keys_are_preserved() -> None:
@@ -94,6 +104,9 @@ def test_every_unit_new_and_review_day_builds_a_typing_session_without_articles(
             assert review_day.typing_sentences
             assert len(first_day.chinese_translations) == len(first_day.typing_sentences)
             assert len(review_day.activity_types_by_item) == len(review_day.typing_sentences)
+            assert len(first_day.has_vocabulary_by_item) == len(first_day.typing_sentences)
+            assert len(first_day.core_words_by_item) == len(first_day.typing_sentences)
+            assert len(first_day.core_patterns_by_item) == len(first_day.typing_sentences)
             assert all(first_day.chinese_translations)
 
         connection = context.database.connect()

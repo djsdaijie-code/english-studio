@@ -10,7 +10,6 @@ from english_typing_trainer.database.course_capability_repository import (
     CourseCapabilityRepository,
 )
 from english_typing_trainer.models.learning_content import (
-    CourseCapabilityAttempt,
     CourseCapabilityItem,
     CourseCapabilityStatus,
     CourseReviewCard,
@@ -19,7 +18,6 @@ from english_typing_trainer.models.learning_content import (
     CourseReviewQueueItem,
     LearningContentRef,
 )
-from english_typing_trainer.models.pronunciation import PronunciationResult
 from english_typing_trainer.models.vocabulary import VocabularyContext
 from english_typing_trainer.services.article_word_index import (
     ArticleWordIndexService,
@@ -177,45 +175,7 @@ class CourseCapabilityService:
         )
         return result
 
-    def record_dictation(
-        self,
-        content_ref: LearningContentRef,
-        *,
-        score: float | None,
-        error_count: int,
-        omitted_count: int,
-        inserted_count: int,
-        replay_count: int,
-        duration_ms: int,
-    ) -> CourseCapabilityAttempt:
-        self.resolve_item(content_ref)
-        course_id = self._course_id(content_ref.course_stable_key)
-        self.progress.enroll(course_id)
-        attempt = self.repository.add_attempt(
-            CourseCapabilityAttempt(
-                course_stable_key=content_ref.course_stable_key,
-                item_stable_key=content_ref.item_stable_key,
-                capability_type="dictation",
-                status="completed",
-                score=score,
-                accuracy_score=score,
-                error_count=max(0, error_count),
-                omitted_count=max(0, omitted_count),
-                inserted_count=max(0, inserted_count),
-                replay_count=max(0, replay_count),
-                duration_ms=max(0, duration_ms),
-                provider="text_compare",
-                content_version=content_ref.content_version,
-                attempted_at=self._now(),
-            )
-        )
-        self.progress.complete_activity(
-            course_id, content_ref.item_stable_key, "dictation", score
-        )
-        return attempt
-
     def start_listening(self, content_ref: LearningContentRef) -> None:
-        """Record that configured course audio is being prepared for playback."""
         self.resolve_item(content_ref)
         self.progress.start_activity(
             self._course_id(content_ref.course_stable_key),
@@ -224,7 +184,6 @@ class CourseCapabilityService:
         )
 
     def complete_listening(self, content_ref: LearningContentRef) -> None:
-        """Complete configured listening once course audio starts playing."""
         self.resolve_item(content_ref)
         self.progress.complete_activity(
             self._course_id(content_ref.course_stable_key),
@@ -239,50 +198,6 @@ class CourseCapabilityService:
             content_ref.item_stable_key,
             "review",
         )
-
-    def record_speaking(
-        self,
-        content_ref: LearningContentRef,
-        result: PronunciationResult,
-        *,
-        duration_ms: int = 0,
-    ) -> CourseCapabilityAttempt:
-        self.resolve_item(content_ref)
-        status = self._capability_status(result.status)
-        course_id = self._course_id(content_ref.course_stable_key)
-        self.progress.enroll(course_id)
-        attempt = self.repository.add_attempt(
-            CourseCapabilityAttempt(
-                course_stable_key=content_ref.course_stable_key,
-                item_stable_key=content_ref.item_stable_key,
-                capability_type="speaking",
-                status=status,
-                score=result.overall_score,
-                accuracy_score=result.accuracy_score,
-                fluency_score=result.fluency_score,
-                completeness_score=result.completeness_score,
-                prosody_score=result.prosody_score,
-                duration_ms=max(0, duration_ms),
-                provider=result.provider,
-                content_version=content_ref.content_version,
-                attempted_at=self._now(),
-            )
-        )
-        if status == "completed":
-            self.progress.complete_activity(
-                course_id,
-                content_ref.item_stable_key,
-                "speaking",
-                result.overall_score,
-            )
-        else:
-            self.progress.fail_activity(
-                course_id,
-                content_ref.item_stable_key,
-                "speaking",
-                result.overall_score,
-            )
-        return attempt
 
     def ensure_vocabulary_review(
         self,
@@ -517,7 +432,6 @@ class CourseCapabilityService:
     def _progress_activity_type(activity_type: str) -> str:
         return {
             "fsrs": "review",
-            "listening": "review",
             "reading": "typing",
             "translation": "typing",
             "self_test": "typing",

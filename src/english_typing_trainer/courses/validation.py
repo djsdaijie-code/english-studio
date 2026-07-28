@@ -14,7 +14,7 @@ from english_typing_trainer.courses.errors import (
 from english_typing_trainer.courses.paths import resolve_safe_relative
 
 
-SUPPORTED_SPECIFICATION_VERSIONS = frozenset({"1.0"})
+SUPPORTED_SPECIFICATION_VERSIONS = frozenset({"1.0", "1.1"})
 SCHEMA_NAMES = (
     "course.schema.json",
     "lesson.schema.json",
@@ -323,7 +323,13 @@ class CourseValidator:
                     raise CourseValidationError("unit manifest order or title mismatch", path=unit_path, course_id=course_id)
                 if unit["status"] != unit_entry["status"]:
                     raise CourseValidationError("unit manifest status mismatch", path=unit_path, course_id=course_id)
-                self._validate_unit_graph(unit, unit_path, course_id, stable_keys)
+                self._validate_unit_graph(
+                    unit,
+                    unit_path,
+                    course_id,
+                    stable_keys,
+                    course_root=course_path.parent,
+                )
                 units[unit_id] = unit
 
         self._assert_unique(unit_ids, "unit_id", path=course_path, course_id=course_id)
@@ -392,6 +398,8 @@ class CourseValidator:
         path: Path,
         course_id: str,
         stable_keys: dict[tuple[str, str], str],
+        *,
+        course_root: Path,
     ) -> None:
         lesson_ids = [lesson["lesson_id"] for lesson in unit["lessons"]]
         sentence_ids = [sentence["sentence_id"] for sentence in unit["sentences"]]
@@ -449,8 +457,81 @@ class CourseValidator:
             self._check_fixed_casing(sentence["english"], path, course_id, sentence["sentence_id"])
             for word in sentence["core_words"]:
                 self._check_fixed_casing(word, path, course_id, sentence["sentence_id"])
+            visual = sentence.get("visual_prompt")
+            if visual is not None:
+                self._validate_visual_asset(
+                    visual["asset_path"],
+                    course_root,
+                    path,
+                    course_id,
+                    sentence["sentence_id"],
+                )
         for lesson_id, orders in orders_by_lesson.items():
             self._assert_unique(orders, f"sentence order in {lesson_id}", path=path, course_id=course_id)
+
+    @staticmethod
+    def _validate_visual_asset(
+        relative_path: str,
+        course_root: Path,
+        unit_path: Path,
+        course_id: str,
+        sentence_id: str,
+    ) -> None:
+        try:
+            asset_path = resolve_safe_relative(course_root, relative_path)
+        except ValueError as exc:
+            raise CourseValidationError(
+                f"sentence {sentence_id} has invalid visual asset path: {exc}",
+                path=unit_path,
+                course_id=course_id,
+            ) from exc
+        if not asset_path.is_file():
+            raise CourseValidationError(
+                f"sentence {sentence_id} visual asset is missing: {relative_path!r}",
+                path=unit_path,
+                course_id=course_id,
+            )
+        try:
+            payload = asset_path.read_bytes()
+        except OSError as exc:
+            raise CourseValidationError(
+                f"sentence {sentence_id} visual asset cannot be read: {relative_path!r}",
+                path=unit_path,
+                course_id=course_id,
+            ) from exc
+        if len(payload) > 256 * 1024:
+            raise CourseValidationError(
+                f"sentence {sentence_id} visual asset exceeds 256 KiB",
+                path=unit_path,
+                course_id=course_id,
+            )
+        try:
+            svg = payload.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise CourseValidationError(
+                f"sentence {sentence_id} visual asset is not UTF-8 SVG",
+                path=unit_path,
+                course_id=course_id,
+            ) from exc
+        unsafe_patterns = (
+            r"<!DOCTYPE\b",
+            r"<!ENTITY\b",
+            r"<\s*script\b",
+            r"<\s*image\b",
+            r"<\s*foreignObject\b",
+            r"\b(?:href|xlink:href)\s*=",
+            r"\bon[a-z]+\s*=",
+            r"@import\b",
+            r"url\((?!#)",
+        )
+        if "<svg" not in svg or any(
+            re.search(pattern, svg, flags=re.IGNORECASE) for pattern in unsafe_patterns
+        ):
+            raise CourseValidationError(
+                f"sentence {sentence_id} visual asset contains unsupported SVG content",
+                path=unit_path,
+                course_id=course_id,
+            )
 
     @staticmethod
     def _stable_keys_for_data(data: LoadedCourseData) -> list[str]:

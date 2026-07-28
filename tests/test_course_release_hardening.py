@@ -6,17 +6,15 @@ from pathlib import Path
 import shutil
 import sys
 
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication
 
 from english_typing_trainer.application.bootstrap import run_acceptance_smoke
 from english_typing_trainer.application.context import AppContext, build_app_context
 from english_typing_trainer.courses.paths import default_courses_root
 from english_typing_trainer.models.course_progress import CourseActivityType
-from english_typing_trainer.models.pronunciation import PronunciationResult
 from english_typing_trainer.models.tts import TTSAudioResult, TTSRequest
 from english_typing_trainer.services.audio_playback import AudioPlaybackService
 from english_typing_trainer.services.credential_store import MemoryCredentialStore
-from english_typing_trainer.services.recording_service import RecordingService
 from english_typing_trainer.ui.course_page import CoursePage
 from english_typing_trainer.ui.main_window import MainWindow
 
@@ -26,7 +24,6 @@ COURSE_ID = "ai-large-models"
 DAY_ONE = "ai-l1-u01-d01"
 FIRST_ITEM = "ai-large-models-sentence-0001"
 SECOND_ITEM = "ai-large-models-sentence-0002"
-DICTATION_ITEM = "ai-large-models-sentence-0008"
 SPEAKING_ITEM = "ai-large-models-sentence-0007"
 
 
@@ -46,7 +43,6 @@ def _context(data_dir: Path, courses_root: Path | None = None):
         courses_root=courses_root,
         credential_store=MemoryCredentialStore(),
         tts_credential_store=MemoryCredentialStore(),
-        pronunciation_credential_store=MemoryCredentialStore(),
     )
 
 
@@ -64,12 +60,11 @@ def _save_json(path: Path, payload: dict) -> None:
 def _complete_required_course_activities(context: AppContext) -> None:
     activity_types: dict[str, CourseActivityType] = {
         "typing": "typing",
-        "dictation": "dictation",
-        "speaking": "speaking",
+        "listening": "review",
+        "reinforcement": "review",
         "vocabulary": "vocabulary",
         "review": "review",
         "fsrs": "review",
-        "listening": "review",
         "reading": "typing",
         "translation": "typing",
         "self_test": "typing",
@@ -106,30 +101,9 @@ def test_course_state_and_capability_history_survive_new_app_context(
     try:
         progress = first.course_progress_service
         progress.complete_item(COURSE_ID, FIRST_ITEM, 96.0)
-        dictation = first.course_capability_service.item(COURSE_ID, DICTATION_ITEM)
-        speaking = first.course_capability_service.item(COURSE_ID, SPEAKING_ITEM)
-        first.course_capability_service.record_dictation(
-            dictation.ref,
-            score=88.0,
-            error_count=1,
-            omitted_count=0,
-            inserted_count=0,
-            replay_count=2,
-            duration_ms=1200,
-        )
-        first.course_capability_service.record_speaking(
-            speaking.ref,
-            PronunciationResult(
-                status="completed",
-                provider="azure",
-                overall_score=82.0,
-                accuracy_score=83.0,
-                fluency_score=81.0,
-                completeness_score=84.0,
-                prosody_score=80.0,
-            ),
-            duration_ms=900,
-        )
+        listening = first.course_capability_service.item(COURSE_ID, SPEAKING_ITEM)
+        first.course_capability_service.start_listening(listening.ref)
+        first.course_capability_service.complete_listening(listening.ref)
         card = first.course_capability_service.ensure_sentence_review(
             first.course_capability_service.content_ref(COURSE_ID, FIRST_ITEM)
         )
@@ -152,22 +126,14 @@ def test_course_state_and_capability_history_survive_new_app_context(
         assert enrollment.current_lesson_stable_key == remembered_lesson
         assert progress.get_item_progress(COURSE_ID, FIRST_ITEM).status == "completed"
         typing = progress.get_activity_progress(COURSE_ID, FIRST_ITEM, "typing")
-        dictation = progress.get_activity_progress(
-            COURSE_ID, DICTATION_ITEM, "dictation"
-        )
-        speaking = progress.get_activity_progress(
-            COURSE_ID, SPEAKING_ITEM, "speaking"
+        listening = progress.get_activity_progress(
+            COURSE_ID, SPEAKING_ITEM, "review"
         )
         assert (typing.status, typing.latest_score) == ("completed", 96.0)
-        assert (dictation.status, dictation.attempt_count, dictation.latest_score) == (
+        assert (listening.status, listening.attempt_count, listening.latest_score) == (
             "completed",
             1,
-            88.0,
-        )
-        assert (speaking.status, speaking.attempt_count, speaking.latest_score) == (
-            "completed",
-            1,
-            82.0,
+            None,
         )
         stored_card = reopened.course_capability_service.ensure_sentence_review(
             reopened.course_capability_service.content_ref(COURSE_ID, FIRST_ITEM)
@@ -214,9 +180,8 @@ def test_course_state_and_capability_history_survive_new_app_context(
         reopened.database.close()
 
 
-def test_due_course_review_ui_rates_cards_and_keeps_normal_queue_separate(
+def test_legacy_course_review_cards_remain_stored_without_dictation_ui(
     tmp_path: Path,
-    monkeypatch,
 ) -> None:
     app = _app()
     context = _context(tmp_path / "data")
@@ -233,61 +198,21 @@ def test_due_course_review_ui_rates_cards_and_keeps_normal_queue_separate(
     service.repository.update_review_card(first, now)
     service.repository.update_review_card(second, now)
     window = MainWindow(context)
-    messages: list[str] = []
-    monkeypatch.setattr(
-        QMessageBox,
-        "information",
-        lambda _parent, _title, message: messages.append(message),
-    )
     try:
         window.show()
         window._show_courses()
         app.processEvents()
-        assert "2" in window.course_page.due_review_button.text()
-        window._start_course_due_review()
-        assert window.stack.currentWidget() is window.dictation_page
-        assert window.dictation_page._course_review_mode
-        assert window.dictation_page.current.ref.item_stable_key == SECOND_ITEM
-        assert "AI 与大模型英语" in window.dictation_page.context.text()
-        assert "Day 1" in window.dictation_page.context.text()
-        window.dictation_page.input.setPlainText(window.dictation_page.current.text)
-        window.dictation_page._submit()
-        window.dictation_page._rate("good")
-        assert len(service.repository.list_review_logs(second.id or 0)) == 1
-        rated = service.repository.get_review_card_by_id(second.id or 0)
-        assert rated is not None
-        assert rated.due_at_utc > now
-        assert rated.last_reviewed_at_utc is not None
-        assert rated.state in {"learning", "review", "relearning"}
-        assert "1" in window.course_page.due_review_button.text()
+        assert not hasattr(window, "dictation_page")
+        assert not hasattr(window.course_page, "due_review_button")
+        assert "review" not in window.course_page.capability_buttons
+        assert len(service.due_sentence_reviews()) == 2
         connection = context.database.connect()
         assert connection.execute(
             "SELECT COUNT(*) FROM course_capability_attempts"
-        ).fetchone()[0] == 1
+        ).fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM dictation_attempts").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM vocabulary_review_cards").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM articles").fetchone()[0] == 0
-
-        current_index = window.dictation_page.index
-        window.dictation_page.input.setPlainText(window.dictation_page.current.text)
-        window.dictation_page._submit()
-        monkeypatch.setattr(
-            service,
-            "rate_sentence_review",
-            lambda *_args: (_ for _ in ()).throw(RuntimeError("database unavailable")),
-        )
-        window.dictation_page._rate("good")
-        assert window.dictation_page.index == current_index
-        assert "暂时无法保存" in window.dictation_page.feedback.text()
-
-        context.course_progress_service.set_enrollment_status(COURSE_ID, "paused")
-        assert service.due_sentence_reviews() == ()
-        context.course_progress_service.set_enrollment_status(COURSE_ID, "active")
-        assert len(service.due_sentence_reviews()) == 1
-        context.course_progress_service.set_enrollment_status(COURSE_ID, "archived")
-        window._leave_dictation()
-        window._start_course_due_review()
-        assert messages == ["当前没有已到期的课程复习卡。"]
     finally:
         window.current_practice_saved = True
         window.current_course_session = None
@@ -356,8 +281,8 @@ def test_course_version_upgrade_notice_preserves_completed_stable_state(
         assert status.current_content_version == "1.1.0"
         progress = upgraded.course_progress_service.get_course_progress(COURSE_ID)
         assert (progress.completed_required_items, progress.total_required_items) == (
-            256,
-            257,
+            208,
+            209,
         )
         assert upgraded.course_progress_service.get_item_progress(
             COURSE_ID, FIRST_ITEM
@@ -429,11 +354,23 @@ def test_pyinstaller_course_path_simulation_ignores_working_directory(
     assert default_courses_root() == bundle / "courses"
     context = _context(tmp_path / "data")
     try:
-        assert len(context.course_repository.list_courses()) == 1
-        assert len(context.course_repository.list_courses()[0].levels) == 5
+        courses = context.course_repository.list_courses()
+        assert [course.course_id for course in courses] == [
+            "ai-large-models",
+            "global-car-logos",
+            "crypto-blockchain-english",
+        ]
+        assert len(courses[0].levels) == 5
+        car_logo = context.course_repository.get_sentence_by_stable_key(
+            "global-car-logos-brand-toyota"
+        )
+        assert car_logo is not None and car_logo.visual_prompt is not None
+        assert car_logo.visual_prompt.resolved_asset_path == (
+            bundle / "courses" / "global-car-logos" / "assets" / "logos" / "toyota.svg"
+        )
+        assert car_logo.visual_prompt.resolved_asset_path.is_file()
     finally:
         context.database.close()
-
 
 class _FakeTTSProvider:
     name = "minimax"
@@ -488,121 +425,5 @@ def test_course_audio_corruption_and_missing_devices_degrade_cleanly(
             "未检测到可用的音频播放设备。",
         ]
 
-        class NullDevice:
-            def isNull(self) -> bool:
-                return True
-
-        recording_messages: list[str] = []
-        recording = RecordingService(
-            tmp_path / "recordings", device_provider=lambda: NullDevice()
-        )
-        recording.failed.connect(recording_messages.append)
-        assert recording.start() is None
-        denied = RecordingService(
-            tmp_path / "denied",
-            device_provider=lambda: (_ for _ in ()).throw(PermissionError()),
-        )
-        denied.failed.connect(recording_messages.append)
-        assert denied.start() is None
-        assert recording_messages == [
-            "未检测到可用麦克风。",
-            "无法启动麦克风录音，请检查设备和系统权限。",
-        ]
     finally:
-        context.database.close()
-
-
-def test_missing_minimax_key_reports_error_and_does_not_leave_activity_running(
-    tmp_path: Path,
-    monkeypatch,
-) -> None:
-    _app()
-    context = _context(tmp_path / "data")
-    window = MainWindow(context)
-    messages: list[str] = []
-    monkeypatch.setattr(
-        QMessageBox,
-        "information",
-        lambda _parent, _title, message: messages.append(message),
-    )
-    try:
-        window._start_course_capability(COURSE_ID, DAY_ONE, "tts")
-        assert messages == ["尚未配置 MiniMax API Key。"]
-        assert context.course_progress_service.get_activity_progress(
-            COURSE_ID, FIRST_ITEM, "review"
-        ).status == "failed"
-        assert context.database.connect().execute(
-            "SELECT COUNT(*) FROM tts_audio_cache"
-        ).fetchone()[0] == 0
-        assert context.database.connect().execute(
-            "SELECT COUNT(*) FROM articles"
-        ).fetchone()[0] == 0
-    finally:
-        window.current_practice_saved = True
-        window.close()
-        context.database.close()
-
-
-def test_missing_azure_credentials_stay_in_course_history_only(
-    tmp_path: Path,
-) -> None:
-    _app()
-    context = _context(tmp_path / "data")
-    window = MainWindow(context)
-    try:
-        item = context.course_capability_service.item(COURSE_ID, SPEAKING_ITEM)
-        window._open_course_pronunciation(item)
-        recording = tmp_path / "short-recording.m4a"
-        recording.write_bytes(b"temporary-audio")
-        window.pronunciation_page.set_recorded(recording)
-        window._assess_pronunciation("sentence", recording, False)
-        assert "未配置 Azure Speech" in window.pronunciation_page.scores.text()
-        row = context.database.connect().execute(
-            """
-            SELECT capability_type,status,provider
-            FROM course_capability_attempts
-            """
-        ).fetchone()
-        assert tuple(row) == ("speaking", "not_configured", "azure")
-        assert context.course_progress_service.get_activity_progress(
-            COURSE_ID, SPEAKING_ITEM, "speaking"
-        ).status == "failed"
-        assert context.database.connect().execute(
-            "SELECT COUNT(*) FROM pronunciation_attempts"
-        ).fetchone()[0] == 0
-        assert not recording.exists()
-    finally:
-        window.current_practice_saved = True
-        window.close()
-        context.database.close()
-
-
-def test_course_tts_cache_database_failure_is_recoverable(
-    tmp_path: Path,
-    monkeypatch,
-) -> None:
-    _app()
-    context = _context(tmp_path / "data")
-    window = MainWindow(context)
-    messages: list[str] = []
-    monkeypatch.setattr(
-        QMessageBox,
-        "warning",
-        lambda _parent, _title, message: messages.append(message),
-    )
-    monkeypatch.setattr(
-        context.tts_service,
-        "get_cached_course",
-        lambda *_args: (_ for _ in ()).throw(RuntimeError("database unavailable")),
-    )
-    try:
-        window._start_course_capability(COURSE_ID, DAY_ONE, "tts")
-        assert messages == ["音频缓存暂时无法读取，请稍后重试。"]
-        assert context.course_progress_service.get_activity_progress(
-            COURSE_ID, FIRST_ITEM, "review"
-        ).status == "failed"
-        assert window.stack.currentWidget() is not None
-    finally:
-        window.current_practice_saved = True
-        window.close()
         context.database.close()

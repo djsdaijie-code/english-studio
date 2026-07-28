@@ -22,6 +22,39 @@ QFrame#ContentArea {
     background: transparent;
 }
 
+QFrame#TodayLearningTimeBar {
+    min-height: 34px;
+    max-height: 34px;
+    background: #111b28;
+    border-bottom: 1px solid #223043;
+}
+
+QLabel#TodayLearningTimeTitle {
+    color: #91a2b8;
+    font-size: 12px;
+}
+
+QLabel#TodayLearningTimeValue {
+    color: #e3ebf5;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+QToolButton#TodayLearningTimeToggle {
+    min-width: 26px;
+    max-width: 26px;
+    min-height: 26px;
+    max-height: 26px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    padding: 4px;
+}
+
+QToolButton#TodayLearningTimeToggle:hover {
+    background: #1d2d40;
+}
+
 QFrame#Card, QFrame#MetricCard, QFrame#EmptyCard, QFrame#PanelCard {
     background: #152232;
     border: 1px solid #223043;
@@ -34,6 +67,129 @@ QFrame#CardAccent {
     border-radius: 12px;
 }
 
+QScrollArea#HomeScroll, QWidget#HomeContent {
+    background: transparent;
+    border: none;
+}
+
+QFrame#HomeContinueCard, QFrame#HomeGoalCard, QFrame#HomePanel {
+    background: #152232;
+    border: 1px solid #26384f;
+    border-radius: 14px;
+}
+
+QFrame#HomeCourseCover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #244fba, stop:0.58 #5068c8, stop:1 #7968c6);
+    border: none;
+    border-radius: 12px;
+}
+
+QLabel[role="home-cover-title"] {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+QLabel[role="home-cover-meta"] {
+    color: #dbe8ff;
+    font-size: 13px;
+}
+
+QLabel[role="home-kicker"] {
+    color: #8fb8ff;
+    background: #1b3152;
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 12px;
+}
+
+QLabel[role="home-course-title"] {
+    color: #f8fbff;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+QLabel[role="home-lesson-title"], QLabel[role="home-section-title"] {
+    color: #f2f6fb;
+    font-size: 17px;
+    font-weight: 650;
+}
+
+QLabel[role="home-meta"] {
+    color: #91a1b5;
+    font-size: 12px;
+}
+
+QLabel[role="home-goal-value"], QLabel[role="home-task-title"], QLabel[role="home-goal-footer"] {
+    color: #ecf3fb;
+    font-weight: 600;
+}
+
+QLabel[role="home-task-status"] {
+    color: #8495aa;
+    font-size: 12px;
+}
+
+QLabel[role="home-task-status"][completed="true"] {
+    color: #72c88d;
+}
+
+QFrame#HomeTaskRow, QFrame#HomeRecentRow {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #223043;
+}
+
+QLabel#HomeTaskBadge {
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+QLabel#HomeTaskBadge[tone="blue"] { background: #1d355c; color: #8fb8ff; }
+QLabel#HomeTaskBadge[tone="green"] { background: #183b2b; color: #72c88d; }
+QLabel#HomeTaskBadge[tone="violet"] { background: #33294d; color: #b49aff; }
+QLabel#HomeTaskBadge[tone="cyan"] { background: #173b42; color: #70c9d5; }
+QLabel#HomeTaskBadge[tone="amber"] { background: #42321d; color: #e8b56a; }
+
+QFrame#HomeQuickCard {
+    background: #111d2a;
+    border: 1px solid #26384f;
+    border-radius: 10px;
+}
+
+QLabel[role="home-quick-title"] {
+    color: #eaf1f8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton[variant="home-outline"] {
+    min-height: 30px;
+    padding: 0 11px;
+    color: #8fb8ff;
+    border: 1px solid #3b5e8c;
+    background: transparent;
+}
+
+QPushButton[variant="home-quick"] {
+    min-height: 28px;
+    padding: 0 8px;
+    color: #8fb8ff;
+    border: 1px solid #314967;
+    background: #172636;
+}
+
+QProgressBar#HomeCourseProgress, QProgressBar#HomeRecentProgress {
+    background: #27374a;
+    border: none;
+    border-radius: 3px;
+}
+
+QProgressBar#HomeCourseProgress::chunk, QProgressBar#HomeRecentProgress::chunk {
+    background: #5f8fe8;
+    border-radius: 3px;
+}
+
 QLabel[role="page-title"], QLabel[role="app-title"] {
     color: #f8fbff;
     font-weight: 600;
@@ -44,7 +200,7 @@ QLabel[role="page-title"] {
 }
 
 QLabel[role="app-title"] {
-    font-size: 30px;
+    font-size: 22px;
 }
 
 QLabel[role="subtitle"], QLabel[role="muted"], QLabel[role="metric-title"] {
@@ -86,6 +242,141 @@ QFrame#CourseListSelectionBar {
 
 QFrame#CourseListCard[selected="true"] QFrame#CourseListSelectionBar {
     background: #6f9ed8;
+}
+
+QPushButton#CourseBackButton {
+    min-height: 40px;
+    padding: 0 16px;
+    background: #172636;
+    border: 1px solid #3a506a;
+    color: #d9e5f2;
+    font-weight: 600;
+}
+
+QPushButton#CourseBackButton:hover {
+    background: #1b3152;
+    border-color: #5d82b4;
+    color: #a9c9f4;
+}
+
+QPushButton#CourseBackButton:pressed {
+    background: #203a60;
+}
+
+QFrame#CourseProgressCard {
+    background: #152232;
+    border: 1px solid #26384f;
+    border-radius: 12px;
+}
+
+QLabel[role="course-progress-title"] {
+    color: #d9e5f2;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QLabel[role="course-progress-value"] {
+    color: #8fb8ff;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+QLabel[role="course-progress-detail"], QLabel[role="course-progress-status"] {
+    color: #91a4ba;
+    font-size: 13px;
+}
+
+QProgressBar#CourseOverallProgress {
+    min-height: 10px;
+    max-height: 10px;
+    background: #2a3a4d;
+    border: none;
+    border-radius: 5px;
+}
+
+QProgressBar#CourseOverallProgress::chunk {
+    background: #5f8fe8;
+    border-radius: 5px;
+}
+
+QTreeWidget#CourseHierarchy {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    outline: none;
+}
+
+QTreeWidget#CourseHierarchy::item {
+    background: transparent;
+    border: none;
+    padding: 3px 0;
+}
+
+QTreeWidget#CourseHierarchy::item:selected {
+    background: #203a60;
+    color: #f5f8fc;
+}
+
+QFrame#CourseStructureRow {
+    border: none;
+    border-radius: 10px;
+}
+
+QFrame#CourseStructureRow[kind="level"] {
+    background: #18283b;
+    border: 1px solid #2a4059;
+}
+
+QFrame#CourseStructureRow[kind="unit"] {
+    background: #142232;
+    border: 1px solid #26384f;
+}
+
+QFrame#CourseStructureRow[kind="lesson"] {
+    background: #111d2a;
+    border: 1px solid #213247;
+}
+
+QLabel[role="course-structure-level-title"] {
+    color: #f3f7fc;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+QLabel[role="course-structure-unit-title"] {
+    color: #dce7f3;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QLabel[role="course-structure-lesson-title"] {
+    color: #cbd8e7;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QLabel[role="course-structure-metadata"], QLabel[role="course-structure-status"] {
+    color: #8fa2b8;
+    font-size: 12px;
+}
+
+QLabel[role="course-structure-percentage"] {
+    color: #8fb8ff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QProgressBar#CourseStructureProgress {
+    min-height: 7px;
+    max-height: 7px;
+    background: #2b3c50;
+    border: none;
+    border-radius: 3px;
+}
+
+QProgressBar#CourseStructureProgress::chunk {
+    background: #6293e8;
+    border-radius: 3px;
 }
 
 QLabel[role="course-card-title"] {
@@ -348,4 +639,49 @@ QPushButton[segment="true"]:checked {
     border-color: #405874;
     color: #f4f7fb;
     font-weight: 600;
+}
+
+QFrame#VocabularyQuickAccess {
+    background: transparent;
+    border: none;
+}
+
+QToolButton#VocabularyQuickButton {
+    min-width: 48px;
+    max-width: 48px;
+    min-height: 48px;
+    max-height: 48px;
+    background: #172636;
+    border: 1px solid #3a506a;
+    border-radius: 24px;
+}
+
+QToolButton#VocabularyQuickButton:hover {
+    background: #203a60;
+    border-color: #5d82b4;
+}
+
+QFrame#VocabularyAddedPopup {
+    min-width: 286px;
+    max-width: 340px;
+    background: #152232;
+    border: 1px solid #314760;
+    border-radius: 12px;
+}
+
+QLabel[role="vocabulary-popup-title"] {
+    color: #9db0c5;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+QLabel[role="vocabulary-popup-word"] {
+    color: #f3f7fc;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+QLabel[role="vocabulary-popup-message"] {
+    color: #91a4ba;
+    font-size: 12px;
 }

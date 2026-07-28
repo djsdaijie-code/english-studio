@@ -13,7 +13,6 @@ class AppPaths:
     logs_dir: Path
     backups_dir: Path
     audio_cache_dir: Path
-    recordings_dir: Path
 
 
 class AppPathService:
@@ -25,14 +24,12 @@ class AppPathService:
         logs_dir = data_dir / "logs"
         backups_dir = data_dir / "backups"
         audio_cache_dir = data_dir / "audio_cache"
-        recordings_dir = data_dir / "recordings"
         return AppPaths(
             data_dir=data_dir,
             database_path=data_dir / "typing_trainer.db",
             logs_dir=logs_dir,
             backups_dir=backups_dir,
             audio_cache_dir=audio_cache_dir,
-            recordings_dir=recordings_dir,
         )
 
     def ensure_directories(self) -> AppPaths:
@@ -43,7 +40,6 @@ class AppPathService:
         paths.logs_dir.mkdir(parents=True, exist_ok=True)
         paths.backups_dir.mkdir(parents=True, exist_ok=True)
         paths.audio_cache_dir.mkdir(parents=True, exist_ok=True)
-        paths.recordings_dir.mkdir(parents=True, exist_ok=True)
         return paths
 
     def _default_data_dir(self) -> Path:

@@ -30,7 +30,7 @@
     "title": { "type": "string", "minLength": 1 },
     "lesson_type": {
       "type": "string",
-      "enum": ["new_content", "mixed_practice", "scenario", "dictation", "speaking", "review", "assessment", "reading"]
+      "enum": ["new_content", "mixed_practice", "scenario", "listening", "review", "assessment", "reading"]
     },
     "description": { "type": "string" },
     "learning_goals": {
@@ -77,7 +77,7 @@
       "properties": {
         "activity_type": {
           "type": "string",
-          "enum": ["typing", "listening", "dictation", "speaking", "reading", "fsrs", "translation", "self_test"]
+          "enum": ["typing", "listening", "reading", "fsrs", "translation", "self_test", "reinforcement"]
         },
         "sentence_ids": { "$ref": "#/$defs/sentenceIds" },
         "required": { "type": "boolean" }
@@ -90,7 +90,7 @@
       "properties": {
         "assessment_type": {
           "type": "string",
-          "enum": ["typing", "dictation", "speaking", "mixed"]
+          "enum": ["typing", "listening", "mixed"]
         },
         "sentence_ids": { "$ref": "#/$defs/sentenceIds" },
         "passing_score": { "type": "integer", "minimum": 0, "maximum": 100 }

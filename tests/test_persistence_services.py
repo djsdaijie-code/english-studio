@@ -22,6 +22,26 @@ def test_import_article_success_and_duplicate_block(tmp_path: Path) -> None:
         context.database.close()
 
 
+def test_import_preserves_long_article_as_one_complete_section(tmp_path: Path) -> None:
+    context = build_app_context(data_dir=tmp_path / "data")
+    try:
+        text = ("A deliberately long paragraph keeps every character in place. " * 30).strip()
+        file_path = tmp_path / "long article.txt"
+        file_path.write_text(text, encoding="utf-8")
+
+        imported = context.article_library.import_txt_file(file_path, 300)
+
+        assert imported.article is not None
+        assert imported.article.section_count == 1
+        sections = context.article_library.get_sections(imported.article.id)
+        assert len(sections) == 1
+        assert sections[0].text == text
+        assert sections[0].start_offset == 0
+        assert sections[0].end_offset == len(text)
+    finally:
+        context.database.close()
+
+
 def test_import_supports_chinese_filename_and_path(tmp_path: Path) -> None:
     context = build_app_context(data_dir=tmp_path / "data")
     try:

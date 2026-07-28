@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from english_typing_trainer.application.context import build_app_context
@@ -18,6 +19,7 @@ from english_typing_trainer.services.learning_progress import LearningProgressSe
 from english_typing_trainer.services.learning_time import LearningTimeTracker
 from english_typing_trainer.ui.daily_learning_card import DailyLearningCard
 from english_typing_trainer.ui.main_window import MainWindow
+from english_typing_trainer.ui.today_learning_time import TodayLearningTimeBar, format_learning_duration
 
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -154,6 +156,68 @@ def test_learning_timer_counts_activity_caps_idle_and_resumes(tmp_path: Path) ->
         clock.advance(12)
         tracker.stop()
         assert context.learning_repository.dashboard(clock.wall().date()).effective_seconds == pytest.approx(102)
+    finally:
+        context.database.close()
+
+
+def test_today_learning_time_includes_unflushed_active_seconds(tmp_path: Path) -> None:
+    context, clock, tracker = _tracker(tmp_path)
+    try:
+        tracker.activity("typing_activity")
+        clock.advance(7)
+        tracker.tick()
+        assert context.learning_repository.dashboard(clock.wall().date()).effective_seconds == 0
+        assert tracker.pending_effective_seconds() == pytest.approx(7)
+        tracker.flush()
+        assert tracker.pending_effective_seconds() == 0
+        assert context.learning_repository.dashboard(clock.wall().date()).effective_seconds == pytest.approx(7)
+    finally:
+        context.database.close()
+
+
+def test_today_learning_time_bar_formats_and_temporarily_hides() -> None:
+    _app()
+    bar = TodayLearningTimeBar()
+    bar.set_seconds(3723.9)
+    bar.set_hide_control_visible(True)
+
+    assert format_learning_duration(3723.9) == "01:02:03"
+    assert bar.value_label.text() == "01:02:03"
+    assert not bar.visibility_button.icon().isNull()
+
+    bar.visibility_button.click()
+    assert bar.time_hidden is True
+    assert bar.value_label.text() == "已隐藏"
+
+    bar.visibility_button.click()
+    assert bar.time_hidden is False
+    assert bar.value_label.text() == "01:02:03"
+
+
+def test_learning_time_bar_is_global_and_eye_control_is_limited_to_typing_pages(tmp_path: Path) -> None:
+    app = _app()
+    context = build_app_context(data_dir=tmp_path / "data")
+    try:
+        window = MainWindow(context)
+        window.resize(1280, 720)
+        window.show()
+        app.processEvents()
+
+        for index in range(window.stack.count()):
+            page = window.stack.widget(index)
+            window.stack.setCurrentWidget(page)
+            app.processEvents()
+            assert window.today_learning_time_bar.isVisibleTo(window)
+            expected_eye = page in {window.practice_view, window.sentence_practice_view}
+            assert window.today_learning_time_bar.visibility_button.isVisibleTo(window) is expected_eye
+
+        window.stack.setCurrentWidget(window.practice_view)
+        app.processEvents()
+        was_active = context.learning_time_tracker.active
+        window.today_learning_time_bar.visibility_button.click()
+        assert window.today_learning_time_bar.time_hidden is True
+        assert context.learning_time_tracker.active is was_active
+        window.close()
     finally:
         context.database.close()
 
@@ -345,8 +409,12 @@ def test_daily_learning_card_and_settings_fit_supported_sizes_and_themes(tmp_pat
                 window.show()
                 app.processEvents()
                 assert window.daily_learning_card.isVisible()
-                assert window.daily_learning_card.width() > 800
-                assert window.daily_learning_card.height() <= 196
+                assert window.daily_learning_card.width() >= 360
+                assert window.home_page.continue_card.width() > window.daily_learning_card.width()
+                assert window.daily_learning_card.height() <= 252
+                assert window.home_page.continue_card.height() == window.daily_learning_card.height()
+                assert len(window.home_page.weekly_card.bars.values) == 7
+                assert window.home_page.scroll.horizontalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAlwaysOff
                 assert window.article_list.height() > 100
         assert window.settings_page.daily_goal_combo.count() == 4
         assert window.settings_page.learning_idle_combo.count() == 3

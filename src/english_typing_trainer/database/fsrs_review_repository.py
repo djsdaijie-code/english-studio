@@ -87,7 +87,8 @@ class FsrsReviewRepository:
                FROM vocabulary_review_cards c JOIN vocabulary_entries e ON e.id=c.vocabulary_entry_id
                LEFT JOIN vocabulary_contexts x ON x.id=c.vocabulary_context_id
                LEFT JOIN vocabulary_learning_state s ON s.vocabulary_entry_id=e.id
-               WHERE c.is_suspended=0 AND c.due_at_utc<=? AND COALESCE(s.status,'')!='mastered'
+               WHERE c.is_suspended=0 AND c.card_type IN ('spelling','meaning')
+                 AND c.due_at_utc<=? AND COALESCE(s.status,'')!='mastered'
                ORDER BY c.due_at_utc,c.id LIMIT ?""",
             (_iso(now), limit),
         ).fetchall()
@@ -99,7 +100,8 @@ class FsrsReviewRepository:
                       COUNT(*) due,
                       SUM(CASE WHEN state IN ('learning','relearning') THEN 1 ELSE 0 END) learning
                FROM vocabulary_review_cards c LEFT JOIN vocabulary_learning_state s ON s.vocabulary_entry_id=c.vocabulary_entry_id
-               WHERE c.is_suspended=0 AND c.due_at_utc<=? AND COALESCE(s.status,'')!='mastered'""",
+               WHERE c.is_suspended=0 AND c.card_type IN ('spelling','meaning')
+                 AND c.due_at_utc<=? AND COALESCE(s.status,'')!='mastered'""",
             (_iso(now), _iso(now)),
         ).fetchone()
         return int(row["overdue"] or 0), int(row["due"] or 0), int(row["learning"] or 0)
@@ -112,7 +114,10 @@ class FsrsReviewRepository:
                       c.source_type,c.course_stable_key,c.item_stable_key,c.content_version context_content_version
                FROM vocabulary_entries e JOIN vocabulary_learning_state s ON s.vocabulary_entry_id=e.id
                LEFT JOIN vocabulary_contexts c ON c.id=(SELECT id FROM vocabulary_contexts WHERE vocabulary_entry_id=e.id ORDER BY created_at DESC,id DESC LIMIT 1)
-               WHERE s.status!='mastered' AND NOT EXISTS (SELECT 1 FROM vocabulary_review_cards r WHERE r.vocabulary_entry_id=e.id)
+               WHERE s.status!='mastered' AND NOT EXISTS (
+                   SELECT 1 FROM vocabulary_review_cards r
+                   WHERE r.vocabulary_entry_id=e.id AND r.card_type IN ('spelling','meaning')
+               )
                ORDER BY e.created_at,e.id LIMIT ?""", (limit,)
         ).fetchall()
         return [(self._entry(row), self._context(row), row["legacy_due"]) for row in rows]

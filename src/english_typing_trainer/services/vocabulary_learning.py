@@ -157,7 +157,18 @@ class VocabularyLearningService:
         finally:
             with self._lock: self._ai_inflight.discard(key)
 
-    def list_entries(self, *, search: str="", status: str="all"): return self.repository.list_entries(search=search,status=status)
+    def list_entries(
+        self,
+        *,
+        search: str = "",
+        status: str = "all",
+        article_id: int | None = None,
+    ):
+        return self.repository.list_entries(
+            search=search,
+            status=status,
+            article_id=article_id,
+        )
     def detail(self, entry_id: int):
         contexts=[self._resolve_context(context) for context in self.repository.list_contexts(entry_id)]
         return self.repository.get_entry(entry_id),contexts,self.repository.get_state(entry_id)

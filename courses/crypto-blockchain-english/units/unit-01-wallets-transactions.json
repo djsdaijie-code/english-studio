@@ -1,0 +1,1147 @@
+{
+  "specification_version": "1.0",
+  "content_version": "0.1.0",
+  "unit_id": "crypto-l1-u01",
+  "stable_key": "crypto-blockchain-english-unit-wallets-transactions",
+  "course_id": "crypto-blockchain-english",
+  "level_id": "crypto-l1",
+  "order": 1,
+  "title": "钱包、交易与链上安全",
+  "description": "学习钱包密钥、链上转账、交易订单、合约授权和防骗所需的高频英语。",
+  "difficulty": "intermediate",
+  "estimated_days": 7,
+  "learning_goals": [
+    "区分 wallet、address、private key 和 recovery phrase",
+    "看懂链上交易状态、Gas、订单和安全提示"
+  ],
+  "core_vocabulary": [
+    "crypto wallet",
+    "public address",
+    "private key",
+    "recovery phrase",
+    "gas fee",
+    "transaction hash",
+    "centralized exchange",
+    "decentralized exchange",
+    "market order",
+    "limit order",
+    "liquidity",
+    "slippage",
+    "token approval",
+    "phishing"
+  ],
+  "core_patterns": [
+    "A + noun + is/does + definition.",
+    "Verb + object + before + verb-ing.",
+    "A is the difference between B and C."
+  ],
+  "learning_plan_override": null,
+  "lessons": [
+    {
+      "lesson_id": "crypto-l1-u01-d01",
+      "stable_key": "crypto-blockchain-english-u01-day-01",
+      "unit_id": "crypto-l1-u01",
+      "day": 1,
+      "order": 1,
+      "title": "钱包、地址与密钥",
+      "lesson_type": "new_content",
+      "description": "理解钱包、地址、私钥和恢复短语的不同作用。",
+      "learning_goals": [
+        "理解钱包、地址、私钥和恢复短语的不同作用。"
+      ],
+      "new_sentence_ids": [
+        "crypto-s0001",
+        "crypto-s0002",
+        "crypto-s0003",
+        "crypto-s0004",
+        "crypto-s0005"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0001",
+            "crypto-s0002",
+            "crypto-s0003",
+            "crypto-s0004",
+            "crypto-s0005"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u01-d02",
+      "stable_key": "crypto-blockchain-english-u01-day-02",
+      "unit_id": "crypto-l1-u01",
+      "day": 2,
+      "order": 2,
+      "title": "网络、Gas 与交易状态",
+      "lesson_type": "new_content",
+      "description": "看懂转账前后的网络、费用、状态和交易哈希。",
+      "learning_goals": [
+        "看懂转账前后的网络、费用、状态和交易哈希。"
+      ],
+      "new_sentence_ids": [
+        "crypto-s0006",
+        "crypto-s0007",
+        "crypto-s0008",
+        "crypto-s0009",
+        "crypto-s0010"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0006",
+            "crypto-s0007",
+            "crypto-s0008",
+            "crypto-s0009",
+            "crypto-s0010"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u01-d03",
+      "stable_key": "crypto-blockchain-english-u01-day-03",
+      "unit_id": "crypto-l1-u01",
+      "day": 3,
+      "order": 3,
+      "title": "CEX、DEX 与订单",
+      "lesson_type": "new_content",
+      "description": "区分中心化与去中心化交易所，并看懂常见订单。",
+      "learning_goals": [
+        "区分中心化与去中心化交易所，并看懂常见订单。"
+      ],
+      "new_sentence_ids": [
+        "crypto-s0011",
+        "crypto-s0012",
+        "crypto-s0013",
+        "crypto-s0014",
+        "crypto-s0015"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0011",
+            "crypto-s0012",
+            "crypto-s0013",
+            "crypto-s0014",
+            "crypto-s0015"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u01-d04",
+      "stable_key": "crypto-blockchain-english-u01-day-04",
+      "unit_id": "crypto-l1-u01",
+      "day": 4,
+      "order": 4,
+      "title": "滑点、授权与防骗",
+      "lesson_type": "new_content",
+      "description": "学习交易确认、合约授权和防范钓鱼的高频表达。",
+      "learning_goals": [
+        "学习交易确认、合约授权和防范钓鱼的高频表达。"
+      ],
+      "new_sentence_ids": [
+        "crypto-s0016",
+        "crypto-s0017",
+        "crypto-s0018",
+        "crypto-s0019",
+        "crypto-s0020"
+      ],
+      "review_sentence_ids": [],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0016",
+            "crypto-s0017",
+            "crypto-s0018",
+            "crypto-s0019",
+            "crypto-s0020"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u01-d05",
+      "stable_key": "crypto-blockchain-english-u01-day-05",
+      "unit_id": "crypto-l1-u01",
+      "day": 5,
+      "order": 5,
+      "title": "综合场景：完成一次安全转账",
+      "lesson_type": "scenario",
+      "description": "按安全顺序复习钱包、网络、费用、授权和测试转账。",
+      "learning_goals": [
+        "按安全顺序复习钱包、网络、费用、授权和测试转账。"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "crypto-s0001",
+        "crypto-s0002",
+        "crypto-s0005",
+        "crypto-s0006",
+        "crypto-s0007",
+        "crypto-s0010",
+        "crypto-s0017",
+        "crypto-s0019",
+        "crypto-s0020"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0001",
+            "crypto-s0002",
+            "crypto-s0005",
+            "crypto-s0006",
+            "crypto-s0007",
+            "crypto-s0010",
+            "crypto-s0017",
+            "crypto-s0019",
+            "crypto-s0020"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u01-d06",
+      "stable_key": "crypto-blockchain-english-u01-day-06",
+      "unit_id": "crypto-l1-u01",
+      "day": 6,
+      "order": 6,
+      "title": "术语辨析：地址、交易与订单",
+      "lesson_type": "mixed_practice",
+      "description": "比较容易混淆的钱包、交易状态和订单术语。",
+      "learning_goals": [
+        "比较容易混淆的钱包、交易状态和订单术语。"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "crypto-s0002",
+        "crypto-s0003",
+        "crypto-s0006",
+        "crypto-s0008",
+        "crypto-s0010",
+        "crypto-s0011",
+        "crypto-s0012",
+        "crypto-s0013",
+        "crypto-s0014",
+        "crypto-s0016"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0002",
+            "crypto-s0003",
+            "crypto-s0006",
+            "crypto-s0008",
+            "crypto-s0010",
+            "crypto-s0011",
+            "crypto-s0012",
+            "crypto-s0013",
+            "crypto-s0014",
+            "crypto-s0016"
+          ],
+          "required": true
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    },
+    {
+      "lesson_id": "crypto-l1-u01-d07",
+      "stable_key": "crypto-blockchain-english-u01-day-07",
+      "unit_id": "crypto-l1-u01",
+      "day": 7,
+      "order": 7,
+      "title": "全单元复习",
+      "lesson_type": "review",
+      "description": "复习 20 条钱包、交易和安全表达。",
+      "learning_goals": [
+        "复习 20 条钱包、交易和安全表达。"
+      ],
+      "new_sentence_ids": [],
+      "review_sentence_ids": [
+        "crypto-s0001",
+        "crypto-s0002",
+        "crypto-s0003",
+        "crypto-s0004",
+        "crypto-s0005",
+        "crypto-s0006",
+        "crypto-s0007",
+        "crypto-s0008",
+        "crypto-s0009",
+        "crypto-s0010",
+        "crypto-s0011",
+        "crypto-s0012",
+        "crypto-s0013",
+        "crypto-s0014",
+        "crypto-s0015",
+        "crypto-s0016",
+        "crypto-s0017",
+        "crypto-s0018",
+        "crypto-s0019",
+        "crypto-s0020"
+      ],
+      "activities": [
+        {
+          "activity_type": "typing",
+          "sentence_ids": [
+            "crypto-s0001",
+            "crypto-s0002",
+            "crypto-s0003",
+            "crypto-s0004",
+            "crypto-s0005",
+            "crypto-s0006",
+            "crypto-s0007",
+            "crypto-s0008",
+            "crypto-s0009",
+            "crypto-s0010",
+            "crypto-s0011",
+            "crypto-s0012",
+            "crypto-s0013",
+            "crypto-s0014",
+            "crypto-s0015",
+            "crypto-s0016",
+            "crypto-s0017",
+            "crypto-s0018",
+            "crypto-s0019",
+            "crypto-s0020"
+          ],
+          "required": true
+        },
+        {
+          "activity_type": "fsrs",
+          "sentence_ids": [
+            "crypto-s0001",
+            "crypto-s0002",
+            "crypto-s0003",
+            "crypto-s0004",
+            "crypto-s0005",
+            "crypto-s0006",
+            "crypto-s0007",
+            "crypto-s0008",
+            "crypto-s0009",
+            "crypto-s0010",
+            "crypto-s0011",
+            "crypto-s0012",
+            "crypto-s0013",
+            "crypto-s0014",
+            "crypto-s0015",
+            "crypto-s0016",
+            "crypto-s0017",
+            "crypto-s0018",
+            "crypto-s0019",
+            "crypto-s0020"
+          ],
+          "required": false
+        }
+      ],
+      "assessment": null,
+      "content_version": "0.1.0",
+      "status": "draft"
+    }
+  ],
+  "sentences": [
+    {
+      "sentence_id": "crypto-s0001",
+      "stable_key": "crypto-blockchain-english-sentence-0001",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d01",
+      "day": 1,
+      "order": 1,
+      "english": "A crypto wallet manages the keys for your blockchain accounts.",
+      "chinese": "加密钱包管理用于控制区块链账户的密钥。",
+      "scene": "理解钱包的作用",
+      "difficulty": "elementary",
+      "core_words": [
+        "crypto wallet",
+        "key",
+        "blockchain account"
+      ],
+      "core_patterns": [
+        "A + noun + manages + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A crypto wallet stores every coin inside the app.",
+          "explanation_zh": "钱包是管理账户密钥的工具，资产记录保存在区块链上。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0002",
+      "stable_key": "crypto-blockchain-english-sentence-0002",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d01",
+      "day": 1,
+      "order": 2,
+      "english": "A public address tells others where they can send assets.",
+      "chinese": "公钥地址告诉他人可以把资产发送到哪里。",
+      "scene": "接收链上资产",
+      "difficulty": "elementary",
+      "core_words": [
+        "public address",
+        "send",
+        "asset"
+      ],
+      "core_patterns": [
+        "A + noun + tells others where + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A public address must always remain secret.",
+          "explanation_zh": "公钥地址可以用于接收资产；必须保密的是私钥和恢复短语。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0003",
+      "stable_key": "crypto-blockchain-english-sentence-0003",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d01",
+      "day": 1,
+      "order": 3,
+      "english": "A private key authorizes transactions and must remain secret.",
+      "chinese": "私钥用于授权交易，并且必须保密。",
+      "scene": "保护账户控制权",
+      "difficulty": "elementary",
+      "core_words": [
+        "private key",
+        "authorize",
+        "transaction",
+        "secret"
+      ],
+      "core_patterns": [
+        "A + noun + verb + and must + verb."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A private key is safe to share with support.",
+          "explanation_zh": "私钥代表账户控制权，不能交给客服或任何其他人。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0004",
+      "stable_key": "crypto-blockchain-english-sentence-0004",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d01",
+      "day": 1,
+      "order": 4,
+      "english": "A recovery phrase can restore access to a compatible wallet.",
+      "chinese": "恢复短语可以在兼容的钱包中恢复访问权限。",
+      "scene": "恢复自托管钱包",
+      "difficulty": "elementary",
+      "core_words": [
+        "recovery phrase",
+        "restore",
+        "access",
+        "compatible"
+      ],
+      "core_patterns": [
+        "A + noun + can + verb + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A recovery phrase only works on one device.",
+          "explanation_zh": "恢复短语通常可在兼容钱包中恢复账户，并不只绑定一台设备。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0005",
+      "stable_key": "crypto-blockchain-english-sentence-0005",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d01",
+      "day": 1,
+      "order": 5,
+      "english": "Never enter your recovery phrase on an untrusted website.",
+      "chinese": "绝不要在不可信的网站上输入恢复短语。",
+      "scene": "防范助记词钓鱼",
+      "difficulty": "elementary",
+      "core_words": [
+        "enter",
+        "recovery phrase",
+        "untrusted website"
+      ],
+      "core_patterns": [
+        "Never + verb + object + on + place."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Enter your recovery phrase on any wallet website.",
+          "explanation_zh": "只有在明确、安全的恢复流程中才应使用恢复短语。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0006",
+      "stable_key": "crypto-blockchain-english-sentence-0006",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d02",
+      "day": 2,
+      "order": 1,
+      "english": "Select the correct network before you send any crypto.",
+      "chinese": "发送任何加密资产前，先选择正确的网络。",
+      "scene": "发起链上转账",
+      "difficulty": "elementary",
+      "core_words": [
+        "select",
+        "network",
+        "send",
+        "crypto"
+      ],
+      "core_patterns": [
+        "Select + object + before + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Select any network before sending crypto.",
+          "explanation_zh": "发送网络必须与接收方支持的网络一致。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0007",
+      "stable_key": "crypto-blockchain-english-sentence-0007",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d02",
+      "day": 2,
+      "order": 2,
+      "english": "Gas fees pay for processing transactions on a blockchain network.",
+      "chinese": "Gas 费为区块链网络处理交易付费。",
+      "scene": "理解链上费用",
+      "difficulty": "intermediate",
+      "core_words": [
+        "gas fee",
+        "process",
+        "transaction",
+        "network"
+      ],
+      "core_patterns": [
+        "Fees pay for + verb-ing + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Gas fees are the amount of crypto being transferred.",
+          "explanation_zh": "Gas 费是交易处理成本，不是转账资产本身的数量。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0008",
+      "stable_key": "crypto-blockchain-english-sentence-0008",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d02",
+      "day": 2,
+      "order": 3,
+      "english": "A pending transaction is waiting to be included in a block.",
+      "chinese": "待处理交易正在等待被打包进区块。",
+      "scene": "查看交易状态",
+      "difficulty": "intermediate",
+      "core_words": [
+        "pending",
+        "transaction",
+        "included",
+        "block"
+      ],
+      "core_patterns": [
+        "A pending + noun + is waiting to be + past participle."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A pending transaction is already final.",
+          "explanation_zh": "pending 表示交易尚在等待处理，不能理解为已经最终确认。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0009",
+      "stable_key": "crypto-blockchain-english-sentence-0009",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d02",
+      "day": 2,
+      "order": 4,
+      "english": "A confirmed transaction has already been recorded on the blockchain.",
+      "chinese": "已确认的交易已经记录在区块链上。",
+      "scene": "区分交易状态",
+      "difficulty": "intermediate",
+      "core_words": [
+        "confirmed",
+        "recorded",
+        "blockchain"
+      ],
+      "core_patterns": [
+        "A confirmed + noun + has already been + past participle."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A confirmed transaction never appears on-chain.",
+          "explanation_zh": "confirmed 表示交易已被链上区块记录。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0010",
+      "stable_key": "crypto-blockchain-english-sentence-0010",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d02",
+      "day": 2,
+      "order": 5,
+      "english": "Use a transaction hash to track a transfer on-chain.",
+      "chinese": "使用交易哈希追踪链上转账。",
+      "scene": "使用区块浏览器",
+      "difficulty": "intermediate",
+      "core_words": [
+        "transaction hash",
+        "track",
+        "transfer",
+        "on-chain"
+      ],
+      "core_patterns": [
+        "Use + object + to + verb + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A transaction hash is the recipient's wallet address.",
+          "explanation_zh": "交易哈希标识一笔交易，不等同于收款地址。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0011",
+      "stable_key": "crypto-blockchain-english-sentence-0011",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d03",
+      "day": 3,
+      "order": 1,
+      "english": "A centralized exchange holds assets on behalf of its users.",
+      "chinese": "中心化交易所代表用户托管资产。",
+      "scene": "区分交易平台",
+      "difficulty": "intermediate",
+      "core_words": [
+        "centralized exchange",
+        "hold",
+        "on behalf of"
+      ],
+      "core_patterns": [
+        "A + noun + holds + object + on behalf of + person."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A centralized exchange never holds user assets.",
+          "explanation_zh": "中心化交易所通常由平台托管用户账户中的资产。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0012",
+      "stable_key": "crypto-blockchain-english-sentence-0012",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d03",
+      "day": 3,
+      "order": 2,
+      "english": "A decentralized exchange uses smart contracts to execute trades.",
+      "chinese": "去中心化交易所使用智能合约执行交易。",
+      "scene": "理解 DEX",
+      "difficulty": "intermediate",
+      "core_words": [
+        "decentralized exchange",
+        "smart contract",
+        "execute",
+        "trade"
+      ],
+      "core_patterns": [
+        "A + noun + uses + object + to + verb."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A decentralized exchange requires every trade to use a broker.",
+          "explanation_zh": "去中心化交易所通常通过智能合约撮合或执行交易，而非传统经纪商。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0013",
+      "stable_key": "crypto-blockchain-english-sentence-0013",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d03",
+      "day": 3,
+      "order": 3,
+      "english": "A market order trades immediately at the best available price.",
+      "chinese": "市价单会按当前最佳可得价格立即成交。",
+      "scene": "阅读交易订单",
+      "difficulty": "intermediate",
+      "core_words": [
+        "market order",
+        "immediately",
+        "available price"
+      ],
+      "core_patterns": [
+        "A + order type + trades at + price."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A market order guarantees one exact price.",
+          "explanation_zh": "市价单追求立即成交，但不保证只在一个精确价格成交。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0014",
+      "stable_key": "crypto-blockchain-english-sentence-0014",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d03",
+      "day": 3,
+      "order": 4,
+      "english": "A limit order trades only at your chosen price or better.",
+      "chinese": "限价单只会按你设定的价格或更优价格成交。",
+      "scene": "设置交易价格",
+      "difficulty": "intermediate",
+      "core_words": [
+        "limit order",
+        "chosen price",
+        "or better"
+      ],
+      "core_patterns": [
+        "A + order type + trades only at + condition."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A limit order always executes immediately.",
+          "explanation_zh": "限价单需要市场达到指定条件，因此不保证立即成交。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0015",
+      "stable_key": "crypto-blockchain-english-sentence-0015",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d03",
+      "day": 3,
+      "order": 5,
+      "english": "Liquidity affects how easily you can buy or sell an asset.",
+      "chinese": "流动性会影响资产买卖的容易程度。",
+      "scene": "判断市场深度",
+      "difficulty": "intermediate",
+      "core_words": [
+        "liquidity",
+        "buy",
+        "sell",
+        "asset"
+      ],
+      "core_patterns": [
+        "A + noun + affects how easily + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Liquidity is the total number of wallets.",
+          "explanation_zh": "流动性描述资产交易的便利程度，不是钱包总数。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0016",
+      "stable_key": "crypto-blockchain-english-sentence-0016",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d04",
+      "day": 4,
+      "order": 1,
+      "english": "Slippage is the difference between the expected and executed price.",
+      "chinese": "滑点是预期价格与实际成交价格之间的差异。",
+      "scene": "确认交易报价",
+      "difficulty": "intermediate",
+      "core_words": [
+        "slippage",
+        "expected price",
+        "executed price"
+      ],
+      "core_patterns": [
+        "A is the difference between B and C."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Slippage is the same as the trading fee.",
+          "explanation_zh": "滑点描述价格差异，交易费则是另外收取的成本。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0017",
+      "stable_key": "crypto-blockchain-english-sentence-0017",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d04",
+      "day": 4,
+      "order": 2,
+      "english": "A token approval lets a smart contract spend specific assets.",
+      "chinese": "代币授权允许智能合约支出指定资产。",
+      "scene": "连接 DeFi 应用",
+      "difficulty": "intermediate",
+      "core_words": [
+        "token approval",
+        "smart contract",
+        "spend",
+        "specific"
+      ],
+      "core_patterns": [
+        "A + noun + lets + object + verb."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A token approval transfers ownership of the entire wallet.",
+          "explanation_zh": "代币授权通常针对特定资产和额度，不等同于转移整个钱包。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0018",
+      "stable_key": "crypto-blockchain-english-sentence-0018",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d04",
+      "day": 4,
+      "order": 3,
+      "english": "Revoke token approvals that you no longer need.",
+      "chinese": "撤销你不再需要的代币授权。",
+      "scene": "管理合约权限",
+      "difficulty": "intermediate",
+      "core_words": [
+        "revoke",
+        "token approval",
+        "no longer"
+      ],
+      "core_patterns": [
+        "Verb + object + that + clause."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Keep every token approval forever.",
+          "explanation_zh": "不再使用的授权会增加暴露面，应按需要检查和撤销。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0019",
+      "stable_key": "crypto-blockchain-english-sentence-0019",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d04",
+      "day": 4,
+      "order": 4,
+      "english": "Phishing pages often imitate real wallets, exchanges, or support teams.",
+      "chinese": "钓鱼页面经常模仿真实的钱包、交易所或客服团队。",
+      "scene": "识别加密诈骗",
+      "difficulty": "intermediate",
+      "core_words": [
+        "phishing",
+        "imitate",
+        "exchange",
+        "support team"
+      ],
+      "core_patterns": [
+        "A + noun + often imitates + objects."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "A real-looking page cannot be a phishing page.",
+          "explanation_zh": "页面外观逼真并不能证明其域名、应用或客服身份可信。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    },
+    {
+      "sentence_id": "crypto-s0020",
+      "stable_key": "crypto-blockchain-english-sentence-0020",
+      "unit_id": "crypto-l1-u01",
+      "lesson_id": "crypto-l1-u01-d04",
+      "day": 4,
+      "order": 5,
+      "english": "Send a small test transaction before transferring a large amount.",
+      "chinese": "转移大额资产前，先发送一笔小额测试交易。",
+      "scene": "降低转账操作风险",
+      "difficulty": "intermediate",
+      "core_words": [
+        "test transaction",
+        "transfer",
+        "large amount"
+      ],
+      "core_patterns": [
+        "Verb + object + before + verb-ing + object."
+      ],
+      "common_mistakes": [
+        {
+          "incorrect": "Always test a transfer with the full amount.",
+          "explanation_zh": "小额测试有助于先检查地址、网络和操作流程。"
+        }
+      ],
+      "alternative_expressions": [],
+      "skill_tags": [
+        "typing",
+        "translation",
+        "fsrs"
+      ],
+      "source_type": "original",
+      "audio_hint": null,
+      "review_group": "crypto-wallets-transactions",
+      "content_version": "0.1.0",
+      "status": "draft",
+      "visual_prompt": null
+    }
+  ],
+  "status": "draft"
+}

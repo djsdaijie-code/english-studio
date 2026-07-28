@@ -209,6 +209,7 @@ class PracticeView(QWidget):
         source_heading.addStretch(1)
         source_heading.addWidget(self.target_hint)
         from english_typing_trainer.ui.speech_controls import SpeechControls
+
         self.speech_controls = SpeechControls()
         self.speech_controls.play_requested.connect(self._request_speech)
         source_heading.addWidget(self.speech_controls)
@@ -345,9 +346,17 @@ class PracticeView(QWidget):
         self.translation_card.setVisible(visible)
         self._refresh_translation()
 
-    def set_speech_segments(self, segments: list[tuple[int, int, str]], *, visible: bool, speed: float) -> None:
-        self._speech_segments = segments; self._current_speech_text = ""
-        self.speech_controls.setVisible(visible); self.speech_controls.set_speed(speed)
+    def set_speech_segments(
+        self,
+        segments: list[tuple[int, int, str]],
+        *,
+        visible: bool,
+        speed: float,
+    ) -> None:
+        self._speech_segments = segments
+        self._current_speech_text = ""
+        self.speech_controls.setVisible(visible)
+        self.speech_controls.set_speed(speed)
         self._refresh_speech_sentence()
 
     def resizeEvent(self, event) -> None:  # type: ignore[override]
@@ -690,7 +699,9 @@ class PracticeView(QWidget):
         self.learning_activity.emit("audio_started")
         self._refresh_speech_sentence()
         if self._current_speech_text:
-            self.speech_requested.emit(self._current_speech_text, speed, self.speech_controls)
+            self.speech_requested.emit(
+                self._current_speech_text, speed, self.speech_controls
+            )
         QTimer.singleShot(0, self._restore_focus)
 
     def _refresh_speech_sentence(self) -> None:

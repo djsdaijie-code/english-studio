@@ -3,7 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-from english_typing_trainer.courses.models import Course, CourseLesson, CourseSentence, CourseUnit
+from english_typing_trainer.courses.models import (
+    Course,
+    CourseLesson,
+    CourseSentence,
+    CourseUnit,
+    CourseVisualPrompt,
+)
 from english_typing_trainer.courses.repository import CourseRepository
 from english_typing_trainer.models.sentence import ArticleSentence
 from english_typing_trainer.services.course_progress import CourseProgressService
@@ -42,6 +48,10 @@ class CourseLearningSession:
     typing_sentences: tuple[ArticleSentence, ...]
     chinese_translations: tuple[str, ...]
     activity_types_by_item: tuple[tuple[str, ...], ...]
+    has_vocabulary_by_item: tuple[bool, ...]
+    core_words_by_item: tuple[tuple[str, ...], ...]
+    core_patterns_by_item: tuple[tuple[str, ...], ...]
+    visual_prompts: tuple[CourseVisualPrompt | None, ...]
     section_text: str
     _started_item_keys: set[str] = field(default_factory=set, repr=False)
 
@@ -139,6 +149,10 @@ class CourseLearningService:
                 self._activity_types(lesson, sentence.sentence_id)
                 for sentence in selected
             ),
+            has_vocabulary_by_item=tuple(bool(sentence.core_words) for sentence in selected),
+            core_words_by_item=tuple(sentence.core_words for sentence in selected),
+            core_patterns_by_item=tuple(sentence.core_patterns for sentence in selected),
+            visual_prompts=tuple(sentence.visual_prompt for sentence in selected),
             section_text=section_text,
         )
 
@@ -200,7 +214,6 @@ class CourseLearningService:
         result: list[str] = []
         mapping = {
             "fsrs": "review",
-            "listening": "review",
             "reading": "typing",
             "translation": "typing",
             "self_test": "typing",

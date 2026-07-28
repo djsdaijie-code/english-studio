@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QContextMenuEvent
+from PySide6.QtGui import QContextMenuEvent, QTextCursor
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from english_typing_trainer.application.context import build_app_context
@@ -29,6 +29,11 @@ def test_main_window_can_be_created_and_uses_chinese_navigation(tmp_path: Path) 
         assert window.nav_buttons[1].text() == "学习内容"
         assert window.nav_buttons[2].text() == "专项练习"
         assert window.stack.currentWidget() is window.home_page
+        assert window.vocabulary_quick_access.book_button.isVisibleTo(window)
+        assert not window.vocabulary_quick_access.book_button.icon().isNull()
+        window.vocabulary_quick_access.book_button.click()
+        app.processEvents()
+        assert window.stack.currentWidget() is window.vocabulary_page
     finally:
         context.database.close()
 
@@ -116,7 +121,7 @@ def test_existing_schema3_database_opens_in_new_ui(tmp_path: Path) -> None:
         reopened.database.close()
 
 
-def test_article_preview_context_menu_is_bound_to_viewport_and_actions_work(tmp_path: Path, monkeypatch) -> None:
+def test_article_preview_context_menu_collects_only_selected_words(tmp_path: Path, monkeypatch) -> None:
     app = _app()
     context = build_app_context(data_dir=tmp_path / "data")
     try:
@@ -129,6 +134,7 @@ def test_article_preview_context_menu_is_bound_to_viewport_and_actions_work(tmp_
         window.resize(1280, 720)
         window.show()
         window._reload_articles()
+        monkeypatch.setattr(window, "_start_vocabulary_enrichment", lambda *_args, **_kwargs: None)
         app.processEvents()
 
         viewport = window.preview_content.viewport()
@@ -141,9 +147,24 @@ def test_article_preview_context_menu_is_bound_to_viewport_and_actions_work(tmp_
         app.processEvents()
         assert len(shown) == 2
 
-        menu, view_action, rebuild_action = window._build_article_preview_menu()
+        cursor=window.preview_content.textCursor()
+        start=window.preview_content.toPlainText().index("learn")
+        cursor.setPosition(start)
+        cursor.setPosition(start+len("learn"),QTextCursor.MoveMode.KeepAnchor)
+        window.preview_content.setTextCursor(cursor)
+        menu, add_action = window._build_article_preview_menu()
         labels = [action.text() for action in menu.actions()]
-        assert view_action.text() in labels and rebuild_action.text() in labels
+        assert add_action.text() == "加入单词本"
+        assert add_action.isEnabled()
+        assert "重新提取文章单词" not in labels
+        assert context.article_word_index_service.list_words(article.id) == []
+
+        window._collect_preview_selected_word()
+        app.processEvents()
+        learned=context.vocabulary_learning_service.repository.get_by_word("learn")
+        assert learned is not None
+        assert window.vocabulary_quick_access.added_popup.isVisible()
+        assert window.vocabulary_quick_access.word_label.text() == "learn"
 
         window._show_current_article_words()
         app.processEvents()
@@ -152,16 +173,38 @@ def test_article_preview_context_menu_is_bound_to_viewport_and_actions_work(tmp_
         assert window.current_vocabulary_article_id == article.id
         assert window.vocabulary_page.table.rowCount() > 0
 
-        before_contexts = context.vocabulary_learning_service.detail(collected.entry.id)[1]
-        monkeypatch.setattr(QMessageBox, "question", lambda *_args, **_kwargs: QMessageBox.StandardButton.Yes)
-        messages = []
-        monkeypatch.setattr(QMessageBox, "information", lambda *_args: messages.append(_args[-1]))
-        window._rebuild_current_article_words()
-        after_contexts = context.vocabulary_learning_service.detail(collected.entry.id)[1]
-        rows = context.article_word_index_service.list_words(article.id)
-        assert len(after_contexts) == len(before_contexts) == 1
-        assert {row["normalized_word"]: row["occurrence_count"] for row in rows}["you"] == 2
-        assert messages and "已记录" in messages[-1]
+        displayed={window.vocabulary_page.table.item(row,0).text().lower() for row in range(window.vocabulary_page.table.rowCount())}
+        assert displayed == {"you","learn"}
+        assert context.article_word_index_service.list_words(article.id) == []
+        window.close()
+    finally:
+        context.database.close()
+
+
+def test_home_dashboard_matches_learning_routes_and_supported_width(tmp_path: Path) -> None:
+    app = _app()
+    context = build_app_context(data_dir=tmp_path / "data")
+    try:
+        window = MainWindow(context)
+        window.resize(1280, 720)
+        window.show()
+        app.processEvents()
+
+        assert window.home_page.continue_card.isVisible()
+        assert window.home_page.daily_learning_card.isVisible()
+        assert window.home_page.weekly_card.isVisible()
+        assert window.home_page.recent_card.isVisible()
+        assert window.home_page.continue_card.width() > window.home_page.daily_learning_card.width()
+        assert len(window.home_page.weekly_card.bars.values) == 7
+
+        window.home_page.history_card.action_button.click()
+        app.processEvents()
+        assert window.stack.currentWidget() is window.history_page
+
+        window._switch_page(window.PAGE_HOME)
+        window.home_page.article_card.action_button.click()
+        app.processEvents()
+        assert window.learning_content_page.current_section() == "articles"
         window.close()
     finally:
         context.database.close()

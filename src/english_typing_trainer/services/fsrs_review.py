@@ -106,18 +106,6 @@ class FsrsReviewService:
             self.repository.update_card(connection, stored, now)
         return stored
 
-    def ensure_listening_card(self, entry_id: int, context_id: int | None = None) -> VocabularyReviewCard:
-        """Create the independent listening card only when the learner starts dictation."""
-        existing = self.repository.get_card_for_entry(entry_id, "listening")
-        if existing is not None:
-            return existing
-        now = self.now()
-        card = Card()
-        card.due = now
-        stored = VocabularyReviewCard(entry_id, "listening", card.to_json(), card.due, context_id, state=card.state.name.lower())
-        with self.database.transaction() as connection:
-            return self.repository.create_card(connection, stored, now)
-
     def ensure_entry_cards(
         self, entry_id: int, context_id: int | None = None
     ) -> tuple[VocabularyReviewCard, ...]:
@@ -130,7 +118,7 @@ class FsrsReviewService:
 
     def suspend_entry(self, entry_id: int, suspended: bool = True) -> None:
         now = self.now()
-        for card_type in ("spelling", "meaning", "listening"):
+        for card_type in ("spelling", "meaning"):
             card = self.repository.get_card_for_entry(entry_id, card_type)
             if card is None:
                 continue

@@ -46,7 +46,6 @@ class SettingsPage(QWidget):
         appearance_card = self._build_appearance_card()
         translation_card = self._build_translation_card()
         speech_card = self._build_speech_card()
-        pronunciation_card = self._build_pronunciation_card()
         vocabulary_card = self._build_vocabulary_card()
         daily_learning_card = self._build_daily_learning_card()
         data_card = self._build_data_card(data_dir)
@@ -54,7 +53,6 @@ class SettingsPage(QWidget):
         content_layout.addWidget(appearance_card)
         content_layout.addWidget(translation_card)
         content_layout.addWidget(speech_card)
-        content_layout.addWidget(pronunciation_card)
         content_layout.addWidget(vocabulary_card)
         content_layout.addWidget(daily_learning_card)
         content_layout.addWidget(data_card)
@@ -94,8 +92,6 @@ class SettingsPage(QWidget):
         self.tts_model_combo.currentIndexChanged.connect(self._mark_dirty)
         self.tts_voice_combo.currentIndexChanged.connect(self._mark_dirty)
         self.tts_speed_combo.currentIndexChanged.connect(self._mark_dirty)
-        self.pronunciation_region_input.textChanged.connect(self._mark_dirty)
-        self.pronunciation_keep_checkbox.toggled.connect(self._mark_dirty)
         self.vocabulary_typing_combo.currentIndexChanged.connect(self._mark_dirty)
         self.vocabulary_auto_checkbox.toggled.connect(self._mark_dirty)
         self.daily_goal_combo.currentIndexChanged.connect(self._mark_dirty)
@@ -129,7 +125,7 @@ class SettingsPage(QWidget):
         self.target_accuracy_spin.setRange(50.0, 100.0)
         self.target_accuracy_spin.setDecimals(1)
         self.target_accuracy_spin.setSingleStep(0.5)
-        form.addRow("默认分段字数", self.section_target_combo)
+        form.addRow("手动分段字数", self.section_target_combo)
         form.addRow("输入规则", self.case_sensitive_checkbox)
         form.addRow("实时统计", self.live_stats_checkbox)
         form.addRow("目标 WPM", self.target_wpm_spin)
@@ -238,23 +234,6 @@ class SettingsPage(QWidget):
         size = f"{size_bytes / (1024*1024):.1f} MB" if size_bytes >= 1024*1024 else f"{size_bytes / 1024:.1f} KB" if size_bytes >= 1024 else f"{size_bytes} B"
         self.tts_cache_label.setText(f"语音缓存：{file_count} 个文件 · {size}")
 
-    def _build_pronunciation_card(self) -> QFrame:
-        card=QFrame(); card.setObjectName("Card")
-        layout=QVBoxLayout(card); layout.setContentsMargins(20,20,20,20); layout.setSpacing(10)
-        title=QLabel("跟读评分 Beta"); title.setProperty("role","page-title"); title.setStyleSheet("font-size: 18px;"); layout.addWidget(title)
-        notice=QLabel("录音会在用户点击评分时发送至 Azure Speech。未配置时仍可录音、回放并对照标准发音，不会显示模拟分数。")
-        notice.setWordWrap(True); notice.setProperty("role","muted"); layout.addWidget(notice)
-        form=QFormLayout(); self.pronunciation_region_input=QLineEdit(); self.pronunciation_region_input.setPlaceholderText("例如 eastus")
-        self.pronunciation_key_input=QLineEdit(); self.pronunciation_key_input.setEchoMode(QLineEdit.EchoMode.Password); self.pronunciation_key_input.setPlaceholderText("Azure Speech Key（不会写入数据库）")
-        self.pronunciation_keep_checkbox=QCheckBox("保留评分后的本地录音")
-        form.addRow("服务商",QLabel("Azure Speech（可选 Beta）")); form.addRow("区域",self.pronunciation_region_input); form.addRow("Speech Key",self.pronunciation_key_input); form.addRow("录音保存",self.pronunciation_keep_checkbox); layout.addLayout(form)
-        self.pronunciation_key_status=QLabel("凭据状态：尚未读取"); self.pronunciation_key_status.setProperty("role","muted"); layout.addWidget(self.pronunciation_key_status)
-        actions=QHBoxLayout(); self.save_pronunciation_key_button=QPushButton("保存 Key"); self.delete_pronunciation_key_button=QPushButton("删除 Key"); actions.addWidget(self.save_pronunciation_key_button); actions.addWidget(self.delete_pronunciation_key_button); actions.addStretch(1); layout.addLayout(actions)
-        return card
-
-    def set_pronunciation_key_status(self, masked_value: str) -> None:
-        self.pronunciation_key_status.setText(f"凭据状态：{masked_value}")
-
     def _build_vocabulary_card(self) -> QFrame:
         card=QFrame(); card.setObjectName("Card"); layout=QVBoxLayout(card); layout.setContentsMargins(20,20,20,20)
         title=QLabel("单词学习"); title.setProperty("role","page-title"); title.setStyleSheet("font-size: 18px;"); layout.addWidget(title)
@@ -345,8 +324,6 @@ class SettingsPage(QWidget):
         for combo,value in ((self.fsrs_retention_combo,settings.fsrs_desired_retention),(self.fsrs_new_cards_combo,settings.fsrs_new_cards_per_day)):
             index=combo.findData(value); combo.setCurrentIndex(index if index>=0 else 0)
         self.status_label.setText("所有设置均已保存。")
-        self.pronunciation_region_input.setText(settings.pronunciation_region)
-        self.pronunciation_keep_checkbox.setChecked(settings.pronunciation_keep_recordings)
 
     def build_settings(self) -> AppSettings:
         return AppSettings(
@@ -368,7 +345,6 @@ class SettingsPage(QWidget):
             tts_model=str(self.tts_model_combo.currentData()),
             tts_voice_id=str(self.tts_voice_combo.currentData()),
             tts_speed=float(self.tts_speed_combo.currentData()),
-            tts_auto_play=False,
             vocabulary_typing_count=int(self.vocabulary_typing_combo.currentData()),
             vocabulary_auto_enrich=self.vocabulary_auto_checkbox.isChecked(),
             vocabulary_audio_preference="dictionary",
@@ -380,10 +356,6 @@ class SettingsPage(QWidget):
             fsrs_desired_retention=float(self.fsrs_retention_combo.currentData()),
             fsrs_new_cards_per_day=int(self.fsrs_new_cards_combo.currentData()),
             fsrs_review_soft_limit=100,
-            pronunciation_provider="azure",
-            pronunciation_region=self.pronunciation_region_input.text().strip(),
-            pronunciation_locale="en-US",
-            pronunciation_keep_recordings=self.pronunciation_keep_checkbox.isChecked(),
         )
 
     def _mark_dirty(self, *_args) -> None:
