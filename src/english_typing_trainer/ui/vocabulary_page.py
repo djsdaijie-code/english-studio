@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, QRect, Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QHeaderView,
+    QStyle,
+    QStyleOptionButton,
 )
 
 
@@ -30,6 +32,59 @@ def _local_text(value: str | None) -> str:
         return datetime.fromisoformat(value).strftime("%m-%d %H:%M")
     except ValueError:
         return value
+
+
+class SelectionRowHeader(QHeaderView):
+    CHECKBOX_SIZE = 16
+
+    def __init__(self, table: QTableWidget) -> None:
+        super().__init__(Qt.Orientation.Vertical, table)
+        self._table = table
+        self.setDefaultAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.setSectionsClickable(True)
+        self.setMinimumWidth(58)
+        self.setMaximumWidth(58)
+        table.itemSelectionChanged.connect(self.viewport().update)
+
+    def checkbox_rect_for_section(self, section: int) -> QRect:
+        top = self.sectionViewportPosition(section)
+        height = self.sectionSize(section)
+        return QRect(6, top + (height - self.CHECKBOX_SIZE) // 2, self.CHECKBOX_SIZE, self.CHECKBOX_SIZE)
+
+    def paintSection(self, painter, rect: QRect, logical_index: int) -> None:
+        super().paintSection(painter, rect, logical_index)
+        option = QStyleOptionButton()
+        option.rect = QRect(
+            rect.left() + 6,
+            rect.top() + (rect.height() - self.CHECKBOX_SIZE) // 2,
+            self.CHECKBOX_SIZE,
+            self.CHECKBOX_SIZE,
+        )
+        option.state = QStyle.StateFlag.State_Enabled | QStyle.StateFlag.State_Active
+        selection_model = self._table.selectionModel()
+        if selection_model and selection_model.isRowSelected(logical_index, QModelIndex()):
+            option.state |= QStyle.StateFlag.State_On
+        else:
+            option.state |= QStyle.StateFlag.State_Off
+        self.style().drawControl(QStyle.ControlElement.CE_CheckBox, option, painter, self)
+
+    def mousePressEvent(self, event) -> None:
+        position = event.position().toPoint()
+        section = self.logicalIndexAt(position)
+        if section >= 0 and self.checkbox_rect_for_section(section).contains(position):
+            selection_model = self._table.selectionModel()
+            if selection_model is not None:
+                index = self._table.model().index(section, 0)
+                command = (
+                    QItemSelectionModel.SelectionFlag.Deselect
+                    if selection_model.isRowSelected(section, QModelIndex())
+                    else QItemSelectionModel.SelectionFlag.Select
+                )
+                selection_model.select(index, command | QItemSelectionModel.SelectionFlag.Rows)
+                self._table.setFocus()
+            event.accept()
+            return
+        super().mousePressEvent(event)
 
 
 class VocabularyEditorDialog(QDialog):
@@ -139,6 +194,8 @@ class VocabularyPage(QWidget):
         layout.addWidget(filter_card)
 
         self.table = QTableWidget(0, 8)
+        self.row_header = SelectionRowHeader(self.table)
+        self.table.setVerticalHeader(self.row_header)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)

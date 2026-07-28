@@ -23,7 +23,7 @@ import english_typing_trainer.ui.main_window as main_window_module
 from english_typing_trainer.ui.practice_view import FocusTextBrowser
 from english_typing_trainer.ui.theme import apply_theme
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
-from english_typing_trainer.ui.vocabulary_page import VocabularyPage
+from english_typing_trainer.ui.vocabulary_page import SelectionRowHeader, VocabularyPage
 
 
 def app(): return QApplication.instance() or QApplication([])
@@ -111,7 +111,11 @@ def test_vocabulary_page_supports_multi_select_and_select_all():
     ]
     page.populate_items(rows); application.processEvents()
     assert page.table.selectionMode()==QAbstractItemView.SelectionMode.ExtendedSelection
+    assert isinstance(page.table.verticalHeader(),SelectionRowHeader)
     assert page.selected_item_ids()==[1]
+    page.table.clearSelection(); application.processEvents()
+    QTest.mouseClick(page.row_header.viewport(),Qt.MouseButton.LeftButton,pos=page.row_header.checkbox_rect_for_section(1).center()); application.processEvents()
+    assert page.selected_item_ids()==[2]
     page.select_all_button.click(); application.processEvents()
     assert page.selected_item_ids()==[1,2,3]
     assert page.select_all_button.text()=="取消全选"
