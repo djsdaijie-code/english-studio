@@ -45,6 +45,14 @@ def test_source_browser_emits_selected_word_and_offsets():
     assert captured==[("well-known",2,12)]
 
 
+def test_source_browser_context_menu_action_emits_selected_word():
+    app(); browser=FocusTextBrowser(); browser.setPlainText("Remove context now.")
+    cursor=browser.textCursor(); cursor.setPosition(7); cursor.setPosition(14,QTextCursor.MoveMode.KeepAnchor); browser.setTextCursor(cursor)
+    captured=[]; browser.word_selected.connect(lambda *args:captured.append(args))
+    _menu, action=browser._create_word_menu(); action.trigger()
+    assert captured==[("context",7,14)]
+
+
 def test_word_learning_page_typing_errors_backspace_and_completion():
     app(); page=WordLearningPage(); entry,contexts,state=data(); page.load(entry,contexts,state); attempts=[]; page.attempt_completed.connect(attempts.append)
     page.context_combo.setCurrentIndex(1)

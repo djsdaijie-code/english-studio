@@ -49,12 +49,18 @@ class FocusTextBrowser(QTextBrowser):
     def _show_word_menu(self, position) -> None:
         if not self._word_collection_enabled:
             return
+        menu, _action = self._create_word_menu()
+        menu.exec(self.mapToGlobal(position))
+
+    def _create_word_menu(self):
         from PySide6.QtWidgets import QMenu
         menu = QMenu(self)
         action = menu.addAction("加入单词本")
         action.setEnabled(bool(self.textCursor().selectedText().strip()))
-        if menu.exec(self.mapToGlobal(position)) is action:
-            self._emit_selection()
+        # Connect the action directly: PySide may return a different Python
+        # wrapper from exec(), especially in frozen Windows builds.
+        action.triggered.connect(self._emit_selection)
+        return menu, action
 
     def _emit_selection(self) -> None:
         cursor = self.textCursor()

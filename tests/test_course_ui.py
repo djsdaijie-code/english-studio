@@ -28,6 +28,7 @@ COURSE_ID = "ai-large-models"
 DAY_ONE = "ai-l1-u01-d01"
 DAY_TWO = "ai-l1-u01-d02"
 DAY_SIX = "ai-l1-u01-d06"
+CONTEXT_DAY = "ai-l1-u02-d03"
 FIRST_ITEM = "ai-large-models-sentence-0001"
 
 
@@ -218,6 +219,40 @@ def test_main_window_course_typing_updates_state_without_article_writes(tmp_path
         assert connection.execute("SELECT COUNT(*) FROM sentence_attempts").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM practice_sessions").fetchone()[0] == 0
         assert connection.execute("SELECT COUNT(*) FROM tts_audio_cache").fetchone()[0] == 0
+    finally:
+        window.current_practice_saved = True
+        window.current_course_session = None
+        window.close()
+        context.database.close()
+
+
+def test_course_sentence_context_menu_collection_updates_vocabulary_in_place(
+    tmp_path: Path,
+) -> None:
+    app = _app()
+    context = _context(tmp_path)
+    window = MainWindow(context)
+    try:
+        context.course_progress_service.complete_item(
+            COURSE_ID, "ai-large-models-sentence-0034"
+        )
+        window.show()
+        window._start_course_lesson(COURSE_ID, CONTEXT_DAY, "manual")
+        app.processEvents()
+        assert window.current_course_session is not None
+        assert (
+            window.current_course_session.current_item_stable_key
+            == "ai-large-models-sentence-0035"
+        )
+
+        window._collect_selected_word("context", 7, 14)
+        app.processEvents()
+
+        entry = context.vocabulary_learning_service.repository.get_by_word("context")
+        assert entry is not None
+        assert window.vocabulary_quick_access.word_label.text() == "context"
+        assert window.vocabulary_quick_access.added_popup.isVisibleTo(window)
+        assert window.sentence_practice_view.input_edit.hasFocus()
     finally:
         window.current_practice_saved = True
         window.current_course_session = None
