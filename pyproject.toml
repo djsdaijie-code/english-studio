@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "english-typing-trainer"
-version = "2.0.0.dev2"
+version = "2.0.0"
 description = "Local Windows desktop app for English reading, typing, AI read-aloud, and review."
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
