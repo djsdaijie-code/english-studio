@@ -90,6 +90,7 @@ from english_typing_trainer.ui.article_proofreading_tasks import ArticleProofrea
 from english_typing_trainer.ui.vocabulary_quick_access import VocabularyQuickAccess
 from english_typing_trainer.ui.today_learning_time import TodayLearningTimeBar
 from english_typing_trainer.ui.chinese_article_dialog import ChineseArticleDialog
+from english_typing_trainer.ui.chinese_typing_page import ChineseTypingPage
 from english_typing_trainer.typing_engine.language import count_cjk_characters, is_chinese_typing_text
 
 
@@ -420,6 +421,7 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         self.home_page = HomePage()
         self.home_page.article_library_requested.connect(self._show_library)
+        self.home_page.chinese_typing_requested.connect(self._show_chinese_typing)
         self.home_page.courses_requested.connect(self._show_courses)
         self.home_page.special_practice_requested.connect(self._show_special_practice)
         self.home_page.vocabulary_requested.connect(self._show_vocabulary)
@@ -429,7 +431,13 @@ class MainWindow(QMainWindow):
         self.daily_learning_card = self.home_page.daily_learning_card
         self.daily_learning_card.review_requested.connect(self._start_fsrs_review)
         self.library_page = self._build_library_page()
-        self.learning_content_page = LearningContentPage(self.library_page, self.course_page)
+        self.chinese_typing_page = ChineseTypingPage()
+        self.chinese_typing_page.import_requested.connect(self._import_chinese_article)
+        self.learning_content_page = LearningContentPage(
+            self.library_page,
+            self.course_page,
+            self.chinese_typing_page,
+        )
         self.learning_content_page.section_changed.connect(self._learning_content_section_changed)
         self.stack.addWidget(self.home_page)
         self.stack.addWidget(self.learning_content_page)
@@ -833,10 +841,14 @@ class MainWindow(QMainWindow):
         self.learning_content_page.set_section("courses")
         self._switch_page(self.PAGE_LEARNING_CONTENT)
 
+    def _show_chinese_typing(self) -> None:
+        self.learning_content_page.set_section("chinese")
+        self._switch_page(self.PAGE_LEARNING_CONTENT)
+
     def _learning_content_section_changed(self, section: str) -> None:
         if section == "courses":
             self.course_page.reload()
-        else:
+        elif section == "articles":
             self._reload_articles()
 
     def _show_vocabulary(self) -> None:
@@ -1148,10 +1160,11 @@ class MainWindow(QMainWindow):
             dialog.article_title(), dialog.article_text()
         )
         preferred_id = result.article.id if result.article else None
-        self._reload_articles(preferred_article_id=preferred_id)
         if result.status == "error":
             QMessageBox.warning(self, "中文文章导入失败", result.message)
         else:
+            self._show_library()
+            self._reload_articles(preferred_article_id=preferred_id)
             QMessageBox.information(self, "中文文章导入", result.message)
 
     def _proofread_selected_article(self) -> None:

@@ -55,12 +55,21 @@ def test_navigation_switches_pages_and_empty_state_is_visible(tmp_path: Path) ->
         window._show_courses()
         app.processEvents()
         assert window.learning_content_page.current_section() == "courses"
+        window._show_chinese_typing()
+        app.processEvents()
+        assert window.learning_content_page.current_section() == "chinese"
+        assert window.chinese_typing_page.isVisible()
         window.home_page.article_card.action_button.click()
         app.processEvents()
         assert window.learning_content_page.current_section() == "articles"
         window.home_page.course_card.action_button.click()
         app.processEvents()
         assert window.learning_content_page.current_section() == "courses"
+        window._switch_page(window.PAGE_HOME)
+        window.home_page.chinese_typing_card.action_button.click()
+        app.processEvents()
+        assert window.learning_content_page.current_section() == "chinese"
+        assert window.learning_content_page.section_control.button("chinese").text() == "中文打字练习"
         window._show_special_practice()
         app.processEvents()
         assert window.stack.currentWidget() is window.special_practice_page

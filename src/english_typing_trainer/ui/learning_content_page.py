@@ -15,6 +15,7 @@ class LearningContentPage(QWidget):
         self,
         article_page: QWidget,
         course_page: QWidget,
+        chinese_typing_page: QWidget | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -27,7 +28,11 @@ class LearningContentPage(QWidget):
         heading = QLabel("学习内容")
         heading.setProperty("role", "section-title")
         self.section_control = SegmentedControl(
-            [("文章库", "articles"), ("内置课程", "courses")]
+            [
+                ("文章库", "articles"),
+                ("内置课程", "courses"),
+                ("中文打字练习", "chinese"),
+            ]
         )
         self.section_control.set_value("articles")
         header.addWidget(heading)
@@ -38,6 +43,7 @@ class LearningContentPage(QWidget):
         self.content_stack = QStackedWidget()
         self.content_stack.addWidget(article_page)
         self.content_stack.addWidget(course_page)
+        self.content_stack.addWidget(chinese_typing_page or QWidget())
         layout.addWidget(self.content_stack, stretch=1)
 
         self.section_control.value_changed.connect(self._change_section)
@@ -47,8 +53,12 @@ class LearningContentPage(QWidget):
 
     def set_section(self, section: str) -> None:
         self.section_control.set_value(section)
-        self.content_stack.setCurrentIndex(0 if section == "articles" else 1)
+        self.content_stack.setCurrentIndex(self._section_index(section))
 
     def _change_section(self, section: str) -> None:
-        self.content_stack.setCurrentIndex(0 if section == "articles" else 1)
+        self.content_stack.setCurrentIndex(self._section_index(section))
         self.section_changed.emit(section)
+
+    @staticmethod
+    def _section_index(section: str) -> int:
+        return {"articles": 0, "courses": 1, "chinese": 2}.get(section, 0)
