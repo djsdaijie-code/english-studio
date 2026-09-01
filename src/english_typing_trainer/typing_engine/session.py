@@ -10,6 +10,7 @@ from english_typing_trainer.statistics.metrics import (
     calculate_wpm,
 )
 from english_typing_trainer.typing_engine.text_analysis import classify_error, extract_target_word
+from english_typing_trainer.typing_engine.language import is_cjk_character
 
 
 @dataclass(slots=True)
@@ -37,6 +38,7 @@ class SessionSnapshot:
     correct_keystrokes: int
     error_keystrokes: int
     correct_characters: int
+    speed_characters: int
     current_streak: int
     best_streak: int
     elapsed_active_seconds: float
@@ -49,9 +51,17 @@ class SessionSnapshot:
 
 
 class TypingSession:
-    def __init__(self, content: str, *, case_sensitive: bool = True, start_position: int = 0) -> None:
+    def __init__(
+        self,
+        content: str,
+        *,
+        case_sensitive: bool = True,
+        start_position: int = 0,
+        speed_mode: str = "english",
+    ) -> None:
         self.content = content
         self.case_sensitive = case_sensitive
+        self.speed_mode = speed_mode if speed_mode in {"english", "chinese"} else "english"
         self.start_position = max(0, min(start_position, len(content)))
         self.position = self.start_position
         self.total_keystrokes = 0
@@ -206,18 +216,30 @@ class TypingSession:
         return actual_char.casefold() == expected_char.casefold()
 
     def snapshot(self) -> SessionSnapshot:
+        speed_characters = self.correct_characters
+        if self.speed_mode == "chinese":
+            speed_characters = sum(
+                1
+                for typed in self.typed_characters
+                if typed.is_correct and is_cjk_character(typed.target_char)
+            )
         return SessionSnapshot(
             position=self.position,
             total_keystrokes=self.total_keystrokes,
             correct_keystrokes=self.correct_keystrokes,
             error_keystrokes=self.error_keystrokes,
             correct_characters=self.correct_characters,
+            speed_characters=speed_characters,
             current_streak=self.current_streak,
             best_streak=self.best_streak,
             elapsed_active_seconds=self.elapsed_active_seconds,
             paused_seconds=self.paused_seconds,
-            wpm=calculate_wpm(self.correct_characters, self.elapsed_active_seconds),
-            cpm=calculate_cpm(self.correct_characters, self.elapsed_active_seconds),
+            wpm=(
+                0.0
+                if self.speed_mode == "chinese"
+                else calculate_wpm(self.correct_characters, self.elapsed_active_seconds)
+            ),
+            cpm=calculate_cpm(speed_characters, self.elapsed_active_seconds),
             accuracy=calculate_accuracy(self.correct_keystrokes, self.total_keystrokes),
             is_complete=self.is_complete,
             last_error=self.last_error,

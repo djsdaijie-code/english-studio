@@ -11,7 +11,7 @@ from english_typing_trainer.models.section import ArticleSection
 from english_typing_trainer.models.vocabulary import PracticeSet, PracticeSetItem, VocabularyItem
 from english_typing_trainer.statistics.metrics import MIN_EFFECTIVE_CHARACTERS, MIN_EFFECTIVE_SECONDS
 
-ARTICLE_PRACTICE_TYPES = ("article", "article_section")
+ARTICLE_PRACTICE_TYPES = ("article", "article_section", "chinese_article")
 SPECIAL_PRACTICE_TYPES = (
     "error_words",
     "error_characters",
@@ -720,7 +720,7 @@ class PracticeRepository:
         practice_scope = (
             f"{alias}.practice_type IN ('article', 'article_section') AND "
             if article_only
-            else ""
+            else f"{alias}.practice_type != 'chinese_article' AND "
         )
         return (
             f"{practice_scope}{alias}.completed = 1"

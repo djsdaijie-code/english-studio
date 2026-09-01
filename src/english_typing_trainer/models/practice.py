@@ -36,6 +36,7 @@ class PracticeMaterial:
     idle_seconds: float = 0.0
     manual_paused_seconds: float = 0.0
     source_items: list[str] | None = None
+    speed_mode: str = "english"
 
 
 @dataclass(slots=True)

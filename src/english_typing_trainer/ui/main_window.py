@@ -89,6 +89,8 @@ from english_typing_trainer.ui.article_proofreading_dialog import ArticleProofre
 from english_typing_trainer.ui.article_proofreading_tasks import ArticleProofreadingWorker
 from english_typing_trainer.ui.vocabulary_quick_access import VocabularyQuickAccess
 from english_typing_trainer.ui.today_learning_time import TodayLearningTimeBar
+from english_typing_trainer.ui.chinese_article_dialog import ChineseArticleDialog
+from english_typing_trainer.typing_engine.language import count_cjk_characters, is_chinese_typing_text
 
 
 class MetricCard(QFrame):
@@ -509,6 +511,10 @@ class MainWindow(QMainWindow):
         self.import_button = QPushButton("导入文章")
         self.import_button.setProperty("variant", "primary")
         self.import_button.clicked.connect(self._import_articles)
+        self.import_chinese_button = QPushButton("粘贴中文")
+        self.import_chinese_button.setToolTip("粘贴标题和中文正文，用于五笔整篇练习")
+        self.import_chinese_button.clicked.connect(self._import_chinese_article)
+        top_row.addWidget(self.import_chinese_button, alignment=Qt.AlignmentFlag.AlignRight)
         top_row.addWidget(self.import_button, alignment=Qt.AlignmentFlag.AlignRight)
         layout.addLayout(top_row)
 
@@ -606,13 +612,13 @@ class MainWindow(QMainWindow):
 
         mode_row = QHBoxLayout()
         mode_row.setSpacing(12)
-        mode_label = QLabel("练习模式")
-        mode_label.setProperty("role", "subtitle")
+        self.practice_mode_label = QLabel("练习模式")
+        self.practice_mode_label.setProperty("role", "subtitle")
         self.practice_mode_control = SegmentedControl(
             [("逐句学习", "sentence"), ("连续练习", "continuous")]
         )
         self.practice_mode_control.value_changed.connect(self._set_practice_mode)
-        mode_row.addWidget(mode_label)
+        mode_row.addWidget(self.practice_mode_label)
         mode_row.addWidget(self.practice_mode_control)
         mode_row.addStretch(1)
         detail_layout.addLayout(mode_row)
@@ -1013,17 +1019,30 @@ class MainWindow(QMainWindow):
             self.current_vocabulary_article_id=None; self.vocabulary_page.set_article_available(False)
             self.proofread_button.setText("重新检测")
             self.proofread_button.setEnabled(False)
+            self.practice_mode_control.setEnabled(True)
+            self.practice_mode_control.set_value(
+                "sentence" if self.settings.sentence_learning_enabled else "continuous"
+            )
+            self.practice_mode_label.setText("练习模式")
             return
         article = self.articles[row]
+        chinese_typing = is_chinese_typing_text(article.full_text)
         imported = article.imported_at.strftime("%Y-%m-%d %H:%M") if article.imported_at else "暂无"
         last_practiced = article.last_practiced_at.strftime("%Y-%m-%d %H:%M") if article.last_practiced_at else "暂无"
         self.preview_title.setText(article.title)
+        if chinese_typing:
+            count = count_cjk_characters(article.full_text)
+            content_meta = f"正文长度：{article.character_count} · 汉字数：{count} · 整篇单段"
+            progress_meta = "已完成" if article.completed_section_count else f"当前进度：{article.current_character_index}/{article.character_count} 字符"
+        else:
+            content_meta = f"总字数：{article.character_count} · 单词数：{article.word_count} · 分段数：{article.section_count}"
+            progress_meta = f"完成进度：{article.completed_section_count}/{article.section_count} 段"
         self.preview_meta.setText(
             f"导入时间：{imported}\n"
             f"最近练习：{last_practiced}\n"
-            f"总字数：{article.character_count} · 单词数：{article.word_count} · 分段数：{article.section_count}\n"
-            f"完成进度：{article.completed_section_count}/{article.section_count} 段\n"
-            f"原始文件名：{article.original_filename}"
+            f"{content_meta}\n"
+            f"{progress_meta}\n"
+            f"来源：{article.original_filename or '手动粘贴'}"
         )
         self.preview_meta.setToolTip(article.source_path)
         self.preview_content.setPlainText(article.full_text[:3500])
@@ -1031,6 +1050,13 @@ class MainWindow(QMainWindow):
         proofreading = article.id in self._proofreading_article_ids
         self.proofread_button.setText("检测中…" if proofreading else "重新检测")
         self.proofread_button.setEnabled(not proofreading)
+        self.practice_mode_control.setEnabled(not chinese_typing)
+        self.practice_mode_control.set_value(
+            "continuous"
+            if chinese_typing
+            else ("sentence" if self.settings.sentence_learning_enabled else "continuous")
+        )
+        self.practice_mode_label.setText("练习模式（中文五笔使用整篇连续练习）" if chinese_typing else "练习模式")
 
     def _show_article_preview_menu(self,position) -> None:
         if self.current_vocabulary_article_id is None:return
@@ -1113,6 +1139,20 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "导入结果", "\n".join(messages))
         for article_id in proofreading_ids:
             self._start_article_proofreading(article_id, automatic=True)
+
+    def _import_chinese_article(self) -> None:
+        dialog = ChineseArticleDialog(self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        result = self.context.article_library.import_pasted_chinese(
+            dialog.article_title(), dialog.article_text()
+        )
+        preferred_id = result.article.id if result.article else None
+        self._reload_articles(preferred_article_id=preferred_id)
+        if result.status == "error":
+            QMessageBox.warning(self, "中文文章导入失败", result.message)
+        else:
+            QMessageBox.information(self, "中文文章导入", result.message)
 
     def _proofread_selected_article(self) -> None:
         article_id = self._selected_article_id()
@@ -1219,6 +1259,7 @@ class MainWindow(QMainWindow):
         self._sentence_attempt_ids = []
         use_sentence_mode = (
             self.settings.sentence_learning_enabled
+            and material.speed_mode != "chinese"
             and material.practice_type in {"article", "article_section"}
             and material.section_id is not None
         )
@@ -1229,7 +1270,11 @@ class MainWindow(QMainWindow):
         else:
             hints: list[tuple[int, int, str]] = []
             speech_segments: list[tuple[int, int, str]] = []
-            show_translation_panel = material.practice_type in {"article", "article_section"} and material.section_id is not None
+            show_translation_panel = (
+                material.speed_mode != "chinese"
+                and material.practice_type in {"article", "article_section"}
+                and material.section_id is not None
+            )
             if show_translation_panel:
                 sentences = self.context.sentence_service.ensure_for_section(material.section_id)
                 leading_whitespace = len(material.section_text) - len(material.section_text.lstrip())

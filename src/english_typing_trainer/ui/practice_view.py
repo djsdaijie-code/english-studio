@@ -70,6 +70,8 @@ class FocusTextBrowser(QTextBrowser):
 
 class PracticeInputEdit(QPlainTextEdit):
     key_received = Signal(object)
+    input_method_committed = Signal(str)
+    preedit_changed = Signal(str)
     clicked = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -87,6 +89,11 @@ class PracticeInputEdit(QPlainTextEdit):
         self.setPlaceholderText("在这里开始输入……")
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
         self.document().defaultTextOption().setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
+        self._ime_enabled = False
+
+    def set_ime_enabled(self, enabled: bool) -> None:
+        self._ime_enabled = enabled
+        self.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled, enabled)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # type: ignore[override]
         if event.matches(QKeySequence.StandardKey.Paste):
@@ -104,7 +111,15 @@ class PracticeInputEdit(QPlainTextEdit):
         self.clicked.emit()
 
     def inputMethodEvent(self, event) -> None:  # type: ignore[override]
-        event.ignore()
+        if not self._ime_enabled:
+            event.ignore()
+            return
+        preedit = event.preeditString()
+        self.preedit_changed.emit(preedit)
+        committed = event.commitString()
+        if committed:
+            self.input_method_committed.emit(committed)
+        event.accept()
 
     def insertFromMimeData(self, source) -> None:  # type: ignore[override]
         return
@@ -176,10 +191,10 @@ class PracticeView(QWidget):
         stats_row = QHBoxLayout(self.stats_frame)
         stats_row.setContentsMargins(16, 10, 16, 10)
         stats_row.setSpacing(24)
-        self.wpm_value = self._build_stat_label("WPM", stats_row)
-        self.accuracy_value = self._build_stat_label("正确率", stats_row)
-        self.errors_value = self._build_stat_label("错误数", stats_row)
-        self.elapsed_value = self._build_stat_label("时间", stats_row)
+        self.wpm_title, self.wpm_value = self._build_stat_label("WPM", stats_row)
+        _, self.accuracy_value = self._build_stat_label("正确率", stats_row)
+        _, self.errors_value = self._build_stat_label("错误数", stats_row)
+        _, self.elapsed_value = self._build_stat_label("时间", stats_row)
         stats_row.addStretch(1)
         layout.addWidget(self.stats_frame)
 
@@ -250,6 +265,8 @@ class PracticeView(QWidget):
         input_layout.addLayout(input_heading)
         self.input_edit = PracticeInputEdit()
         self.input_edit.key_received.connect(self._handle_input_event)
+        self.input_edit.input_method_committed.connect(self._handle_committed_text)
+        self.input_edit.preedit_changed.connect(self._handle_preedit)
         self.input_edit.clicked.connect(lambda: QTimer.singleShot(0, self._restore_focus))
         input_layout.addWidget(self.input_edit, stretch=1)
 
@@ -300,7 +317,7 @@ class PracticeView(QWidget):
         layout.addLayout(content_shell, stretch=1)
         self._update_responsive_geometry()
 
-    def _build_stat_label(self, title: str, parent_layout: QHBoxLayout) -> QLabel:
+    def _build_stat_label(self, title: str, parent_layout: QHBoxLayout) -> tuple[QLabel, QLabel]:
         box = QVBoxLayout()
         box.setSpacing(2)
         title_label = QLabel(title)
@@ -311,7 +328,7 @@ class PracticeView(QWidget):
         box.addWidget(title_label)
         box.addWidget(value_label)
         parent_layout.addLayout(box)
-        return value_label
+        return title_label, value_label
 
     def apply_settings(self, settings: AppSettings) -> None:
         self._settings_font_size = settings.font_size
@@ -328,10 +345,22 @@ class PracticeView(QWidget):
             material.section_text,
             case_sensitive=settings.case_sensitive,
             start_position=material.resume_character_index,
+            speed_mode=material.speed_mode,
         )
         practice_name = "专项练习" if material.practice_type not in {"article", "article_section"} else material.article_title
         self.title_label.setText(practice_name)
-        self.section_label.setText(f"第 {material.section_index + 1} / {material.section_count} 段")
+        self.section_label.setText(
+            "整篇文章"
+            if material.speed_mode == "chinese"
+            else f"第 {material.section_index + 1} / {material.section_count} 段"
+        )
+        self.wpm_title.setText("字/分钟" if material.speed_mode == "chinese" else "WPM")
+        self.hint_label.setText(
+            "请使用中文输入法在“我的输入”中打字。速度按正确汉字数计算，标点仍参与正确率。"
+            if material.speed_mode == "chinese"
+            else "请在“我的输入”中打字。错误字符会标红并继续前进，Backspace 可回退一格，Esc 暂停或继续。"
+        )
+        self.input_edit.set_ime_enabled(material.speed_mode == "chinese")
         self.pause_button.setText("暂停")
         self.input_feedback_label.setText("等待输入")
         self._translation_visible = True
@@ -436,6 +465,21 @@ class PracticeView(QWidget):
             self.session_completed.emit(self.session.snapshot())
         event.accept()
 
+    def _handle_committed_text(self, text: str) -> None:
+        if self.session is None or not text:
+            return
+        for character in text:
+            key = Qt.Key.Key_Return if character == "\n" else Qt.Key.Key_unknown
+            self._handle_input_event(
+                QKeyEvent(QEvent.Type.KeyPress, key, Qt.KeyboardModifier.NoModifier, character)
+            )
+            if self.session.is_complete:
+                break
+
+    def _handle_preedit(self, text: str) -> None:
+        if text and self.session and not self.session.is_paused and not self.session.is_complete:
+            self.input_feedback_label.setText(f"输入法组合：{text}")
+
     def focusOutEvent(self, event) -> None:  # type: ignore[override]
         if self.session and not self.session.is_complete and not self.isActiveWindow():
             self.session.pause()
@@ -475,7 +519,8 @@ class PracticeView(QWidget):
         snapshot = self.session.snapshot()
         self.progress_label.setText(f"进度 {snapshot.position} / {len(self.session.content)}")
         self._refresh_target_hint()
-        self.wpm_value.setText(f"{snapshot.wpm:.1f}")
+        speed = snapshot.cpm if self.session.speed_mode == "chinese" else snapshot.wpm
+        self.wpm_value.setText(f"{speed:.1f}")
         self.accuracy_value.setText(f"{snapshot.accuracy:.1f}%")
         self.errors_value.setText(str(snapshot.error_keystrokes))
         self.elapsed_value.setText(f"{snapshot.elapsed_active_seconds:.1f} 秒")

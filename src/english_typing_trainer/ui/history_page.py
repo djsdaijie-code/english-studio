@@ -149,6 +149,12 @@ class HistoryPage(QWidget):
         self.empty_label.setVisible(len(rows) == 0)
         for row_index, row in enumerate(rows):
             is_effective = bool(row["is_effective_result"])
+            chinese_typing = row["practice_type"] == "chinese_article"
+            speed_text = (
+                f"{row['cpm']:.1f} 字/分"
+                if chinese_typing and is_effective
+                else (f"{row['wpm']:.1f}" if is_effective else "数据不足")
+            )
             values = [
                 _local_text(row["created_at"]),
                 self._humanize_practice_type(row["practice_type"]),
@@ -156,8 +162,8 @@ class HistoryPage(QWidget):
                 str((row["section_index"] or 0) + 1) if row["section_index"] is not None else "-",
                 "已完成" if row["completed"] else "未完成",
                 f"{row['active_seconds']:.1f} 秒",
-                f"{row['wpm']:.1f}" if is_effective else "数据不足",
-                f"{row['cpm']:.1f}" if is_effective else "数据不足",
+                speed_text,
+                "-" if chinese_typing else (f"{row['cpm']:.1f}" if is_effective else "数据不足"),
                 f"{row['accuracy']:.1f}%" if is_effective else "数据不足",
                 str(row["error_keystrokes"]),
             ]
@@ -194,6 +200,7 @@ class HistoryPage(QWidget):
         mapping = {
             "article": "普通文章",
             "article_section": "普通文章",
+            "chinese_article": "中文五笔",
             "error_words": "错词练习",
             "error_characters": "错误字符",
             "context_sentences": "原句复习",

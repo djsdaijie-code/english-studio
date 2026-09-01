@@ -12,6 +12,7 @@ from english_typing_trainer.models.practice import (
 )
 from english_typing_trainer.statistics.metrics import is_effective_result
 from english_typing_trainer.typing_engine.session import SessionSnapshot, TypingSession
+from english_typing_trainer.typing_engine.language import is_chinese_typing_text
 
 
 class PracticeService:
@@ -48,6 +49,7 @@ class PracticeService:
             section_text=section.text,
             resume_character_index=resume_character_index,
             completed_section_count=completed_section_count,
+            speed_mode="chinese" if is_chinese_typing_text(article.full_text) else "english",
         )
 
     def save_interrupted_session(
@@ -133,7 +135,11 @@ class PracticeService:
             completion_rate = snapshot.position / len(material.section_text)
         effective_result = is_effective_result(
             completed=completed,
-            correct_characters=snapshot.correct_characters,
+            correct_characters=(
+                snapshot.speed_characters
+                if material.speed_mode == "chinese"
+                else snapshot.correct_characters
+            ),
             active_seconds=snapshot.elapsed_active_seconds,
         )
         timing = getattr(session, "timing_breakdown", {})
@@ -153,9 +159,13 @@ class PracticeService:
             accuracy=snapshot.accuracy,
             completion_rate=1.0 if completed else completion_rate,
             completed=completed,
-            practice_type=material.practice_type,
+            practice_type="chinese_article" if material.speed_mode == "chinese" else material.practice_type,
             longest_correct_streak=snapshot.best_streak,
-            average_wpm=snapshot.wpm if effective_result else None,
+            average_wpm=(
+                snapshot.wpm
+                if effective_result and material.speed_mode != "chinese"
+                else None
+            ),
             app_version=self._resolved_app_version(),
             practice_set_id=material.practice_set_id,
             total_elapsed_seconds=float(timing.get("total_elapsed_seconds", snapshot.elapsed_active_seconds + snapshot.paused_seconds)),

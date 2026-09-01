@@ -10,6 +10,7 @@ from english_typing_trainer.models.article import Article
 from english_typing_trainer.models.section import ArticleSection
 from english_typing_trainer.services.sectioning import SectioningService
 from english_typing_trainer.services.text_importer import normalize_text, read_text_file
+from english_typing_trainer.typing_engine.language import count_cjk_characters, is_chinese_typing_text
 
 
 @dataclass(slots=True)
@@ -62,6 +63,41 @@ class ArticleLibraryService:
             created = self._repository.insert_article(connection, article, sections)
 
         return ArticleImportResult("imported", created, "文章导入成功。")
+
+    def import_pasted_chinese(self, title: str, text: str) -> ArticleImportResult:
+        normalized_title = title.strip()
+        if not normalized_title:
+            return ArticleImportResult("error", None, "请填写文章标题。")
+        content = normalize_text(text)
+        if not content:
+            return ArticleImportResult("error", None, "粘贴的中文正文为空，无法导入。")
+        if not is_chinese_typing_text(content):
+            return ArticleImportResult("error", None, "正文中没有检测到中文汉字。")
+
+        content_hash = sha256(content.encode("utf-8")).hexdigest()
+        existing = self._repository.get_article_by_hash(content_hash)
+        if existing and not existing.is_deleted:
+            return ArticleImportResult("duplicate", existing, "这篇文章已经导入过了。")
+        if existing and existing.is_deleted:
+            with self._database.transaction() as connection:
+                self._repository.restore_article(connection, existing.id)
+            restored = self._repository.get_article(existing.id, include_deleted=False)
+            return ArticleImportResult("restored", restored, "这篇文章已从已删除列表中恢复。")
+
+        sections = self._single_section(content)
+        article = Article(
+            title=normalized_title,
+            original_filename="粘贴导入",
+            source_path="",
+            content_hash=content_hash,
+            full_text=content,
+            character_count=len(content),
+            word_count=count_cjk_characters(content),
+            section_count=1,
+        )
+        with self._database.transaction() as connection:
+            created = self._repository.insert_article(connection, article, sections)
+        return ArticleImportResult("imported", created, "中文文章导入成功，已按整篇文章保存。")
 
     def rename_article(self, article_id: int, new_title: str) -> None:
         with self._database.transaction() as connection:

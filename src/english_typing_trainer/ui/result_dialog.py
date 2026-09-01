@@ -29,14 +29,17 @@ class ResultDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
 
-        lines = [
-            f"WPM：{snapshot.wpm:.1f}",
-            f"CPM：{snapshot.cpm:.1f}",
+        speed_lines = (
+            [f"字速：{snapshot.cpm:.1f} 字/分钟", f"正确汉字数：{snapshot.speed_characters}"]
+            if session.speed_mode == "chinese"
+            else [f"WPM：{snapshot.wpm:.1f}", f"CPM：{snapshot.cpm:.1f}"]
+        )
+        lines = speed_lines + [
             f"正确率：{snapshot.accuracy:.1f}%",
             f"有效练习时间：{snapshot.elapsed_active_seconds:.1f} 秒",
             f"暂停时间：{snapshot.paused_seconds:.1f} 秒",
             f"错误次数：{snapshot.error_keystrokes}",
-            f"正确字符数：{snapshot.correct_characters}",
+            f"正确输入数：{snapshot.correct_characters}",
             f"最长连续正确：{snapshot.best_streak}",
         ]
         for line in lines:
@@ -46,7 +49,7 @@ class ResultDialog(QDialog):
 
         if not is_effective_result(
             completed=snapshot.is_complete,
-            correct_characters=snapshot.correct_characters,
+            correct_characters=snapshot.speed_characters,
             active_seconds=snapshot.elapsed_active_seconds,
         ):
             warning = QLabel("练习时间过短，暂不计算有效速度。")

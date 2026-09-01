@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-English Studio 当前正式版本为 `2.0.0`。`feature/course-system` 已完成内置课程 Phase 1–5、Phase 6A 发布加固和 Phase 6B 第一版候选内容，并完成课程、单词本与学习体验的正式版回归。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
+English Studio 当前源码版本为 `2.1.0`，最近正式发布版本为 `2.0.0`。`feature/course-system` 已完成中文五笔整篇练习，以及内置课程 Phase 1–5、Phase 6A 发布加固和 Phase 6B 第一版候选内容。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
 
 ## 架构与目录
 
@@ -25,6 +25,7 @@ English Studio 当前正式版本为 `2.0.0`。`feature/course-system` 已完成
 ## 已完成
 
 - 原有文章库、连续练习、历史统计、错误分析、专项练习、生词本和间隔复习保持兼容。
+- 中文五笔文章支持从标题和粘贴正文导入，整篇保存为单一 section；练习接收 Windows IME 提交，按正确汉字计算字/分钟，并与英文 WPM 统计隔离。
 - 内置课程可从主窗口浏览 Course、Level、Unit 和 Day，显示动态进度，支持推荐继续、自由进入和已完成 Day 复习。
 - “AI 与大模型英语”第一版候选课程已完成 5 个 Level、8 个 Unit、56 个 Day 和 176 条 reviewed 句子；Unit 1–4 与 Unit 5–8 各 88 句，每个 Unit 均具备四天新内容、综合场景、AI 朗读练习和复习自测。
 - Unit 1 原 12 条样例保留英文核心语义和 stable key；全课程共有 176 个唯一句子 stable key，没有 deprecated 或 replacement 项。课程与内容版本为 `1.0.0`，状态保持 `reviewed`。
@@ -66,7 +67,7 @@ English Studio 当前正式版本为 `2.0.0`。`feature/course-system` 已完成
 
 ## 测试状态
 
-2026-08-25，Python 3.14.6：共享课程校验与 Phase 6B 内容 QA 均通过；全量 pytest 为 322 passed。课程专项继续覆盖原课程的 5 个 Level、8 个 Unit、56 个 Day、176 句与 stable key，车标课程的 2 个 Unit、14 个 Day、40 条品牌介绍和视觉素材，以及币圈课程的 2 个 Unit、14 个 Day、40 条短句、TVL 定义、无音频活动边界、Day 会话和文章表零写入。发布加固回归继续覆盖数据库副本迁移、跨 AppContext 恢复、课程 due 队列与 FSRS 日志、版本升级提示、Provider 降级和打包双启动。测试数量仍以每次实际 pytest 输出为准。
+2026-09-01，Python 3.14.6：全量 pytest 为 327 passed。新增回归覆盖中文粘贴导入、整篇单段、重复内容、IME 多汉字提交、汉字速度和独立练习记录；共享课程校验、Phase 6B 内容 QA、数据库迁移、FSRS、Provider 降级和既有 UI 回归继续通过。测试数量仍以每次实际 pytest 输出为准。
 
 ## 尚未完成
 

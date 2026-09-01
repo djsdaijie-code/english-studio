@@ -1,6 +1,6 @@
 # English Studio
 
-English Studio 是面向 Windows 的本地英语学习与打字应用，通过阅读、打字、AI 朗读和复习学习英语。它支持导入英文 TXT、逐字或逐句练习、保存进度和历史，并根据错误记录安排专项与间隔复习。
+English Studio 是面向 Windows 的本地英语学习与打字应用，通过阅读、打字、AI 朗读和复习学习英语，并提供独立的中文五笔整篇练习。它支持导入英文 TXT、粘贴中文正文、保存进度和历史，并根据错误记录安排专项与间隔复习。
 
 ## 技术基线
 
@@ -8,11 +8,12 @@ English Studio 是面向 Windows 的本地英语学习与打字应用，通过�
 - PySide6 6.11.1
 - SQLite（标准库 `sqlite3`），schema version 13
 - pytest 9.1.1；PyInstaller 6.21.0
-- 当前正式版本 `2.0.0`；Windows 安装器和便携版由 `scripts/package.ps1` 构建
+- 当前源码版本 `2.1.0`，最近发布的 Windows 安装器和便携版为 `2.0.0`；新构建由 `scripts/package.ps1` 生成
 
 ## 功能
 
 - 文章库：中文路径 TXT 导入、编码识别、内容去重、全文单段保存、搜索、重命名、软删除和手动重新分段；配置 DeepSeek 后，导入会异步检查格式、拼写和单词错误，已有文章也可重新检测并由用户确认是否应用。
+- 中文五笔：通过“粘贴中文”填写标题和整篇正文，不自动分段；练习接收 Windows 中文输入法提交，速度按正确汉字数显示为“字/分钟”，标点和换行仍参与逐字符正确率。
 - 练习：普通连续模式、逐句学习模式、可见错误输入、Backspace、暂停、进度恢复和实时指标；连续模式可按当前句显示已有中文翻译缓存，并可临时隐藏。
 - 逐句学习：可靠拆句并移除句首、句尾空格/Tab/换行，首个有效输入开始计时、无输入自动暂停、句后学习暂停、Enter 下一句和每句成绩保存。
 - 翻译：DeepSeek 异步按需翻译、前后句上下文、全局句子缓存、重点表达、人工编辑、重试及整篇后台翻译。
@@ -45,7 +46,7 @@ py -3.14 -m venv .venv
 powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1
 ```
 
-正式构建会生成 `EnglishStudio-2.0.0-Setup.exe` 与 `EnglishStudio-2.0.0-win-x64-portable.zip`。安装器默认安装到当前用户目录，不需要管理员权限；卸载默认保留学习数据。未签名构建可能触发 SmartScreen，请先核对 `SHA256SUMS.txt`。
+当前构建配置会生成 `EnglishStudio-2.1.0-Setup.exe` 与 `EnglishStudio-2.1.0-win-x64-portable.zip`。安装器默认安装到当前用户目录，不需要管理员权限；卸载默认保留学习数据。未签名构建可能触发 SmartScreen，请先核对 `SHA256SUMS.txt`。
 
 ## 数据与隐私
 
@@ -82,7 +83,7 @@ $env:ENGLISH_TYPING_TRAINER_DATA_DIR = "$env:TEMP\EnglishStudio-isolated"
 
 ## 已知限制
 
-- English Studio v2.0.0 已完成 Windows 正式构建，GitHub Release 提供安装包和便携版。安装器目前为英文，应用本体为中文；安装包未签名，Windows SmartScreen 可能提示。完整安装、覆盖安装、卸载和重装矩阵仍在真实使用中持续验证。
+- English Studio v2.0.0 已完成 Windows 正式构建并发布；v2.1.0 中文五笔功能当前已完成源码与测试，尚未重新打包。安装器目前为英文，应用本体为中文；安装包未签名，Windows SmartScreen 可能提示。
 - 真实 DeepSeek 调用需要用户自己的 API Key；自动测试只使用 mock provider。
 - 中途退出时保存 session 级字符进度；已完成句子保存 `sentence_attempts`，未完成句子暂不单独保存 attempt。
 - 真人连续输入和真实 API 联调必须由用户按人工验收清单完成，自动化不能替代。
