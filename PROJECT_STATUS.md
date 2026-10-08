@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-English Studio 当前源码版本为 `2.1.0`，最近正式发布版本为 `2.0.0`。`feature/course-system` 已完成中文五笔整篇练习，以及内置课程 Phase 1–5、Phase 6A 发布加固和 Phase 6B 第一版候选内容。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
+English Studio 当前源码版本为 `2.2.0`，最近正式发布版本为 `2.0.0`。`feature/course-system` 已完成英文精读、中文五笔整篇练习，以及内置课程 Phase 1–5、Phase 6A 发布加固和 Phase 6B 第一版候选内容。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
 
 ## 架构与目录
 
@@ -23,6 +23,8 @@ English Studio 当前源码版本为 `2.1.0`，最近正式发布版本为 `2.0.
 当前 schema version 为 13。v8 新增 `daily_learning_stats`、`learning_events`、`achievements` 和 `profile_progress`；v9 新增普通词汇 FSRS；v10 与 v11 的旧听写、跟读历史表仅为升级兼容保留，当前产品不再提供对应入口或写入新记录；v12 新增只保存 enrollment 与稀疏 Item 状态的 `course_enrollments` 和 `course_item_progress`。v13 新增 `course_activity_progress`、`course_capability_attempts`、`course_review_cards`、`course_review_logs`，并仅为 `vocabulary_contexts` 增加四个 stable-key 来源字段。迁移沿用迁移前备份、事务和失败回滚，不重写既有文章、词汇或卡片。
 
 ## 已完成
+
+- 英文精读提供首页和学习内容入口，支持网页文章粘贴、正文整理预览、逐句翻译与重点表达、缓存离线阅读、AI 朗读、单词收藏和可选打字；阅读书签保存在既有 settings 表，与打字进度互不覆盖。
 
 - 原有文章库、连续练习、历史统计、错误分析、专项练习、生词本和间隔复习保持兼容。
 - 首页和“学习内容”均提供中文五笔入口；文章支持从标题和粘贴正文导入，整篇保存为单一 section，练习接收 Windows IME 提交，按正确汉字计算字/分钟，并与英文 WPM 统计隔离。
@@ -67,7 +69,7 @@ English Studio 当前源码版本为 `2.1.0`，最近正式发布版本为 `2.0.
 
 ## 测试状态
 
-2026-09-01，Python 3.14.6：全量 pytest 为 327 passed。新增回归覆盖中文粘贴导入、整篇单段、重复内容、IME 多汉字提交、汉字速度和独立练习记录；共享课程校验、Phase 6B 内容 QA、数据库迁移、FSRS、Provider 降级和既有 UI 回归继续通过。测试数量仍以每次实际 pytest 输出为准。
+2026-10-08：全量 pytest 为 342 passed。在原有 327 项基础上新增 15 项英文精读回归，覆盖正文整理、预览确认、内容去重、阅读书签与打字进度隔离、重启恢复、异步回调、失败重试、缓存零请求、真实 Qt 后台线程、单词收藏和三个尺寸的深浅主题。可见窗口自动烟测使用独立目录和离线示例缓存，schema 保持 13，正式数据库前后 SHA-256 一致。真实 DeepSeek/MiniMax 联调与真人阅读体验仍由用户验证。测试数量以实际 pytest 输出为准。
 
 ## 尚未完成
 

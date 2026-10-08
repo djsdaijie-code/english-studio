@@ -323,6 +323,7 @@ class RecentLearningCard(QFrame):
 class HomePage(QWidget):
     article_library_requested = Signal()
     chinese_typing_requested = Signal()
+    reading_requested = Signal()
     courses_requested = Signal()
     special_practice_requested = Signal()
     vocabulary_requested = Signal()
@@ -405,6 +406,7 @@ class HomePage(QWidget):
         quick_grid = QGridLayout()
         quick_grid.setSpacing(8)
         self.article_card = HomeActionCard("文章阅读", "导入与练习", "打开", self)
+        self.reading_card = HomeActionCard("英文精读", "粘贴文章逐句理解", "打开", self)
         self.chinese_typing_card = HomeActionCard("中文打字练习", "五笔整篇练习", "打开", self)
         self.course_card = HomeActionCard("内置课程", "按推荐顺序学习", "打开", self)
         self.special_card = HomeActionCard("专项练习", "复习错误内容", "打开", self)
@@ -412,6 +414,7 @@ class HomePage(QWidget):
         self.history_card = HomeActionCard("练习记录", "查看最近成绩", "打开", self)
         quick_cards = (
             self.article_card,
+            self.reading_card,
             self.chinese_typing_card,
             self.course_card,
             self.special_card,
@@ -433,6 +436,7 @@ class HomePage(QWidget):
 
         self.continue_card.requested.connect(self.courses_requested.emit)
         self.article_card.action_button.clicked.connect(self.article_library_requested.emit)
+        self.reading_card.action_button.clicked.connect(self.reading_requested.emit)
         self.chinese_typing_card.action_button.clicked.connect(self.chinese_typing_requested.emit)
         self.course_card.action_button.clicked.connect(self.courses_requested.emit)
         self.special_card.action_button.clicked.connect(self.special_practice_requested.emit)

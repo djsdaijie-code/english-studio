@@ -99,6 +99,27 @@ class ArticleLibraryService:
             created = self._repository.insert_article(connection, article, sections)
         return ArticleImportResult("imported", created, "中文文章导入成功，已按整篇文章保存。")
 
+    def import_pasted_english(self, title: str, text: str, source_url: str = "") -> ArticleImportResult:
+        content = normalize_text(text)
+        if not title.strip() or not content:
+            return ArticleImportResult("error", None, "请填写标题和正文。")
+        content_hash = sha256(content.encode("utf-8")).hexdigest()
+        existing = self._repository.get_article_by_hash(content_hash)
+        if existing:
+            if existing.is_deleted:
+                with self._database.transaction() as connection:
+                    self._repository.restore_article(connection, existing.id)
+                existing = self._repository.get_article(existing.id)
+                return ArticleImportResult("restored", existing, "已恢复原文章。")
+            return ArticleImportResult("duplicate", existing, "已使用文章库中相同内容的文章。")
+        article = Article(
+            title=title.strip(), full_text=content, original_filename="粘贴导入（英文精读）",
+            source_path=source_url, content_hash=content_hash, section_count=1,
+        )
+        with self._database.transaction() as connection:
+            created = self._repository.insert_article(connection, article, self._single_section(content))
+        return ArticleImportResult("imported", created, "文章已保存。")
+
     def rename_article(self, article_id: int, new_title: str) -> None:
         with self._database.transaction() as connection:
             self._repository.rename_article(connection, article_id, new_title.strip())

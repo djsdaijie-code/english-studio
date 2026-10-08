@@ -74,3 +74,11 @@ class TranslationService:
 
     def get(self, sentence_hash: str) -> SentenceTranslation | None:
         return self._cache.get(sentence_hash)
+
+    def recover_interrupted(self, sentence_hash: str) -> None:
+        # A persisted pending row can survive an interrupted run without a worker.
+        with self._lock:
+            cached = self._cache.get(sentence_hash)
+            if cached and cached.status == "pending" and sentence_hash not in self._inflight:
+                with self._database.transaction() as connection:
+                    self._cache.fail(connection, sentence_hash, "interrupted")

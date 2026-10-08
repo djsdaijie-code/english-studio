@@ -17,6 +17,7 @@ class LearningContentPage(QWidget):
         course_page: QWidget,
         chinese_typing_page: QWidget | None = None,
         parent: QWidget | None = None,
+        reading_page: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         layout = QVBoxLayout(self)
@@ -31,6 +32,7 @@ class LearningContentPage(QWidget):
             [
                 ("文章库", "articles"),
                 ("内置课程", "courses"),
+                ("英文精读", "reading"),
                 ("中文打字练习", "chinese"),
             ]
         )
@@ -44,6 +46,7 @@ class LearningContentPage(QWidget):
         self.content_stack.addWidget(article_page)
         self.content_stack.addWidget(course_page)
         self.content_stack.addWidget(chinese_typing_page or QWidget())
+        self.content_stack.addWidget(reading_page or QWidget())
         layout.addWidget(self.content_stack, stretch=1)
 
         self.section_control.value_changed.connect(self._change_section)
@@ -61,4 +64,4 @@ class LearningContentPage(QWidget):
 
     @staticmethod
     def _section_index(section: str) -> int:
-        return {"articles": 0, "courses": 1, "chinese": 2}.get(section, 0)
+        return {"articles": 0, "courses": 1, "chinese": 2, "reading": 3}.get(section, 0)

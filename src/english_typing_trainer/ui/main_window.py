@@ -91,6 +91,9 @@ from english_typing_trainer.ui.vocabulary_quick_access import VocabularyQuickAcc
 from english_typing_trainer.ui.today_learning_time import TodayLearningTimeBar
 from english_typing_trainer.ui.chinese_article_dialog import ChineseArticleDialog
 from english_typing_trainer.ui.chinese_typing_page import ChineseTypingPage
+from english_typing_trainer.ui.reading_page import ReadingPage
+from english_typing_trainer.ui.reading_controller import ReadingController
+from english_typing_trainer.ui.reading_import_dialog import ReadingImportDialog
 from english_typing_trainer.typing_engine.language import count_cjk_characters, is_chinese_typing_text
 
 
@@ -422,6 +425,7 @@ class MainWindow(QMainWindow):
         self.home_page = HomePage()
         self.home_page.article_library_requested.connect(self._show_library)
         self.home_page.chinese_typing_requested.connect(self._show_chinese_typing)
+        self.home_page.reading_requested.connect(self._show_reading)
         self.home_page.courses_requested.connect(self._show_courses)
         self.home_page.special_practice_requested.connect(self._show_special_practice)
         self.home_page.vocabulary_requested.connect(self._show_vocabulary)
@@ -433,10 +437,25 @@ class MainWindow(QMainWindow):
         self.library_page = self._build_library_page()
         self.chinese_typing_page = ChineseTypingPage()
         self.chinese_typing_page.import_requested.connect(self._import_chinese_article)
+        self.reading_page = ReadingPage()
+        self.reading_controller = ReadingController(
+            self.context, self.reading_page, self._thread_pool, lambda: self.settings, self
+        )
+        self.reading_page.import_requested.connect(self._import_reading_article)
+        self.reading_page.article_requested.connect(self._open_reading_article)
+        self.reading_page.library_requested.connect(self._show_reading)
+        self.reading_page.speech_requested.connect(self._request_speech)
+        self.reading_page.sentence_requested.connect(lambda: self._speech_sentence_changed(""))
+        self.reading_page.word_collection_requested.connect(self._collect_reading_word)
+        self.reading_page.typing_requested.connect(self._start_reading_typing)
+        self.reading_page.learning_activity.connect(self._track_learning_activity)
+        self.reading_controller.network_waiting.connect(self._reading_network_wait)
+        self.reading_controller.cache_updated.connect(self._reading_cache_updated)
         self.learning_content_page = LearningContentPage(
             self.library_page,
             self.course_page,
             self.chinese_typing_page,
+            reading_page=self.reading_page,
         )
         self.learning_content_page.section_changed.connect(self._learning_content_section_changed)
         self.stack.addWidget(self.home_page)
@@ -660,9 +679,11 @@ class MainWindow(QMainWindow):
     def _learning_page_changed(self, _index:int) -> None:
         self._update_vocabulary_quick_access_visibility()
         self._update_learning_time_visibility_control()
-        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page}:
+        if self.stack.currentWidget() not in {self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page} and not self._reading_is_active():
             self._handle_learning_update(self.context.learning_time_tracker.stop())
             self._refresh_daily_learning()
+            if self._active_speech_control is self.reading_page.speech_controls:
+                self.audio_playback.stop()
 
     def _update_learning_time_visibility_control(self) -> None:
         if not hasattr(self, "today_learning_time_bar"):
@@ -676,11 +697,19 @@ class MainWindow(QMainWindow):
             return
         focus_pages={self.practice_view,self.sentence_practice_view,self.word_learning_page,self.fsrs_review_page}
         self.vocabulary_quick_access.set_shortcut_visible(
-            self.stack.currentWidget() not in focus_pages
+            self.stack.currentWidget() not in focus_pages and not self._reading_is_active()
         )
         QTimer.singleShot(0,self._position_vocabulary_quick_access)
 
     def _track_learning_activity(self,event_type:str) -> None:
+        if self._reading_is_active():
+            sentence = self.reading_page.current_sentence
+            update = self.context.learning_time_tracker.activity(
+                event_type, related_article_id=sentence.article_id, related_sentence_id=sentence.id
+            )
+            self._handle_learning_update(update)
+            self._refresh_daily_learning()
+            return
         if self.current_course_session is not None and self.stack.currentWidget() is self.sentence_practice_view:
             if self.sentence_practice_view.learning is not None:
                 self.current_course_session.sync_index(self.sentence_practice_view.learning.current_index)
@@ -829,6 +858,9 @@ class MainWindow(QMainWindow):
         self.settings_page.load_settings(self.settings)
 
     def _show_library(self) -> None:
+        if self._reading_is_active():
+            self.audio_playback.stop()
+            self._handle_learning_update(self.context.learning_time_tracker.stop())
         self.learning_content_page.set_section("articles")
         self._switch_page(self.PAGE_LEARNING_CONTENT)
         self._reload_articles()
@@ -838,18 +870,105 @@ class MainWindow(QMainWindow):
         self._refresh_special_practice_page()
 
     def _show_courses(self) -> None:
+        if self._reading_is_active():
+            self.audio_playback.stop()
+            self._handle_learning_update(self.context.learning_time_tracker.stop())
         self.learning_content_page.set_section("courses")
         self._switch_page(self.PAGE_LEARNING_CONTENT)
 
     def _show_chinese_typing(self) -> None:
+        if self._reading_is_active():
+            self.audio_playback.stop()
+            self._handle_learning_update(self.context.learning_time_tracker.stop())
         self.learning_content_page.set_section("chinese")
         self._switch_page(self.PAGE_LEARNING_CONTENT)
 
+    def _reading_is_active(self) -> bool:
+        return bool(
+            hasattr(self, "reading_page")
+            and self.stack.currentWidget() is self.learning_content_page
+            and self.learning_content_page.current_section() == "reading"
+            and self.reading_page.pages.currentWidget() is self.reading_page.reader
+            and self.reading_page.current_sentence
+        )
+
+    def _show_reading(self) -> None:
+        self.audio_playback.stop()
+        self._handle_learning_update(self.context.learning_time_tracker.stop())
+        self.reading_page.pages.setCurrentWidget(self.reading_page.library)
+        self.reading_page.populate_articles(self.reading_controller.service.list_articles())
+        self.learning_content_page.set_section("reading")
+        self._switch_page(self.PAGE_LEARNING_CONTENT)
+
+    def _import_reading_article(self) -> None:
+        dialog = ReadingImportDialog(self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            article = self.reading_controller.service.import_article(
+                dialog.title_input.text(), dialog.text_input.toPlainText(), dialog.source_input.text()
+            )
+            self._reload_articles(preferred_article_id=article.id)
+            self._open_reading_article(article.id)
+        except ValueError as exc:
+            QMessageBox.information(self, "无法开始精读", str(exc))
+
+    def _open_reading_article(self, article_id: int) -> None:
+        self._persist_current_practice()
+        self.learning_content_page.set_section("reading")
+        self._switch_page(self.PAGE_LEARNING_CONTENT)
+        try:
+            self.reading_controller.open_article(article_id)
+            self._update_vocabulary_quick_access_visibility()
+        except ValueError as exc:
+            QMessageBox.information(self, "无法打开文章", str(exc))
+
+    def _start_reading_typing(self, article_id: int) -> None:
+        self.audio_playback.stop()
+        material = self.context.practice_service.load_practice_material(article_id)
+        self._begin_practice(material)
+
+    def _reading_network_wait(self) -> None:
+        if self._reading_is_active():
+            self._handle_learning_update(self.context.learning_time_tracker.suspend_for_network())
+
+    def _reading_cache_updated(self, sentence_hash: str) -> None:
+        sentence = self.sentence_practice_view.current_sentence
+        if sentence and sentence.sentence_hash == sentence_hash and self._can_reveal_sentence_translation(sentence):
+            cached = self.context.translation_service.get(sentence_hash)
+            if cached:
+                self.sentence_practice_view.show_translation(cached)
+
+    def _collect_reading_word(self, text: str, start: int, end: int) -> None:
+        sentence = self.reading_page.current_sentence
+        if sentence is None:
+            return
+        try:
+            result = self.context.vocabulary_learning_service.collect(
+                text, sentence=sentence.normalized_text, article_id=sentence.article_id,
+                article_sentence_id=sentence.id, start_offset=start, end_offset=end,
+                typing_target_count=self.settings.vocabulary_typing_count,
+            )
+        except ValueError as exc:
+            QMessageBox.information(self, "收藏单词", str(exc))
+            return
+        self._show_vocabulary_added(result.entry.display_word, self._vocabulary_collection_message(result))
+        self._refresh_vocabulary_page()
+        self._track_learning_activity("meaning_revealed")
+        if result.entry.id and self.settings.vocabulary_auto_enrich:
+            self._start_vocabulary_enrichment(result.entry.id, result.context.id)
+
     def _learning_content_section_changed(self, section: str) -> None:
+        if section != "reading":
+            self._handle_learning_update(self.context.learning_time_tracker.stop())
+            if self._active_speech_control is self.reading_page.speech_controls:
+                self.audio_playback.stop()
         if section == "courses":
             self.course_page.reload()
         elif section == "articles":
             self._reload_articles()
+        elif section == "reading":
+            self._show_reading()
 
     def _show_vocabulary(self) -> None:
         self._switch_page(self.PAGE_VOCABULARY)
@@ -1805,6 +1924,7 @@ class MainWindow(QMainWindow):
             sentence.sentence_hash, result, provider=provider.name, model=provider.model,
             prompt_version=self.settings.translation_prompt_version,
         )
+        self.reading_controller.refresh_cache(sentence.sentence_hash)
         if cached and self._can_reveal_sentence_translation(sentence):
             self.sentence_practice_view.show_translation(cached)
 
@@ -1812,6 +1932,7 @@ class MainWindow(QMainWindow):
         self._translation_workers.discard(worker)
         provider_error = error if isinstance(error, TranslationProviderError) else TranslationProviderError("unknown", "翻译请求失败。")
         self.context.translation_service.fail(sentence.sentence_hash, provider_error)
+        self.reading_controller.refresh_cache(sentence.sentence_hash)
         if self._can_reveal_sentence_translation(sentence):
             self.sentence_practice_view.show_translation_failed(str(provider_error))
 
@@ -2709,6 +2830,7 @@ class MainWindow(QMainWindow):
             event.ignore()
             return
         self.audio_playback.stop()
+        self.reading_controller.shutdown()
         self._handle_learning_update(self.context.learning_time_tracker.stop())
         for worker in self._tts_workers:
             worker.cancel()
