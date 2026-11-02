@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from english_typing_trainer.models.learning import LearningDashboard
+from english_typing_trainer.branding import APP_NAME
 from english_typing_trainer.ui.daily_learning_card import DailyLearningCard
 
 
@@ -61,7 +62,7 @@ class ContinueLearningCard(QFrame):
         cover_layout = QVBoxLayout(self.cover)
         cover_layout.setContentsMargins(16, 18, 16, 18)
         cover_layout.addStretch(1)
-        self.cover_title = QLabel("English\nStudio")
+        self.cover_title = QLabel(APP_NAME)
         self.cover_title.setProperty("role", "home-cover-title")
         self.cover_title.setWordWrap(True)
         self.cover_meta = QLabel("每日学习")
@@ -120,7 +121,7 @@ class ContinueLearningCard(QFrame):
 
     def update_course(self, data: dict[str, object] | None) -> None:
         if not data:
-            self.cover_title.setText("English\nStudio")
+            self.cover_title.setText(APP_NAME)
             self.cover_meta.setText("每日学习")
             self.course_title.setText("选择一项学习内容")
             self.location.setText("文章与内置课程都可以从这里继续")

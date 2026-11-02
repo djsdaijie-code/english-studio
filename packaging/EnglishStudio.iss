@@ -1,4 +1,4 @@
-#define MyAppName "English Studio"
+#define MyAppName "拾句"
 #define MyAppVersion GetEnv("ENGLISH_STUDIO_RELEASE_VERSION")
 #define MyAppVersionNumeric GetEnv("ENGLISH_STUDIO_RELEASE_VERSION_NUMERIC")
 #define MyAppPublisher "English Studio Contributors"
@@ -12,7 +12,7 @@ AppVersion={#MyAppVersion}
 VersionInfoVersion={#MyAppVersionNumeric}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\English Studio
-DefaultGroupName=English Studio
+DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\release
@@ -22,7 +22,7 @@ SolidCompression=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 WizardStyle=modern
-UninstallDisplayName=English Studio
+UninstallDisplayName={#MyAppName}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -34,11 +34,11 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#MyAppSource}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\English Studio"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\English Studio"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,English Studio}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{localappdata}\EnglishStudio"; Check: ShouldRemoveUserData

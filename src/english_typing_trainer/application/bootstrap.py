@@ -11,6 +11,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from english_typing_trainer import __version__
+from english_typing_trainer.branding import APP_NAME
 from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.application.logging_config import configure_logging
 from english_typing_trainer.services.app_paths import AppPathService
@@ -118,7 +119,7 @@ def _install_exception_handler(log_path) -> None:
 def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("English Studio")
-    app.setApplicationDisplayName("English Studio")
+    app.setApplicationDisplayName(APP_NAME)
     app.setWindowIcon(QIcon(str(resource_root() / "icons" / "english-studio.svg")))
     context = None
     log_path = None
@@ -169,7 +170,7 @@ def main() -> int:
     except Exception:
         logging.getLogger(__name__).exception("应用启动失败")
         detail = f"\n\n错误日志：\n{log_path}" if log_path else ""
-        QMessageBox.critical(None, "English Studio 启动失败", f"English Studio 无法启动。{detail}")
+        QMessageBox.critical(None, f"{APP_NAME} 启动失败", f"{APP_NAME}无法启动。{detail}")
         return 1
     finally:
         if context is not None:

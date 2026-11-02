@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from english_typing_trainer import __version__
+from english_typing_trainer.branding import APP_NAME
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.database.migrations import LATEST_SCHEMA_VERSION
 
@@ -48,9 +49,9 @@ class DataManagementService:
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'"
                 ).fetchone()
             except sqlite3.DatabaseError as exc:
-                raise ValueError("所选文件不是 English Studio 数据库备份。") from exc
+                raise ValueError(f"所选文件不是{APP_NAME}数据库备份。") from exc
             if row is None:
-                raise ValueError("所选文件不是 English Studio 数据库备份。")
+                raise ValueError(f"所选文件不是{APP_NAME}数据库备份。")
             version_row = connection.execute(
                 "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1"
             ).fetchone()

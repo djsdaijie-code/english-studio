@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from english_typing_trainer.branding import APP_NAME
 
 
 @dataclass(frozen=True, slots=True)
 class UiTexts:
-    app_name: str = "English Studio"
-    window_title: str = "English Studio"
+    app_name: str = APP_NAME
+    window_title: str = APP_NAME
     nav_articles: str = "文章库"
     nav_special: str = "专项练习"
     nav_vocabulary: str = "生词本"

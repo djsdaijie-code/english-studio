@@ -14,11 +14,11 @@ VSVersionInfo(
       StringTable(
         u'080404B0',
         [StringStruct(u'CompanyName', u'English Studio Contributors'),
-         StringStruct(u'FileDescription', u'English Studio'),
+         StringStruct(u'FileDescription', u'拾句'),
          StringStruct(u'FileVersion', u'2.2.0.0'),
          StringStruct(u'InternalName', u'EnglishStudio'),
          StringStruct(u'OriginalFilename', u'EnglishStudio.exe'),
-         StringStruct(u'ProductName', u'English Studio'),
+         StringStruct(u'ProductName', u'拾句'),
          StringStruct(u'ProductVersion', u'2.2.0')]
       )
     ]),

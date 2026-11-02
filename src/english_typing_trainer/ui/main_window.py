@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
 
 from english_typing_trainer.application.context import AppContext
 from english_typing_trainer import __version__
+from english_typing_trainer.branding import APP_NAME, APP_TAGLINE
 from english_typing_trainer.models.article import Article
 from english_typing_trainer.models.practice import PracticeMaterial
 from english_typing_trainer.models.settings import AppSettings
@@ -277,7 +278,7 @@ class MainWindow(QMainWindow):
         self.preview_special_material: PracticeMaterial | None = None
         self._logger = logging.getLogger(__name__)
 
-        self.setWindowTitle("English Studio")
+        self.setWindowTitle(APP_NAME)
         self.setMinimumSize(1280, 720)
         self.resize(1500, 1000)
 
@@ -413,9 +414,9 @@ class MainWindow(QMainWindow):
         sidebar_layout.setContentsMargins(18, 18, 18, 18)
         sidebar_layout.setSpacing(10)
 
-        app_title = QLabel("English Studio")
+        app_title = QLabel(APP_NAME)
         app_title.setProperty("role", "app-title")
-        app_subtitle = QLabel("通过阅读、打字、AI 朗读和复习学习英语")
+        app_subtitle = QLabel(APP_TAGLINE)
         app_subtitle.setProperty("role", "subtitle")
         sidebar_layout.addWidget(app_title)
         sidebar_layout.addWidget(app_subtitle)
@@ -2236,8 +2237,8 @@ class MainWindow(QMainWindow):
     def _show_about(self) -> None:
         QMessageBox.information(
             self,
-            "关于 English Studio",
-            "English Studio\n通过阅读、打字、AI 朗读和复习学习英语\n\n"
+            f"关于{APP_NAME}",
+            f"{APP_NAME}\n{APP_TAGLINE}\n版本 {__version__}\n\n"
             "本程序默认把学习数据保存在本机。在线翻译和 AI 语音仅在你主动配置对应服务后使用。\n\n"
             "版本信息与隐私说明请查看项目 README、PRIVACY.md 和 THIRD_PARTY_NOTICES.md。",
         )

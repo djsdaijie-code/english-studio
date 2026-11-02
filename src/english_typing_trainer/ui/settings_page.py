@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from english_typing_trainer.branding import APP_NAME
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -278,7 +280,7 @@ class SettingsPage(QWidget):
         self.backup_database_button = QPushButton("备份数据库")
         self.restore_database_button = QPushButton("恢复数据库")
         self.export_diagnostics_button = QPushButton("导出诊断日志")
-        self.about_button = QPushButton("关于 English Studio")
+        self.about_button = QPushButton(f"关于{APP_NAME}")
         self.backup_hint = QLabel("备份、恢复和诊断文件均不会包含 Windows 凭据管理器中的 API Key。")
         self.backup_hint.setProperty("role", "subtitle")
         layout.addWidget(title)
