@@ -30,6 +30,8 @@ def load_stylesheet(theme_name: str) -> str:
 
 
 def build_app_font(font_size: int = 14) -> QFont:
+    if sys.platform == "darwin":
+        return QFont("PingFang SC", font_size)
     for font_path in (
         Path(r"C:\Windows\Fonts\msyh.ttc"),
         Path(r"C:\Windows\Fonts\msyhbd.ttc"),

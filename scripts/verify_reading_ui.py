@@ -50,7 +50,8 @@ def main() -> int:
     options = parser.parse_args()
     output = options.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    formal = Path(os.environ["LOCALAPPDATA"]) / "EnglishStudio" / "typing_trainer.db"
+    from english_typing_trainer.services.app_paths import AppPathService
+    formal = AppPathService().get_paths().database_path
     before = _hash(formal)
     app = QApplication([])
     context = build_app_context(

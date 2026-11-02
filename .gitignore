@@ -11,6 +11,8 @@ coverage.xml
 # Build outputs (keep future PyInstaller .spec files tracked)
 build/
 dist/
+build-macos/
+dist-macos/
 *.egg-info/
 
 # Runtime and acceptance data
@@ -55,6 +57,8 @@ Desktop.ini
 # Generated release artifacts
 release/*.zip
 release/*.exe
+release/*.dmg
+release/SHA256SUMS-macOS.txt
 release/SHA256SUMS.txt
 dist-debug/
 build-debug/

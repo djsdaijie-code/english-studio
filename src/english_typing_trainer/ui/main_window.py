@@ -46,7 +46,7 @@ from english_typing_trainer.models.article import Article
 from english_typing_trainer.models.practice import PracticeMaterial
 from english_typing_trainer.models.settings import AppSettings
 from english_typing_trainer.models.sentence import ArticleSentence
-from english_typing_trainer.services.credential_store import mask_api_key, mask_secret
+from english_typing_trainer.services.credential_store import mask_api_key, mask_secret, credential_storage_label
 from english_typing_trainer.database.sentence_repositories import SentenceAttemptRepository
 from english_typing_trainer.services.translation_provider import DeepSeekTranslationProvider, TranslationProviderError
 from english_typing_trainer.models.tts import TTSRequest
@@ -2012,7 +2012,7 @@ class MainWindow(QMainWindow):
             self.context.credential_store.set(api_key)
             self.settings_page.api_key_input.clear()
             self.settings_page.set_api_key_status(mask_api_key(api_key))
-            QMessageBox.information(self, "保存成功", "API Key 已保存到 Windows 凭据管理器。")
+            QMessageBox.information(self, "保存成功", f"API Key 已保存到{credential_storage_label()}。")
         except Exception as exc:
             QMessageBox.critical(self, "保存失败", f"无法保存 API Key：{exc}")
 
@@ -2029,7 +2029,7 @@ class MainWindow(QMainWindow):
         if not key: QMessageBox.information(self,"未输入 Key","请输入 MiniMax API Key。"); return
         try:
             self.context.tts_credential_store.set(key); self.settings_page.tts_api_key_input.clear(); self.settings_page.set_tts_api_key_status(mask_secret(key))
-            QMessageBox.information(self,"保存成功","MiniMax API Key 已保存到 Windows 凭据管理器。")
+            QMessageBox.information(self,"保存成功",f"MiniMax API Key 已保存到{credential_storage_label()}。")
         except Exception as exc: QMessageBox.critical(self,"保存失败",f"无法保存 MiniMax API Key：{exc}")
 
     def _delete_tts_key(self) -> None:
@@ -2213,7 +2213,7 @@ class MainWindow(QMainWindow):
         answer = QMessageBox.warning(
             self,
             "恢复数据库",
-            "恢复会替换当前数据库。程序会先创建当前数据的安全备份；Windows 凭据管理器中的 API Key 不受影响。是否继续？",
+            f"恢复会替换当前数据库。程序会先创建当前数据的安全备份；{credential_storage_label()}中的 API Key 不受影响。是否继续？",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
             QMessageBox.StandardButton.Cancel,
         )

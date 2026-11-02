@@ -14,7 +14,7 @@
 - PySide6 6.11.1
 - SQLite（标准库 `sqlite3`），schema version 13
 - pytest 9.1.1；PyInstaller 6.21.0
-- 当前源码版本 `2.2.0`，最近发布的 Windows 安装器和便携版为 `2.0.0`；新构建由 `scripts/package.ps1` 生成
+- 当前源码版本 `2.3.0`，最近发布的 Windows 安装器和便携版为 `2.0.0`；Windows 构建使用 `scripts/package.ps1`，Apple Silicon Mac 测试版见 [Mac 构建与安装](docs/macos-build.md)
 
 ## 功能
 
@@ -54,7 +54,13 @@ py -3.14 -m venv .venv
 powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1
 ```
 
-当前构建配置会生成 `EnglishStudio-2.2.0-Setup.exe` 与 `EnglishStudio-2.2.0-win-x64-portable.zip`。安装器默认安装到当前用户目录，不需要管理员权限；卸载默认保留学习数据。未签名构建可能触发 SmartScreen，请先核对 `SHA256SUMS.txt`。
+当前构建配置会生成 `EnglishStudio-2.3.0-Setup.exe` 与 `EnglishStudio-2.3.0-win-x64-portable.zip`。安装器默认安装到当前用户目录，不需要管理员权限；卸载默认保留学习数据。未签名构建可能触发 SmartScreen，请先核对 `SHA256SUMS.txt`。
+
+## Mac 测试版
+
+提供原生 Apple Silicon（M 系列）构建，使用“拾句”名称和新图标，产物为 `.app`、DMG 与 ZIP。Mac 数据保存在 `~/Library/Application Support/EnglishStudio/`，Key 通过 macOS 钥匙串保存；不随应用一起分发。
+
+在 Mac 中安装 Python 3.14 后，可用 `.venv/bin/python main.py` 从源码运行，或使用 `scripts/package_macos.py` 构建。测试包没有 Apple Developer ID 签名与公证，macOS 27.2、实际音频与输入法体验需用户实机验收。具体命令见 [Mac 构建与安装](docs/macos-build.md)。
 
 ## 数据与隐私
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,8 +17,9 @@ class AppPaths:
 
 
 class AppPathService:
-    def __init__(self, base_dir: Path | None = None) -> None:
+    def __init__(self, base_dir: Path | None = None, *, platform: str | None = None) -> None:
         self._base_dir = base_dir
+        self._platform = platform or sys.platform
 
     def get_paths(self) -> AppPaths:
         data_dir = self._base_dir or self._environment_override() or self._default_data_dir()
@@ -33,7 +35,7 @@ class AppPathService:
         )
 
     def ensure_directories(self) -> AppPaths:
-        if self._base_dir is None and self._environment_override() is None:
+        if self._platform == "win32" and self._base_dir is None and self._environment_override() is None:
             self._migrate_legacy_default_data()
         paths = self.get_paths()
         paths.data_dir.mkdir(parents=True, exist_ok=True)
@@ -43,6 +45,10 @@ class AppPathService:
         return paths
 
     def _default_data_dir(self) -> Path:
+        if self._platform == "darwin":
+            return Path.home() / "Library" / "Application Support" / "EnglishStudio"
+        if self._platform != "win32":
+            return Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local" / "share"))) / "EnglishStudio"
         local_app_data = os.environ.get("LOCALAPPDATA")
         if local_app_data:
             return Path(local_app_data) / "EnglishStudio"

@@ -204,5 +204,5 @@ def test_statistics_rules_and_trend_fill_zero(tmp_path: Path) -> None:
 def test_default_localappdata_path_computation(monkeypatch) -> None:
     monkeypatch.delenv("ENGLISH_TYPING_TRAINER_DATA_DIR", raising=False)
     monkeypatch.setenv("LOCALAPPDATA", r"C:\Users\TestUser\AppData\Local")
-    paths = AppPathService().get_paths()
-    assert str(paths.database_path) == r"C:\Users\TestUser\AppData\Local\EnglishStudio\typing_trainer.db"
+    paths = AppPathService(platform="win32").get_paths()
+    assert paths.database_path == Path(r"C:\Users\TestUser\AppData\Local") / "EnglishStudio" / "typing_trainer.db"

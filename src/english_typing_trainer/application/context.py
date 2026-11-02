@@ -7,7 +7,7 @@ from pathlib import Path
 from english_typing_trainer.database.manager import DatabaseManager
 from english_typing_trainer.services.app_paths import AppPathService, AppPaths
 from english_typing_trainer.services.article_library import ArticleLibraryService
-from english_typing_trainer.services.credential_store import CredentialStore, FallbackCredentialStore, MemoryCredentialStore, WindowsCredentialStore
+from english_typing_trainer.services.credential_store import CredentialStore, MemoryCredentialStore, create_credential_store
 from english_typing_trainer.services.history_service import HistoryService
 from english_typing_trainer.services.practice_service import PracticeService
 from english_typing_trainer.services.review_planning import ReviewPlanningService
@@ -124,13 +124,9 @@ def build_app_context(
     )
     fsrs_review_service.set_context_resolver(course_capability_service.resolve_context)
     if credential_store is None:
-        credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
-            WindowsCredentialStore("English Studio/DeepSeek API", "DeepSeek API"), WindowsCredentialStore()
-        )
+        credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else create_credential_store("deepseek")
     if tts_credential_store is None:
-        tts_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else FallbackCredentialStore(
-            WindowsCredentialStore("English Studio/MiniMax TTS", "MiniMax TTS"), WindowsCredentialStore("EnglishTypingTrainer/MiniMax TTS", "MiniMax TTS")
-        )
+        tts_credential_store = MemoryCredentialStore() if os.environ.get("PYTEST_CURRENT_TEST") else create_credential_store("tts")
     special_practice_service = SpecialPracticeService(
         database,
         normalization=normalization_service,

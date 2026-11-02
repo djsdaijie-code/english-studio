@@ -1,0 +1,47 @@
+name: Build Shiju for Apple Silicon
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/macos-arm64
+
+permissions:
+  contents: read
+
+jobs:
+  macos-arm64:
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      QT_QPA_PLATFORM: offscreen
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
+      ENGLISH_TYPING_TRAINER_DATA_DIR: ${{ runner.temp }}/shiju-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14.6"
+          architecture: arm64
+          cache: pip
+      - name: Verify native architecture
+        run: |
+          test "$(uname -m)" = "arm64"
+          python --version
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Test and package
+        run: python scripts/package_macos.py
+      - name: Upload test packages and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shiju-macOS-arm64
+          if-no-files-found: warn
+          path: |
+            release/Shiju-*-macOS-arm64.zip
+            release/Shiju-*-macOS-arm64.dmg
+            release/SHA256SUMS-macOS.txt
+            artifacts/macos-build/report.json
+            artifacts/macos-build/seed.json
+            artifacts/macos-build/verify.json

@@ -1,5 +1,12 @@
 # 更新日志
 
+## 2.3.0 - 2026-11-02 · Mac 测试版
+
+- 增加原生 Apple Silicon 的 `.app`、DMG 和 ZIP 构建定义及 GitHub macOS 构建工作流，使用“拾句”名称与图标。
+- macOS 使用 Application Support 数据目录与原生钥匙串，补充中文字体回退；Windows 旧数据和凭据兼容逻辑保留。
+- 构建包含全量测试、arm64 架构和签名完整性检查、发布包个人数据排除与双启动持久化烟测；schema 保持 13。
+- 测试包仅使用 ad-hoc 签名，尚无 Apple Developer ID 签名与公证，Mac 用户实机体验需另行验收。
+
 ## 未发布 · 品牌同步 - 2026-11-02
 
 - 新增“展开书页 + 金色引号”的拾句应用图标，提供 SVG、1024px PNG、多尺寸 Windows ICO 和 macOS ICNS；同步窗口、侧栏、EXE 和安装器图标引用。

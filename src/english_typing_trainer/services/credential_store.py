@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import sys
 from ctypes import wintypes
 from typing import Protocol
 
@@ -101,6 +102,63 @@ class WindowsCredentialStore:
         if not self._advapi.CredDeleteW(self.target_name, self.CRED_TYPE_GENERIC, 0):
             if ctypes.get_last_error() != self.ERROR_NOT_FOUND:
                 raise ctypes.WinError(ctypes.get_last_error())
+
+
+class MacOSCredentialStore:
+    """Uses only the native Keychain backend; no plaintext or memory fallback."""
+
+    def __init__(self, service_name: str, user_name: str, *, backend=None) -> None:
+        self.service_name = service_name
+        self.user_name = user_name
+        self._backend = backend
+
+    def _keychain(self):
+        if self._backend is None:
+            try:
+                from keyring.backends.macOS import Keyring
+                self._backend = Keyring()
+            except Exception:
+                raise OSError("无法访问 macOS 钥匙串，请检查系统权限。") from None
+        return self._backend
+
+    def get(self) -> str | None:
+        try:
+            return self._keychain().get_password(self.service_name, self.user_name)
+        except Exception:
+            raise OSError("无法读取 macOS 钥匙串，请解锁钥匙串后重试。") from None
+
+    def set(self, secret: str) -> None:
+        try:
+            self._keychain().set_password(self.service_name, self.user_name, secret)
+        except Exception:
+            raise OSError("无法保存到 macOS 钥匙串，请检查系统授权后重试。") from None
+
+    def delete(self) -> None:
+        try:
+            if self.get() is not None:
+                self._keychain().delete_password(self.service_name, self.user_name)
+        except Exception:
+            raise OSError("无法删除 macOS 钥匙串中的凭据，请检查系统授权。") from None
+
+
+def create_credential_store(service: str, *, platform: str | None = None) -> CredentialStore:
+    platform = platform or sys.platform
+    if service not in {"deepseek", "tts"}:
+        raise ValueError("未知凭据服务。")
+    target, user, legacy = (
+        ("English Studio/DeepSeek API", "DeepSeek API", "EnglishTypingTrainer/DeepSeekAPI")
+        if service == "deepseek"
+        else ("English Studio/MiniMax TTS", "MiniMax TTS", "EnglishTypingTrainer/MiniMax TTS")
+    )
+    if platform == "darwin":
+        return MacOSCredentialStore(target, user)
+    if platform == "win32":
+        return FallbackCredentialStore(WindowsCredentialStore(target, user), WindowsCredentialStore(legacy, user))
+    raise OSError("当前系统没有受支持的安全凭据存储。")
+
+
+def credential_storage_label() -> str:
+    return "macOS 钥匙串" if sys.platform == "darwin" else "Windows 凭据管理器"
 
 
 def mask_api_key(api_key: str | None) -> str:

@@ -99,6 +99,11 @@ class PracticeInputEdit(QPlainTextEdit):
         if event.matches(QKeySequence.StandardKey.Paste):
             event.accept()
             return
+        if event.modifiers() & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.MetaModifier):
+            if event.matches(QKeySequence.StandardKey.Copy):
+                self.copy()
+            event.accept()
+            return
         self.key_received.emit(event)
         event.accept()
 

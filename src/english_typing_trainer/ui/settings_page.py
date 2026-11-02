@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from english_typing_trainer.branding import APP_NAME
+from english_typing_trainer.services.credential_store import credential_storage_label
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -281,7 +282,7 @@ class SettingsPage(QWidget):
         self.restore_database_button = QPushButton("恢复数据库")
         self.export_diagnostics_button = QPushButton("导出诊断日志")
         self.about_button = QPushButton(f"关于{APP_NAME}")
-        self.backup_hint = QLabel("备份、恢复和诊断文件均不会包含 Windows 凭据管理器中的 API Key。")
+        self.backup_hint = QLabel(f"备份、恢复和诊断文件均不会包含{credential_storage_label()}中的 API Key。")
         self.backup_hint.setProperty("role", "subtitle")
         layout.addWidget(title)
         layout.addWidget(self.data_dir_label)
