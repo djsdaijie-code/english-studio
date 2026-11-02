@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Shiju: a book of collected sentences</title>
+  <defs>
+    <linearGradient id="ink" x1="180" y1="90" x2="850" y2="970" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#316b91"/>
+      <stop offset="0.55" stop-color="#234d70"/>
+      <stop offset="1" stop-color="#16334e"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="532" y1="345" x2="812" y2="710" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e1edf3"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="568" y1="420" x2="746" y2="568" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f5cc80"/>
+      <stop offset="1" stop-color="#dca951"/>
+    </linearGradient>
+  </defs>
+  <rect x="40" y="40" width="944" height="944" rx="224" fill="url(#ink)"/>
+  <rect x="46" y="46" width="932" height="932" rx="218" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="4"/>
+  <path d="M232 357C318 330 411 337 492 379V728C411 686 318 678 232 704C223 707 216 700 216 691V378C216 368 222 360 232 357Z" fill="#faf7ee"/>
+  <path d="M532 379C613 337 706 330 792 357C802 360 808 368 808 378V691C808 700 801 707 792 704C706 678 613 686 532 728Z" fill="url(#paper)"/>
+  <path d="M492 728Q512 742 532 728" fill="none" stroke="#e3eaf0" stroke-width="16" stroke-linecap="round"/>
+  <path d="M280 433Q353 421 428 443M280 497Q353 485 428 507M280 561Q337 552 389 564" fill="none" stroke="#829aaa" stroke-width="20" stroke-linecap="round"/>
+  <path d="M577 422H643V478C643 519 621 548 584 559V530C603 522 613 507 615 490H577Z" fill="url(#gold)"/>
+  <path d="M674 422H740V478C740 519 718 548 681 559V530C700 522 710 507 712 490H674Z" fill="url(#gold)"/>
+  <path d="M584 613Q655 595 738 607" fill="none" stroke="#829aaa" stroke-width="20" stroke-linecap="round"/>
+</svg>

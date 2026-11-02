@@ -37,5 +37,6 @@ exe = EXE(
     disable_windowed_traceback=False, argv_emulation=False, target_arch=None,
     codesign_identity=None, entitlements_file=None,
     version=str(project_root / "packaging" / "version_info.txt"),
+    icon=str(project_root / "resources" / "icons" / "shiju.ico"),
 )
 coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, upx_exclude=[], name="EnglishStudio")

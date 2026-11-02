@@ -61,6 +61,8 @@ $RequiredPatterns = @(
     "EnglishStudio.exe",
     "light.qss",
     "dark.qss",
+    "shiju.svg",
+    "shiju.ico",
     "qwindows.dll",
     "Qt6Charts.dll",
     "Qt6Svg.dll",

@@ -8,7 +8,7 @@ import logging
 import re
 
 from PySide6.QtCore import QEvent, Qt, QTimer, QUrl, QThreadPool
-from PySide6.QtGui import QAction, QCloseEvent, QDesktopServices
+from PySide6.QtGui import QAction, QCloseEvent, QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
@@ -63,7 +63,7 @@ from english_typing_trainer.ui.tts_tasks import TTSWorker
 from english_typing_trainer.ui.settings_page import SettingsPage as SettingsScreen
 from english_typing_trainer.ui.special_practice_page import SpecialPracticePage
 from english_typing_trainer.ui.statistics_page import StatisticsPage
-from english_typing_trainer.ui.theme import apply_theme
+from english_typing_trainer.ui.theme import apply_theme, resource_root
 from english_typing_trainer.ui.vocabulary_page import VocabularyPage
 from english_typing_trainer.ui.word_learning_page import WordLearningPage
 from english_typing_trainer.ui.fsrs_review_page import FsrsReviewPage
@@ -279,6 +279,7 @@ class MainWindow(QMainWindow):
         self._logger = logging.getLogger(__name__)
 
         self.setWindowTitle(APP_NAME)
+        self.setWindowIcon(QIcon(str(resource_root() / "icons" / "shiju.svg")))
         self.setMinimumSize(1280, 720)
         self.resize(1500, 1000)
 
@@ -416,9 +417,16 @@ class MainWindow(QMainWindow):
 
         app_title = QLabel(APP_NAME)
         app_title.setProperty("role", "app-title")
+        brand_row = QHBoxLayout()
+        brand_row.setSpacing(10)
+        brand_icon = QLabel()
+        brand_icon.setFixedSize(36, 36)
+        brand_icon.setPixmap(self.windowIcon().pixmap(36, 36))
+        brand_row.addWidget(brand_icon)
+        brand_row.addWidget(app_title, stretch=1)
         app_subtitle = QLabel(APP_TAGLINE)
         app_subtitle.setProperty("role", "subtitle")
-        sidebar_layout.addWidget(app_title)
+        sidebar_layout.addLayout(brand_row)
         sidebar_layout.addWidget(app_subtitle)
         sidebar_layout.addSpacing(8)
 

@@ -120,7 +120,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("English Studio")
     app.setApplicationDisplayName(APP_NAME)
-    app.setWindowIcon(QIcon(str(resource_root() / "icons" / "english-studio.svg")))
+    app.setWindowIcon(QIcon(str(resource_root() / "icons" / "shiju.svg")))
     context = None
     log_path = None
     try:
