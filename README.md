@@ -62,6 +62,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1
 
 在 Mac 中安装 Python 3.14 后，可用 `.venv/bin/python main.py` 从源码运行，或使用 `scripts/package_macos.py` 构建。测试包没有 Apple Developer ID 签名与公证，macOS 27.2、实际音频与输入法体验需用户实机验收。具体命令见 [Mac 构建与安装](docs/macos-build.md)。
 
+首个 `2.3.0` Apple Silicon 测试包已完成原生构建：[下载 Actions 测试产物](https://github.com/djsdaijie-code/english-studio/actions/runs/41391233552/artifacts/13117921353)（需要登录 GitHub，有效期至 2027-01-31）。下载后打开其中的 DMG，将“拾句.app”拖入 Applications；运行打包版无需安装 Python。验证结果和 SHA-256 见 [交付报告](docs/macos-delivery-2.3.0.md)。这不是新的正式 GitHub Release。
+
 ## 数据与隐私
 
 正式数据目录为 `%LOCALAPPDATA%\EnglishStudio\`，包含数据库、日志和迁移备份。首次启用新目录时会复制旧 `%LOCALAPPDATA%\EnglishTypingTrainer\` 数据，验证后保留旧目录不删除。翻译缓存保存在 `typing_trainer.db` 的 `sentence_translations` 表；DeepSeek API Key 使用 Windows Credential Manager 保存，不进入数据库、配置文件或日志。

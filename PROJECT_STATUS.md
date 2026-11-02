@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-软件显示名称已定为“拾句”，品牌文案为“拾句习语，读懂英文。”。窗口、侧栏、关于页及下次构建的安装器显示名称已同步；内部标识、正式数据目录、凭据名称和升级识别码保持兼容，未重新打包。
+软件显示名称已定为“拾句”，品牌文案为“拾句习语，读懂英文。”。窗口、侧栏、关于页及下次构建的安装器显示名称已同步；内部标识、正式数据目录、凭据名称和升级识别码保持兼容。本轮已构建 Mac 测试包，既有 Windows 发布包不变。
 
 拾句当前源码版本为 `2.3.0`，最近正式发布版本为 `2.0.0`。本轮增加原生 Apple Silicon Mac 测试版支持，Mac 实机兼容性仍需验收。既有英文精读、中文五笔整篇练习及课程能力继续保留。“AI 与大模型英语” `1.0.0` 当前为 `reviewed`；“全球汽车品牌与车标英语” `0.1.1` 与“币圈与区块链英语” `0.1.0` 当前为 `draft`，三门课程均未设为 `published`。
 
@@ -66,12 +66,13 @@
 
 - 正式目录：`%LOCALAPPDATA%\EnglishStudio\`；首次运行会兼容复制旧 `EnglishTypingTrainer` 数据并保留旧目录。
 - 开发/验收：`ENGLISH_TYPING_TRAINER_DATA_DIR` 指向独立目录。
-- API Key：Windows Credential Manager；测试使用内存凭据存储。
+- Mac 正式目录：`~/Library/Application Support/EnglishStudio/`；不迁移或修改 Windows 数据。
+- API Key：Windows Credential Manager / macOS 原生钥匙串；业务测试使用内存凭据存储，Mac 构建机另以随机服务名测试真实钥匙串并清理。
 - 翻译缓存：用户本地 SQLite；日志不记录 Key 或大段正文。
 
 ## 测试状态
 
-2026-11-02，Mac 适配的 Windows 回归：353 passed、1 skipped（原生 Mac 钥匙串测试）；Python 3.14.6。独立目录启动通过，正式数据库前后 SHA-256 均为 13b87a591ef5f92d9eeadf927f13add78be33afc9b2d3594ce3712e93b6f8428。原生 macOS 构建、钥匙串和打包版启动结果待构建机验证。
+2026-11-02，Mac 适配的 Windows 回归：356 passed、1 skipped（原生 Mac 钥匙串测试）；Python 3.14.6。保留原 342 项测试，新增 15 项 Mac 路径、凭据、快捷键、证书与包审计回归，共 357 项。独立目录启动通过，正式数据库前后 SHA-256 均为 13b87a591ef5f92d9eeadf927f13add78be33afc9b2d3594ce3712e93b6f8428。原生 macOS 15.8.2 arm64 构建机全量 357 passed（含真实钥匙串测试），打包版双启动持久化和 HTTPS 验证通过，已生成 DMG 和 ZIP。详见 [Mac 测试版交付报告](docs/macos-delivery-2.3.0.md)。用户 Mac 27.2 的音频、输入法、Finder/Dock 和安装体验未验证。
 
 2026-11-02，品牌同步专项：UI、数据备份和版本配置回归 13 passed；隔离可见窗口深浅主题烟测通过，正式数据库前后 SHA-256 一致。应用版本保持 2.2.0，本轮未重新构建安装包。
 

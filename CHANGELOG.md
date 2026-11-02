@@ -6,6 +6,7 @@
 - macOS 使用 Application Support 数据目录与原生钥匙串，补充中文字体回退；Windows 旧数据和凭据兼容逻辑保留。
 - 构建包含全量测试、arm64 架构和签名完整性检查、发布包个人数据排除与双启动持久化烟测；schema 保持 13。
 - 测试包仅使用 ad-hoc 签名，尚无 Apple Developer ID 签名与公证，Mac 用户实机体验需另行验收。
+- Mac 原生全量测试 357 passed；打包版双启动、持久化与 HTTPS 检查通过。补齐证书根包，修正架构检查参数，DMG/ZIP 通过 Actions Artifact 交付，不改正式 Release。
 
 ## 未发布 · 品牌同步 - 2026-11-02
 

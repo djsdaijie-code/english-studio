@@ -27,6 +27,7 @@ python3.14 -m venv .venv
 也可执行 `zsh scripts/run_macos.command` 启动源码。构建只能在原生 arm64 macOS 上进行。
 脚本使用 `Shiju-macOS.spec` 生成 `dist-macos/拾句.app`，打包本地 SVG、ICNS、主题、课程、QtCharts、QtSvg、QtMultimedia 和 macOS Qt 平台插件。
 随后校验架构、代码完整性、无个人运行数据，并用独立目录执行两次启动验收。
+Mac 包自带 certifi CA 根证书，启动时仅在未显式配置 `SSL_CERT_FILE` 时启用，避免依赖构建机上的 Python 证书目录；打包烟测会验证 HTTPS 证书校验成功，绝不关闭 TLS 校验。
 
 产物：
 
