@@ -15,6 +15,7 @@ from english_typing_trainer.branding import APP_NAME
 from english_typing_trainer.application.context import build_app_context
 from english_typing_trainer.application.logging_config import configure_logging
 from english_typing_trainer.services.app_paths import AppPathService
+from english_typing_trainer.services.network_security import configure_https_certificates
 from english_typing_trainer.ui.main_window import MainWindow
 from english_typing_trainer.ui.theme import resource_root
 
@@ -93,6 +94,12 @@ def run_acceptance_smoke(context, window: MainWindow, report_path: Path, action:
         and report["article_count"] == 0
         and report["first_item_status"] == "in_progress"
     )
+    if os.environ.get("ENGLISH_STUDIO_ACCEPTANCE_TLS_CHECK") == "1":
+        import urllib.request
+
+        with urllib.request.urlopen("https://www.python.org/", timeout=20) as response:
+            report["https_status"] = response.status
+        report["passed"] = report["passed"] and report["https_status"] == 200
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n",
@@ -117,6 +124,7 @@ def _install_exception_handler(log_path) -> None:
 
 
 def main() -> int:
+    configure_https_certificates()
     app = QApplication(sys.argv)
     app.setApplicationName("English Studio")
     app.setApplicationDisplayName(APP_NAME)

@@ -129,3 +129,16 @@ def test_command_and_control_shortcuts_do_not_reach_typing_handlers(monkeypatch)
         editor.keyPressEvent(QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_V, modifier, "v"))
     assert received == []
     editor.close()
+
+
+@pytest.mark.parametrize("platform, override", [("darwin", ""), ("darwin", "custom.pem"), ("win32", "")])
+def test_bundled_macos_certificates_preserve_explicit_overrides(monkeypatch, platform, override):
+    from types import SimpleNamespace
+    from english_typing_trainer.services import network_security
+
+    monkeypatch.setattr(network_security.sys, "platform", platform)
+    monkeypatch.setenv("SSL_CERT_FILE", override)
+    monkeypatch.setitem(sys.modules, "certifi", SimpleNamespace(where=lambda: "bundled-cacert.pem"))
+    network_security.configure_https_certificates()
+    import os
+    assert os.environ["SSL_CERT_FILE"] == ("bundled-cacert.pem" if platform == "darwin" and not override else override)

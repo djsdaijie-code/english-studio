@@ -47,6 +47,7 @@ def smoke(bundle: Path, destination: Path) -> None:
             ENGLISH_TYPING_TRAINER_APP_TAG="acceptance-macos",
             ENGLISH_STUDIO_ACCEPTANCE_REPORT=str(destination / f"{action}.json"),
             ENGLISH_STUDIO_ACCEPTANCE_ACTION=action,
+            ENGLISH_STUDIO_ACCEPTANCE_TLS_CHECK="1",
             QT_QPA_PLATFORM="offscreen",
         )
         subprocess.run([str(exe)], cwd=destination, env=env, check=True, timeout=90)
@@ -73,7 +74,7 @@ def main() -> int:
     run(sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--distpath", "dist-macos", "--workpath", "build-macos", "Shiju-macOS.spec")
     bundle = ROOT / "dist-macos" / "拾句.app"
     executable = bundle / "Contents" / "MacOS" / "Shiju"
-    run("/usr/bin/lipo", "-verify_arch", "arm64", executable)
+    run("/usr/bin/lipo", executable, "-verify_arch", "arm64")
     run("/usr/bin/codesign", "--verify", "--deep", "--strict", bundle)
     report = audit_bundle(bundle)
     report.update(version=__version__, architecture="arm64", signing="ad-hoc", notarized=False)
